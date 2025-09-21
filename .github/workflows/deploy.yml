@@ -1,31 +1,40 @@
-name: Deploy Static Site to GitHub Pages
+name: Deploy Static to GitHub Pages
+
 on:
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main ]   # PR에서는 빌드 흐름만(정적이라 스킵) — 배포 없음
+  push:
+    branches: [ main ]   # main에 머지될 때만 배포
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/upload-pages-artifact@v3
+
+      # 정적 루트만 업로드: src/main/resources/static
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: "."   # 루트 경로 기준으로 index.html 업로드
+          path: "src/main/resources/static"
 
   deploy:
-    if: github.ref == 'refs/heads/main'   # ✅ main 브랜치에서만 실행
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
