@@ -20,6 +20,7 @@ jobs:
           path: "."   # 루트 경로 기준으로 index.html 업로드
 
   deploy:
+    if: github.ref == 'refs/heads/main'   # ✅ main 브랜치에서만 실행
     needs: build
     runs-on: ubuntu-latest
     environment:
