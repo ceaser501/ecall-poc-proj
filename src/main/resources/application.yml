@@ -1,5 +1,34 @@
 server:
   port: 8082
+
 spring:
   application:
-    name: ecall-web
+    name: ecall-poc-proj
+
+  # 정적 리소스 설정
+  web:
+    resources:
+      static-locations: classpath:/static/
+      cache:
+        period: 0  # 개발 중에는 캐시 비활성화
+
+  # 개발 편의를 위한 설정
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+  # Thymeleaf 설정 (필요시 사용)
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+# 로깅 설정
+logging:
+  level:
+    com.ecall: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
