@@ -1,12 +1,116 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="utf-8" />
-    <title>E-CALL PoC</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-CALL POC - 응급구조콜 시스템</title>
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-<h1>🚀 E-CALL PoC 샘플 페이지</h1>
-<p>Spring Boot 정적 리소스에서 서빙되는 index.html 입니다.</p>
-<a href="/api/health" target="_blank">/api/health 호출</a>
+    <div class="container">
+        <header>
+            <h1>🚨 E-CALL POC System</h1>
+            <p>응급구조콜 자동화 시스템</p>
+        </header>
+
+        <nav class="menu">
+            <h2>주요 기능</h2>
+            <ul>
+                <li><a href="#speech-recognition">🎤 음성 인식 (김태수)</a></li>
+                <li><a href="#emotion-analysis">😊 감정 분석 (임송은)</a></li>
+                <li><a href="#location-extract">📍 위치 추출 (임송은)</a></li>
+                <li><a href="#text-summary">📝 텍스트 요약 (전선민)</a></li>
+                <li><a href="#project-info">📋 프로젝트 정보</a></li>
+            </ul>
+        </nav>
+
+        <main class="dashboard">
+            <h2>시스템 상태</h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <h3>음성 인식 모듈</h3>
+                    <span class="status-badge active">활성</span>
+                    <p>AI Speech STT 준비</p>
+                </div>
+                <div class="status-card">
+                    <h3>텍스트 요약</h3>
+                    <span class="status-badge active">활성</span>
+                    <p>Azure OpenAI 연동</p>
+                </div>
+                <div class="status-card">
+                    <h3>발화자 분석</h3>
+                    <span class="status-badge active">활성</span>
+                    <p>Speaker Recognition API</p>
+                </div>
+                <div class="status-card">
+                    <h3>위치 서비스</h3>
+                    <span class="status-badge active">활성</span>
+                    <p>Azure Maps/Kakao Maps</p>
+                </div>
+            </div>
+        </main>
+
+        <section class="team-info">
+            <h2>팀원 역할 분담</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>내용</th>
+                        <th>담당자</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="3">0. 공통</td>
+                        <td>프로젝트 주제 선정 및 프로세스 검토</td>
+                        <td>금웅섭, 김태수, 손장원, 전선민, 임송은</td>
+                    </tr>
+                    <tr>
+                        <td>제안서 작성 및 발표</td>
+                        <td>손장원, 전선민, 임송은</td>
+                    </tr>
+                    <tr>
+                        <td>인프라 및 기능 리소스 분석</td>
+                        <td>김태수, 손장원</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">1. 음성 → 텍스트 변환</td>
+                        <td>음성인식 (AI Speech STT)</td>
+                        <td>전선민</td>
+                    </tr>
+                    <tr>
+                        <td>음성 텍스트 변환</td>
+                        <td>전선민</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3">2. 텍스트 요약</td>
+                        <td>텍스트 문장 교정 (Azure OpenAI)</td>
+                        <td>전선민</td>
+                    </tr>
+                    <tr>
+                        <td>발화자 인식 분리</td>
+                        <td>김태수</td>
+                    </tr>
+                    <tr>
+                        <td>발화자 감정분석</td>
+                        <td>임송은</td>
+                    </tr>
+                    <tr>
+                        <td>3. 텍스트 분석</td>
+                        <td>발화자 장소/주소 추출</td>
+                        <td>임송은</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            <p>© 2024 E-CALL POC Project - 응급구조콜 자동화 시스템</p>
+            <p>API Status: <a href="/api/health" target="_blank">Health Check</a></p>
+        </footer>
+    </div>
+
+    <script src="/js/main.js"></script>
 </body>
 </html>
