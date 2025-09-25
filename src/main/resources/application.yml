@@ -5,6 +5,12 @@ spring:
   application:
     name: ecall-poc-proj
 
+  # File upload settings
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
   # 정적 리소스 설정
   web:
     resources:

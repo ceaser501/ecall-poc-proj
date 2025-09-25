@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음성 파일 업로드 - E-CALL POC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .upload-area.dragging {
+            border-color: #764ba2;
+            background: #f0f3ff;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f3ff;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .process-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .process-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .results-title {
+            font-size: 1.8em;
+            color: #333;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            flex: 1;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .transcript {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .transcript-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .speaker-label {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .speaker-1 { background: #E3F2FD; color: #1976D2; }
+        .speaker-2 { background: #F3E5F5; color: #7B1FA2; }
+        .speaker-3 { background: #E8F5E9; color: #388E3C; }
+        .speaker-4 { background: #FFF3E0; color: #F57C00; }
+        .speaker-unknown { background: #F5F5F5; color: #757575; }
+
+        .transcript-text {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .transcript-time {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .supported-formats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f7ff;
+            border-radius: 8px;
+        }
+
+        .format-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .format-tag {
+            padding: 5px 10px;
+            background: white;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ 음성 파일 업로드 & 화자 분리</h1>
+            <p class="subtitle">오디오 파일을 업로드하면 AI가 자동으로 화자를 분리하고 텍스트로 변환합니다</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">클릭하여 파일 선택 또는 여기에 드래그</div>
+                <div class="upload-hint">WAV, MP3, M4A, OGG, FLAC 지원 (최대 100MB)</div>
+            </div>
+            <input type="file" id="fileInput" accept="audio/*">
+
+            <div class="file-info" id="fileInfo">
+                <strong>선택된 파일:</strong> <span id="fileName"></span><br>
+                <strong>크기:</strong> <span id="fileSize"></span>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <button class="process-btn" id="processBtn" disabled>음성 분석 시작</button>
+
+            <div class="supported-formats">
+                <strong>지원 형식:</strong>
+                <div class="format-list">
+                    <span class="format-tag">WAV (추천)</span>
+                    <span class="format-tag">MP3</span>
+                    <span class="format-tag">M4A</span>
+                    <span class="format-tag">OGG</span>
+                    <span class="format-tag">FLAC</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>음성을 분석중입니다... 잠시만 기다려주세요</p>
+            <p style="color: #999; margin-top: 10px; font-size: 0.9em;">화자 분리 및 텍스트 변환 처리중</p>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 class="results-title">분석 결과</h2>
+                <button class="process-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="resetUpload()">새 파일 업로드</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="speakerCount">0</div>
+                    <div class="stat-label">식별된 화자 수</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="segmentCount">0</div>
+                    <div class="stat-label">전체 발화 수</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="duration">0:00</div>
+                    <div class="stat-label">전체 길이</div>
+                </div>
+            </div>
+
+            <div class="transcript" id="transcript"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        // DOM elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const processBtn = document.getElementById('processBtn');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const transcript = document.getElementById('transcript');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Check if it's an audio file
+            if (!file.type.startsWith('audio/')) {
+                showError('오디오 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            // Check file size (100MB limit)
+            if (file.size > 100 * 1024 * 1024) {
+                showError('파일 크기는 100MB를 초과할 수 없습니다.');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('show');
+            processBtn.disabled = false;
+            hideError();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        // Process button click
+        processBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            processBtn.disabled = true;
+            loading.classList.add('show');
+            resultsSection.classList.remove('show');
+            hideError();
+
+            try {
+                const response = await fetch('/api/voice/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || '처리 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('서버 연결 오류가 발생했습니다.');
+            } finally {
+                loading.classList.remove('show');
+                processBtn.disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            resultsSection.classList.add('show');
+
+            // Update stats
+            document.getElementById('speakerCount').textContent = data.speakerCount || 0;
+            document.getElementById('segmentCount').textContent = data.results.length;
+
+            // Calculate total duration
+            let maxTime = 0;
+            data.results.forEach(result => {
+                const endTime = (result.offset + result.duration) / 10000000; // Convert to seconds
+                if (endTime > maxTime) maxTime = endTime;
+            });
+            document.getElementById('duration').textContent = formatDuration(maxTime);
+
+            // Display transcript
+            transcript.innerHTML = '';
+            data.results.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'transcript-item';
+
+                const speakerClass = getSpeakerClass(result.speakerId);
+                const time = formatTime(result.offset / 10000000); // Convert to seconds
+
+                item.innerHTML = `
+                    <span class="speaker-label ${speakerClass}">화자 ${result.speakerId}</span>
+                    <div class="transcript-text">${result.text}</div>
+                    <div class="transcript-time">${time}</div>
+                `;
+
+                transcript.appendChild(item);
+            });
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getSpeakerClass(speakerId) {
+            if (!speakerId || speakerId === 'Unknown') return 'speaker-unknown';
+            const speakerNum = parseInt(speakerId.replace(/\D/g, ''));
+            if (speakerNum <= 4) return `speaker-${speakerNum}`;
+            return 'speaker-unknown';
+        }
+
+        function formatDuration(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 100);
+            return `${minutes}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        function resetUpload() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            processBtn.disabled = true;
+            resultsSection.classList.remove('show');
+            hideError();
+        }
+    </script>
+</body>
+</html>
