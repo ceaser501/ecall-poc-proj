@@ -1,4 +1,4 @@
-package com.ecall.step1.s1speechrecognition.config;
+package com.ecall.common.config;
 
 import com.ecall.step1.s1speechrecognition.controller.VoiceStreamController;
 import lombok.RequiredArgsConstructor;
