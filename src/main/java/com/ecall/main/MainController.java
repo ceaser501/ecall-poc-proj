@@ -1,8 +1,9 @@
 package com.ecall.main;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Map;
 
@@ -11,10 +12,17 @@ import java.util.Map;
  * E-CALL POC 프로젝트
  */
 @Slf4j
-@RestController
+@Controller
 public class MainController {
 
+    @GetMapping("/")
+    public String index() {
+        log.info("메인 페이지 접속");
+        return "redirect:/index.html";
+    }
+
     @GetMapping("/api/health")
+    @ResponseBody
     public Map<String, Object> health() {
         log.info("Health check API 호출");
 
@@ -32,6 +40,7 @@ public class MainController {
     }
 
     @GetMapping("/api/modules")
+    @ResponseBody
     public Map<String, Object> getModuleStatus() {
         return Map.of(
                 "speech", Map.of("path", "/api/speech", "담당자", "김태수", "status", "ready"),
