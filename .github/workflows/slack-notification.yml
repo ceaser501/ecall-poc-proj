@@ -1,0 +1,93 @@
+name: Slack Notification on Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - develop
+
+jobs:
+  slack-notification:
+    runs-on: ubuntu-latest
+    # PR이 merge된 경우에만 실행
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get PR and merge info
+        id: pr_info
+        run: |
+          echo "pr_title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "merged_by=${{ github.event.pull_request.merged_by.login }}" >> $GITHUB_OUTPUT
+          echo "author=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+          echo "source_branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          echo "target_branch=${{ github.event.pull_request.base.ref }}" >> $GITHUB_OUTPUT
+          echo "commits=${{ github.event.pull_request.commits }}" >> $GITHUB_OUTPUT
+          echo "additions=${{ github.event.pull_request.additions }}" >> $GITHUB_OUTPUT
+          echo "deletions=${{ github.event.pull_request.deletions }}" >> $GITHUB_OUTPUT
+          echo "changed_files=${{ github.event.pull_request.changed_files }}" >> $GITHUB_OUTPUT
+
+      # PR Merge 알림
+      - name: Notify Slack on PR Merge
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              attachments: [{
+                color: '#6f42c1',
+                title: '✅ PR #${{ steps.pr_info.outputs.pr_number }} 병합 완료',
+                fields: [
+                  {
+                    title: 'PR 제목',
+                    value: `${{ steps.pr_info.outputs.pr_title }}`,
+                    short: false
+                  },
+                  {
+                    title: '작성자',
+                    value: `${{ steps.pr_info.outputs.author }}`,
+                    short: true
+                  },
+                  {
+                    title: '병합자',
+                    value: `${{ steps.pr_info.outputs.merged_by }}`,
+                    short: true
+                  },
+                  {
+                    title: '브랜치',
+                    value: `${{ steps.pr_info.outputs.source_branch }} → ${{ steps.pr_info.outputs.target_branch }}`,
+                    short: false
+                  },
+                  {
+                    title: '커밋 수',
+                    value: `${{ steps.pr_info.outputs.commits }}`,
+                    short: true
+                  },
+                  {
+                    title: '변경사항',
+                    value: `파일 ${{ steps.pr_info.outputs.changed_files }}개 (+${{ steps.pr_info.outputs.additions }} / -${{ steps.pr_info.outputs.deletions }})`,
+                    short: true
+                  }
+                ],
+                actions: [
+                  {
+                    type: 'button',
+                    text: 'PR 보기',
+                    url: `${{ github.event.pull_request.html_url }}`
+                  },
+                  {
+                    type: 'button',
+                    text: '커밋 목록',
+                    url: `${{ github.event.pull_request.html_url }}/commits`
+                  }
+                ],
+                footer: 'GitHub Actions',
+                footer_icon: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+                ts: Math.floor(Date.now() / 1000)
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
