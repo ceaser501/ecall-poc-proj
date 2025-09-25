@@ -31,6 +31,13 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
 
+# Azure Speech Service 설정
+azure:
+  speech:
+    subscription-key: ${AZURE_SPEECH_SUBSCRIPTION_KEY:YOUR_AZURE_SPEECH_KEY}
+    region: ${AZURE_SPEECH_REGION:koreacentral}
+    language: ${AZURE_SPEECH_LANGUAGE:ko-KR}
+
 # 로깅 설정
 logging:
   level:
