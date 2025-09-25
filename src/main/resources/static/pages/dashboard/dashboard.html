@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>E-CALL POC 개발 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .title-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .emergency-icon {
+            font-size: 1.2em;
+            color: #dc3545;
+            animation: pulse 2s infinite;
+            display: inline-block;
+            font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .status-badges {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .badge.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .badge.dev {
+            background: #FF9800;
+            color: white;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .feature-category {
+            margin-bottom: 30px;
+        }
+
+        .category-title {
+            font-size: 1.3em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 40px;
+        }
+
+        .feature-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .feature-info {
+            flex: 1;
+        }
+
+        .feature-name {
+            color: #333;
+            font-size: 1.05em;
+            margin-bottom: 5px;
+        }
+
+        .feature-desc {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .feature-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .feature-link {
+            padding: 6px 12px;
+            background: #f0f3ff;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .feature-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .feature-link.disabled {
+            background: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .team-section {
+            margin-top: 30px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .team-member {
+            background: linear-gradient(135deg, #f5f7ff 0%, #fff 100%);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e8eaff;
+        }
+
+        .member-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .member-role {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .member-tasks {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .member-tasks li {
+            margin-left: 20px;
+            margin-bottom: 5px;
+        }
+
+        .progress-section {
+            margin-top: 30px;
+        }
+
+        .progress-bar {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 25%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 1s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quick-link {
+            flex: 1;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .quick-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tech-tag {
+            padding: 5px 12px;
+            background: #e8f5e9;
+            color: #388e3c;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="emergency-icon">&#128680;</span>
+                <span class="title-text">E-CALL POC 개발 대시보드</span>
+            </h1>
+            <p class="subtitle">긴급 전화 자동 분석 시스템 프로토타입</p>
+            <div class="status-badges">
+                <span class="badge active">시스템 정상</span>
+                <span class="badge dev">개발 진행중</span>
+                <span class="badge" style="background: #2196F3; color: white;">POC v0.1</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- 주요 기능 섹션 -->
+            <div class="section">
+                <h2 class="section-title">🎯 주요 기능</h2>
+
+                <!-- 1. 음성 인식 및 화자 분리 -->
+                <div class="feature-category">
+                    <div class="category-title">
+                        <span class="category-number">1</span>
+                        음성 인식 및 화자 분리
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">1-1. 실시간 음성 인식 (STT)</div>
+                                <div class="feature-desc">마이크 입력을 실시간으로 텍스트 변환</div>
+                            </div>
+                            <div class="feature-links">
+                                <a href="/pages/voice/voice-test.html" class="feature-link">실시간</a>
+                                <a href="/pages/voice/voice-upload.html" class="feature-link">파일업로드</a>
+                                <a href="/pages/voice/voice-combined.html" class="feature-link">통합테스트</a>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">1-2. 화자 분리 (Diarization)</div>
+                                <div class="feature-desc">여러 화자 구분 및 식별</div>
+                            </div>
+                            <div class="feature-links">
+                                <a href="/pages/voice/voice-combined.html" class="feature-link">테스트</a>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">1-3. 음성 품질 분석</div>
+                                <div class="feature-desc">노이즈 제거 및 음질 개선</div>
+                            </div>
+                            <div class="feature-links">
+                                <span class="feature-link disabled">개발예정</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 2. 감정 분석 및 긴급도 판단 -->
+                <div class="feature-category">
+                    <div class="category-title">
+                        <span class="category-number">2</span>
+                        감정 분석 및 긴급도 판단
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">2-1. 발화자 감정 분석</div>
+                                <div class="feature-desc">공포, 불안, 긴장 등 감정 상태 파악</div>
+                            </div>
+                            <div class="feature-links">
+                                <a href="/emotion/test.html" class="feature-link disabled">개발중</a>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">2-2. 긴급도 레벨 판단</div>
+                                <div class="feature-desc">상황 심각도 자동 분류 (1-5단계)</div>
+                            </div>
+                            <div class="feature-links">
+                                <span class="feature-link disabled">개발예정</span>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">2-3. 음성 톤 분석</div>
+                                <div class="feature-desc">음성 높낮이, 속도 분석</div>
+                            </div>
+                            <div class="feature-links">
+                                <span class="feature-link disabled">개발예정</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 3. 위치 정보 추출 -->
+                <div class="feature-category">
+                    <div class="category-title">
+                        <span class="category-number">3</span>
+                        위치 정보 추출 및 매핑
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">3-1. 주소/장소 자동 인식</div>
+                                <div class="feature-desc">대화 내용에서 위치 정보 추출</div>
+                            </div>
+                            <div class="feature-links">
+                                <a href="/location/extract.html" class="feature-link disabled">개발중</a>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">3-2. 지도 시각화</div>
+                                <div class="feature-desc">추출된 위치를 지도에 표시</div>
+                            </div>
+                            <div class="feature-links">
+                                <span class="feature-link disabled">개발예정</span>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">3-3. 경로 분석</div>
+                                <div class="feature-desc">최적 접근 경로 계산</div>
+                            </div>
+                            <div class="feature-links">
+                                <span class="feature-link disabled">개발예정</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 4. 텍스트 처리 및 요약 -->
+                <div class="feature-category">
+                    <div class="category-title">
+                        <span class="category-number">4</span>
+                        텍스트 처리 및 요약
+                    </div>
+                    <ul class="feature-list">
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">4-1. 대화 내용 요약</div>
+                                <div class="feature-desc">핵심 내용 자동 요약 생성</div>
+                            </div>
+                            <div class="feature-links">
+                                <a href="/text/summary.html" class="feature-link disabled">개발중</a>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">4-2. 핵심 정보 추출</div>
+                                <div class="feature-desc">인명, 상황, 요구사항 등 추출</div>
+                            </div>
+                            <div class="feature-links">
+                                <span class="feature-link disabled">개발예정</span>
+                            </div>
+                        </li>
+                        <li class="feature-item">
+                            <div class="feature-info">
+                                <div class="feature-name">4-3. 보고서 자동 생성</div>
+                                <div class="feature-desc">상황 보고서 자동 작성</div>
+                            </div>
+                            <div class="feature-links">
+                                <span class="feature-link disabled">개발예정</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 사이드바 섹션 -->
+            <div>
+                <!-- 진행 상황 -->
+                <div class="section">
+                    <h2 class="section-title">📊 진행 상황</h2>
+                    <div class="progress-section">
+                        <div class="progress-bar">
+                            <div class="progress-fill">25%</div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">4</div>
+                                <div class="stat-label">전체 모듈</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">1</div>
+                                <div class="stat-label">완료</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">진행중</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 빠른 접근 -->
+                <div class="section" style="margin-top: 30px;">
+                    <h2 class="section-title">⚡ 빠른 접근</h2>
+                    <div class="quick-links">
+                        <a href="/pages/voice/voice-combined.html" class="quick-link">
+                            🎙️ 음성 인식 테스트
+                        </a>
+                        <a href="/api/health" class="quick-link">
+                            ❤️ API 상태 확인
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 기술 스택 -->
+                <div class="section" style="margin-top: 30px;">
+                    <h2 class="section-title">🛠️ 기술 스택</h2>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Spring Boot</span>
+                        <span class="tech-tag">Azure Speech SDK</span>
+                        <span class="tech-tag">WebSocket</span>
+                        <span class="tech-tag">Azure OpenAI</span>
+                        <span class="tech-tag">Docker</span>
+                        <span class="tech-tag">GitHub Actions</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 팀원 역할 분담 -->
+        <div class="section team-section">
+            <h2 class="section-title">👥 팀원 역할 분담</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-name">김태수</div>
+                    <div class="member-role">음성 처리 담당</div>
+                    <ul class="member-tasks">
+                        <li>실시간 음성 인식 (STT) 구현 ✅</li>
+                        <li>화자 분리 (Diarization) 기능 ✅</li>
+                        <li>WebSocket 스트리밍 처리 ✅</li>
+                        <li>Azure Speech SDK 통합 ✅</li>
+                    </ul>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-name">임송은</div>
+                    <div class="member-role">감정 분석 & 위치 추출 담당</div>
+                    <ul class="member-tasks">
+                        <li>발화자 감정 분석 모듈 🔄</li>
+                        <li>긴급도 레벨 판단 시스템</li>
+                        <li>위치 정보 자동 추출 🔄</li>
+                        <li>지도 시각화 구현</li>
+                    </ul>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-name">전선민</div>
+                    <div class="member-role">텍스트 처리 담당</div>
+                    <ul class="member-tasks">
+                        <li>대화 내용 요약 기능 🔄</li>
+                        <li>핵심 정보 추출 알고리즘</li>
+                        <li>보고서 자동 생성</li>
+                        <li>Azure OpenAI API 연동</li>
+                    </ul>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-name">금웅섭</div>
+                    <div class="member-role">텍스트 분석 담당</div>
+                    <ul class="member-tasks">
+                        <li>상황 분석 및 위험/응급 레벨 설정</li>
+                        <li>기존 데이터 수집 (RAG)</li>
+                        <li>대응 매뉴얼 추천</li>
+                        <li>문서화 및 테스트</li>
+                    </ul>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-name">손장원</div>
+                    <div class="member-role">데이터 저장 & 시각화 담당</div>
+                    <ul class="member-tasks">
+                        <li>텍스트 데이터 저장</li>
+                        <li>음성파일 Blob 저장</li>
+                        <li>대시보드 시각화</li>
+                        <li>리소스 사용 현황판</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="margin-top: 20px; text-align: center; color: #999; font-size: 0.9em;">
+                ✅ 완료 | 🔄 진행중 | 대기중
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 API 상태 확인
+        window.onload = async () => {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                console.log('System Status:', data);
+
+                // 진행률 애니메이션
+                setTimeout(() => {
+                    const progressFill = document.querySelector('.progress-fill');
+                    progressFill.style.width = '25%';
+                }, 500);
+            } catch (error) {
+                console.error('Failed to check system status:', error);
+            }
+        };
+
+        // 현재 시간 표시
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('ko-KR');
+            // 필요시 시간 표시 추가
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
