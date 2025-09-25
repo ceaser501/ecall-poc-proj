@@ -1,0 +1,303 @@
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* Navigation Menu */
+.menu {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.menu h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.menu ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.menu li a {
+    display: block;
+    padding: 12px 20px;
+    background: white;
+    color: #667eea;
+    text-decoration: none;
+    border-radius: 8px;
+    border: 2px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.menu li a:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Dashboard */
+.dashboard {
+    margin-bottom: 30px;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.status-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-5px);
+}
+
+.status-card h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.status-badge.active {
+    background: #10b981;
+    color: white;
+}
+
+/* Team Info Table */
+.team-info {
+    margin-top: 40px;
+}
+
+.team-info h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th {
+    background: #667eea;
+    color: white;
+    padding: 15px;
+    text-align: left;
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+/* Forms & Inputs */
+.upload-section, .input-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.upload-box {
+    margin: 20px 0;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.upload-label {
+    display: inline-block;
+    padding: 12px 24px;
+    background: white;
+    border: 2px dashed #667eea;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-label:hover {
+    background: #667eea;
+    color: white;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    resize: vertical;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+}
+
+.btn-back {
+    display: inline-block;
+    color: white;
+    text-decoration: none;
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 6px;
+}
+
+.btn-back:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Results */
+.result-section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.result-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    min-height: 100px;
+}
+
+.placeholder {
+    color: #9ca3af;
+    text-align: center;
+}
+
+.error {
+    color: #ef4444;
+}
+
+.summary-content {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.summary-text {
+    background: #e5e7eb;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+}
+
+/* Footer */
+footer {
+    margin-top: 50px;
+    padding: 20px;
+    text-align: center;
+    border-top: 2px solid #e5e7eb;
+    color: #6b7280;
+}
+
+footer a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .menu ul {
+        flex-direction: column;
+    }
+
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
+}

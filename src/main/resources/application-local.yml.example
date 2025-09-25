@@ -1,0 +1,20 @@
+# Azure Speech Services Configuration
+azure:
+  speech:
+    subscription-key: ${AZURE_SPEECH_SUBSCRIPTION_KEY:your_key_here}
+    region: koreacentral
+    language: ko-KR
+
+# Azure OpenAI Configuration
+azure:
+  openai:
+    key: ${AZURE_OPENAI_KEY:your_key_here}
+    endpoint: ${AZURE_OPENAI_ENDPOINT:your_endpoint_here}
+
+# Kakao Maps API
+kakao:
+  maps:
+    api-key: ${KAKAO_MAPS_API_KEY:your_key_here}
+
+# Note: Copy this file to application-local.yml and replace with actual values
+# Never commit application-local.yml to version control!

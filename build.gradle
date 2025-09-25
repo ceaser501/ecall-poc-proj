@@ -20,10 +20,17 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     // Lombok for @Slf4j
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // Azure Cognitive Services Speech SDK
+    implementation group: 'com.microsoft.cognitiveservices.speech', name: 'client-sdk', version: '1.38.0', ext: 'jar'
+
+    // JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음성 인식 테스트 - E-CALL POC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .status-bar {
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.connected { background: #4CAF50; }
+        .status-dot.disconnected { background: #f44336; }
+        .status-dot.recognizing {
+            background: #2196F3;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-stop {
+            background: #f44336;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .transcript-container {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transcript-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-btn {
+            padding: 5px 15px;
+            background: #9E9E9E;
+            color: white;
+            font-size: 14px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .speaker-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .speaker-1 { background: #E3F2FD; color: #1976D2; }
+        .speaker-2 { background: #F3E5F5; color: #7B1FA2; }
+        .speaker-3 { background: #E8F5E9; color: #388E3C; }
+        .speaker-unknown { background: #FFF3E0; color: #F57C00; }
+
+        .message-text {
+            display: inline;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .interim {
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .info-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: #E8EAF6;
+            border-radius: 10px;
+        }
+
+        .info-panel h3 {
+            color: #3F51B5;
+            margin-bottom: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ 음성 인식 (Diarization)</h1>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">연결 안됨</span>
+            </div>
+            <span id="sessionId">-</span>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="controls">
+            <button class="btn-start" id="startBtn" onclick="startRecognition()">
+                음성 인식 시작
+            </button>
+            <button class="btn-stop" id="stopBtn" onclick="stopRecognition()" disabled>
+                정지
+            </button>
+        </div>
+
+        <div class="transcript-container">
+            <div class="transcript-header">
+                <span>인식 결과</span>
+                <button class="clear-btn" onclick="clearTranscript()">초기화</button>
+            </div>
+            <div id="transcript"></div>
+        </div>
+
+        <div class="info-panel">
+            <h3>연결 정보</h3>
+            <div class="info-item">
+                <span class="info-label">WebSocket URL:</span>
+                <span class="info-value" id="wsUrl">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">상태:</span>
+                <span class="info-value" id="connectionStatus">대기중</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">인식된 화자 수:</span>
+                <span class="info-value" id="speakerCount">0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">총 발화 수:</span>
+                <span class="info-value" id="messageCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isRecognizing = false;
+        const speakers = new Set();
+        let messageCount = 0;
+        let currentInterimDiv = null;
+
+        // WebSocket URL 설정
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/voice`;
+        document.getElementById('wsUrl').textContent = wsUrl;
+
+        function startRecognition() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                return;
+            }
+
+            console.log('Connecting to WebSocket:', wsUrl);
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateStatus('connected', '연결됨');
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                isRecognizing = true;
+
+                // Send start command
+                ws.send(JSON.stringify({ action: 'start' }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Received:', data);
+                handleMessage(data);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                showError('WebSocket 연결 오류가 발생했습니다.');
+                updateStatus('disconnected', '오류');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+                updateStatus('disconnected', '연결 끊김');
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                isRecognizing = false;
+            };
+        }
+
+        function stopRecognition() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'stop' }));
+                ws.close();
+            }
+            isRecognizing = false;
+            updateStatus('disconnected', '정지됨');
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        }
+
+        function handleMessage(data) {
+            if (data.type === 'connected') {
+                document.getElementById('sessionId').textContent = data.sessionId;
+                document.getElementById('connectionStatus').textContent = '연결됨';
+            } else if (data.type === 'transcribed' || data.type === 'transcribing') {
+                addTranscript(data);
+                if (isRecognizing) {
+                    updateStatus('recognizing', '인식중...');
+                }
+            } else if (data.type === 'status') {
+                console.log('Status:', data.message);
+            } else if (data.type === 'error') {
+                showError(data.error);
+            }
+        }
+
+        function addTranscript(data) {
+            const transcriptDiv = document.getElementById('transcript');
+
+            // Handle interim results
+            if (data.interim || data.type === 'transcribing') {
+                if (!currentInterimDiv) {
+                    currentInterimDiv = createMessageDiv(data, true);
+                    transcriptDiv.appendChild(currentInterimDiv);
+                } else {
+                    // Update existing interim div
+                    const textSpan = currentInterimDiv.querySelector('.message-text');
+                    textSpan.textContent = data.text;
+                }
+            } else {
+                // Final result - replace interim if exists
+                if (currentInterimDiv) {
+                    currentInterimDiv.remove();
+                    currentInterimDiv = null;
+                }
+
+                const messageDiv = createMessageDiv(data, false);
+                transcriptDiv.appendChild(messageDiv);
+
+                // Update statistics
+                speakers.add(data.speakerId);
+                messageCount++;
+                document.getElementById('speakerCount').textContent = speakers.size;
+                document.getElementById('messageCount').textContent = messageCount;
+            }
+
+            // Auto-scroll to bottom
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+        }
+
+        function createMessageDiv(data, isInterim) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isInterim ? 'message interim' : 'message';
+
+            const speakerTag = document.createElement('span');
+            speakerTag.className = `speaker-tag ${getSpeakerClass(data.speakerId)}`;
+            speakerTag.textContent = `화자 ${data.speakerId}`;
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'message-text';
+            textSpan.textContent = data.text;
+
+            const timestampDiv = document.createElement('div');
+            timestampDiv.className = 'timestamp';
+            const time = new Date(data.timestamp).toLocaleTimeString('ko-KR');
+            timestampDiv.textContent = time;
+
+            messageDiv.appendChild(speakerTag);
+            messageDiv.appendChild(textSpan);
+            if (!isInterim) {
+                messageDiv.appendChild(timestampDiv);
+            }
+
+            return messageDiv;
+        }
+
+        function getSpeakerClass(speakerId) {
+            if (!speakerId || speakerId === 'Unknown') return 'speaker-unknown';
+            const speakerNum = parseInt(speakerId.replace(/\D/g, ''));
+            if (speakerNum === 1) return 'speaker-1';
+            if (speakerNum === 2) return 'speaker-2';
+            if (speakerNum === 3) return 'speaker-3';
+            return 'speaker-unknown';
+        }
+
+        function updateStatus(status, text) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            statusDot.className = `status-dot ${status}`;
+            statusText.textContent = text;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function clearTranscript() {
+            document.getElementById('transcript').innerHTML = '';
+            speakers.clear();
+            messageCount = 0;
+            document.getElementById('speakerCount').textContent = '0';
+            document.getElementById('messageCount').textContent = '0';
+            currentInterimDiv = null;
+        }
+
+        // Check API status on load
+        window.onload = () => {
+            fetch('/api/voice/status')
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Voice API Status:', data);
+                })
+                .catch(err => {
+                    console.error('Failed to check API status:', err);
+                });
+        };
+    </script>
+</body>
+</html>

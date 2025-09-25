@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음성 인식 통합 테스트 - E-CALL POC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            font-size: 1.2em;
+        }
+
+        .status-bar {
+            background: #f0f0f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.connected { background: #4CAF50; }
+        .status-dot.disconnected { background: #f44336; }
+        .status-dot.recognizing {
+            background: #2196F3;
+            animation: pulse 1s infinite;
+        }
+        .status-dot.processing { background: #FF9800; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upload-area {
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .upload-area.dragging {
+            border-color: #764ba2;
+            background: #f0f3ff;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .upload-text {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            margin: 15px 0;
+            padding: 12px;
+            background: #f0f3ff;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .transcript-container {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .transcript-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-btn {
+            padding: 5px 15px;
+            background: #9E9E9E;
+            color: white;
+            font-size: 14px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .speaker-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .speaker-1 { background: #E3F2FD; color: #1976D2; }
+        .speaker-2 { background: #F3E5F5; color: #7B1FA2; }
+        .speaker-3 { background: #E8F5E9; color: #388E3C; }
+        .speaker-unknown { background: #FFF3E0; color: #F57C00; }
+
+        .message-text {
+            display: inline;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .interim {
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f0f0f0;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: #666;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ 음성 인식 통합 테스트</h1>
+            <p class="subtitle">실시간 마이크 입력과 파일 업로드를 모두 테스트할 수 있습니다</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- 실시간 음성 인식 섹션 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">🎤</span>
+                    실시간 음성 인식
+                </h2>
+
+                <div class="info-box">
+                    <h4>WebSocket 실시간 스트리밍</h4>
+                    <p>마이크 입력을 실시간으로 텍스트로 변환합니다</p>
+                </div>
+
+                <div class="status-bar">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="realtimeStatusDot"></span>
+                        <span id="realtimeStatusText">연결 안됨</span>
+                    </div>
+                    <span id="sessionId">-</span>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-primary" id="startRealtimeBtn" onclick="startRealtime()">
+                        마이크 시작
+                    </button>
+                    <button class="btn-danger" id="stopRealtimeBtn" onclick="stopRealtime()" disabled>
+                        정지
+                    </button>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="realtimeSpeakers">0</div>
+                        <div class="stat-label">화자 수</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="realtimeMessages">0</div>
+                        <div class="stat-label">발화 수</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="realtimeDuration">0:00</div>
+                        <div class="stat-label">경과 시간</div>
+                    </div>
+                </div>
+
+                <div class="transcript-container">
+                    <div class="transcript-header">
+                        <span>실시간 인식 결과</span>
+                        <button class="clear-btn" onclick="clearRealtimeTranscript()">초기화</button>
+                    </div>
+                    <div id="realtimeTranscript"></div>
+                </div>
+            </div>
+
+            <!-- 파일 업로드 섹션 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="section-icon">📁</span>
+                    파일 업로드 분석
+                </h2>
+
+                <div class="info-box">
+                    <h4>최적화된 파일 처리</h4>
+                    <p>오디오 파일을 빠르게 분석하여 화자를 분리합니다</p>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">클릭하여 파일 선택 또는 드래그</div>
+                    <div class="upload-hint">WAV, MP3, M4A, OGG, FLAC (최대 100MB)</div>
+                </div>
+                <input type="file" id="fileInput" accept="audio/*">
+
+                <div class="file-info" id="fileInfo">
+                    <strong>파일:</strong> <span id="fileName"></span> |
+                    <strong>크기:</strong> <span id="fileSize"></span>
+                </div>
+
+                <button class="btn-primary" id="processBtn" disabled onclick="processFile()">
+                    파일 분석 시작
+                </button>
+
+                <div class="loading" id="uploadLoading">
+                    <div class="spinner"></div>
+                    <p>파일을 분석중입니다...</p>
+                    <p style="color: #999; margin-top: 10px; font-size: 0.9em;">
+                        최적화된 처리로 빠르게 진행중
+                    </p>
+                </div>
+
+                <div class="stats" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="fileSpeakers">0</div>
+                        <div class="stat-label">화자 수</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="fileSegments">0</div>
+                        <div class="stat-label">세그먼트</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="fileProcessTime">-</div>
+                        <div class="stat-label">처리 시간</div>
+                    </div>
+                </div>
+
+                <div class="transcript-container">
+                    <div class="transcript-header">
+                        <span>파일 분석 결과</span>
+                        <button class="clear-btn" onclick="clearFileTranscript()">초기화</button>
+                    </div>
+                    <div id="fileTranscript"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <script>
+        // WebSocket for realtime
+        let ws = null;
+        let isRecognizing = false;
+        const realtimeSpeakers = new Set();
+        let realtimeMessageCount = 0;
+        let realtimeStartTime = null;
+        let realtimeTimer = null;
+        let currentInterimDiv = null;
+
+        // File upload
+        let selectedFile = null;
+        let uploadStartTime = null;
+
+        // WebSocket URL
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/voice`;
+
+        // ========== REALTIME FUNCTIONS ==========
+        function startRealtime() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
+
+            console.log('Connecting to WebSocket:', wsUrl);
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateRealtimeStatus('connected', '연결됨');
+                document.getElementById('startRealtimeBtn').disabled = true;
+                document.getElementById('stopRealtimeBtn').disabled = false;
+                isRecognizing = true;
+                realtimeStartTime = new Date();
+                startRealtimeTimer();
+
+                ws.send(JSON.stringify({ action: 'start' }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleRealtimeMessage(data);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                showError('실시간 연결 오류가 발생했습니다.');
+                updateRealtimeStatus('disconnected', '오류');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+                updateRealtimeStatus('disconnected', '연결 끊김');
+                document.getElementById('startRealtimeBtn').disabled = false;
+                document.getElementById('stopRealtimeBtn').disabled = true;
+                isRecognizing = false;
+                stopRealtimeTimer();
+            };
+        }
+
+        function stopRealtime() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'stop' }));
+                ws.close();
+            }
+            isRecognizing = false;
+            updateRealtimeStatus('disconnected', '정지됨');
+            document.getElementById('startRealtimeBtn').disabled = false;
+            document.getElementById('stopRealtimeBtn').disabled = true;
+            stopRealtimeTimer();
+        }
+
+        function handleRealtimeMessage(data) {
+            if (data.type === 'connected') {
+                document.getElementById('sessionId').textContent = data.sessionId;
+            } else if (data.type === 'recognized' || data.type === 'recognizing') {
+                addRealtimeTranscript(data);
+                if (isRecognizing) {
+                    updateRealtimeStatus('recognizing', '인식중...');
+                }
+            } else if (data.type === 'status') {
+                console.log('Status:', data.message);
+            } else if (data.type === 'error') {
+                showError(data.error);
+            }
+        }
+
+        function addRealtimeTranscript(data) {
+            const transcriptDiv = document.getElementById('realtimeTranscript');
+
+            if (data.interim || data.type === 'recognizing') {
+                if (!currentInterimDiv) {
+                    currentInterimDiv = createMessageDiv(data, true);
+                    transcriptDiv.appendChild(currentInterimDiv);
+                } else {
+                    const textSpan = currentInterimDiv.querySelector('.message-text');
+                    textSpan.textContent = data.text;
+                }
+            } else {
+                if (currentInterimDiv) {
+                    currentInterimDiv.remove();
+                    currentInterimDiv = null;
+                }
+
+                const messageDiv = createMessageDiv(data, false);
+                transcriptDiv.appendChild(messageDiv);
+
+                realtimeSpeakers.add(data.speakerId);
+                realtimeMessageCount++;
+                document.getElementById('realtimeSpeakers').textContent = realtimeSpeakers.size;
+                document.getElementById('realtimeMessages').textContent = realtimeMessageCount;
+            }
+
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+        }
+
+        function updateRealtimeStatus(status, text) {
+            const statusDot = document.getElementById('realtimeStatusDot');
+            const statusText = document.getElementById('realtimeStatusText');
+            statusDot.className = `status-dot ${status}`;
+            statusText.textContent = text;
+        }
+
+        function startRealtimeTimer() {
+            realtimeTimer = setInterval(() => {
+                if (realtimeStartTime) {
+                    const elapsed = Math.floor((new Date() - realtimeStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    document.getElementById('realtimeDuration').textContent =
+                        `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function stopRealtimeTimer() {
+            if (realtimeTimer) {
+                clearInterval(realtimeTimer);
+                realtimeTimer = null;
+            }
+        }
+
+        function clearRealtimeTranscript() {
+            document.getElementById('realtimeTranscript').innerHTML = '';
+            realtimeSpeakers.clear();
+            realtimeMessageCount = 0;
+            document.getElementById('realtimeSpeakers').textContent = '0';
+            document.getElementById('realtimeMessages').textContent = '0';
+            document.getElementById('realtimeDuration').textContent = '0:00';
+            currentInterimDiv = null;
+        }
+
+        // ========== FILE UPLOAD FUNCTIONS ==========
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const processBtn = document.getElementById('processBtn');
+        const uploadLoading = document.getElementById('uploadLoading');
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleFile(files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('audio/')) {
+                showError('오디오 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            if (file.size > 100 * 1024 * 1024) {
+                showError('파일 크기는 100MB를 초과할 수 없습니다.');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('show');
+            processBtn.disabled = false;
+            hideError();
+        }
+
+        async function processFile() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            processBtn.disabled = true;
+            uploadLoading.classList.add('show');
+            hideError();
+            uploadStartTime = new Date();
+
+            try {
+                const response = await fetch('/api/voice/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                const processingTime = ((new Date() - uploadStartTime) / 1000).toFixed(1);
+
+                if (data.success) {
+                    displayFileResults(data, processingTime);
+                } else {
+                    showError(data.error || '처리 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('서버 연결 오류가 발생했습니다.');
+            } finally {
+                uploadLoading.classList.remove('show');
+                processBtn.disabled = false;
+            }
+        }
+
+        function displayFileResults(data, processingTime) {
+            document.getElementById('fileSpeakers').textContent = data.speakerCount || 0;
+            document.getElementById('fileSegments').textContent = data.results.length;
+            document.getElementById('fileProcessTime').textContent = `${processingTime}초`;
+
+            const transcript = document.getElementById('fileTranscript');
+            transcript.innerHTML = '';
+
+            data.results.forEach(result => {
+                const messageDiv = createMessageDiv(result, false);
+                transcript.appendChild(messageDiv);
+            });
+        }
+
+        function clearFileTranscript() {
+            document.getElementById('fileTranscript').innerHTML = '';
+            document.getElementById('fileSpeakers').textContent = '0';
+            document.getElementById('fileSegments').textContent = '0';
+            document.getElementById('fileProcessTime').textContent = '-';
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            processBtn.disabled = true;
+        }
+
+        // ========== COMMON FUNCTIONS ==========
+        function createMessageDiv(data, isInterim) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isInterim ? 'message interim' : 'message';
+
+            const speakerTag = document.createElement('span');
+            speakerTag.className = `speaker-tag ${getSpeakerClass(data.speakerId)}`;
+            speakerTag.textContent = `화자 ${data.speakerId}`;
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'message-text';
+            textSpan.textContent = data.text;
+
+            messageDiv.appendChild(speakerTag);
+            messageDiv.appendChild(textSpan);
+
+            if (!isInterim && data.timestamp) {
+                const timestampDiv = document.createElement('div');
+                timestampDiv.className = 'timestamp';
+                const time = new Date(data.timestamp).toLocaleTimeString('ko-KR');
+                timestampDiv.textContent = time;
+                messageDiv.appendChild(timestampDiv);
+            }
+
+            return messageDiv;
+        }
+
+        function getSpeakerClass(speakerId) {
+            if (!speakerId || speakerId === 'Unknown') return 'speaker-unknown';
+            const speakerNum = parseInt(speakerId.replace(/\D/g, ''));
+            if (speakerNum <= 3) return `speaker-${speakerNum}`;
+            return 'speaker-unknown';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        // Check API status on load
+        window.onload = () => {
+            fetch('/api/voice/status')
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Voice API Status:', data);
+                })
+                .catch(err => {
+                    console.error('Failed to check API status:', err);
+                });
+        };
+    </script>
+</body>
+</html>
