@@ -2,6 +2,7 @@ package com.ecall.common.config;
 
 import com.microsoft.cognitiveservices.speech.*;
 import com.microsoft.cognitiveservices.speech.audio.*;
+import io.github.cdimascio.dotenv.Dotenv;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 public class AzureSpeechConfig {
+
+    private final Dotenv dotenv;
 
     @Value("${azure.speech.subscription-key}")
     private String subscriptionKey;
@@ -20,11 +23,30 @@ public class AzureSpeechConfig {
     @Value("${azure.speech.language:ko-KR}")
     private String language;
 
+    public AzureSpeechConfig() {
+        // Load .env file
+        this.dotenv = Dotenv.configure()
+            .ignoreIfMissing()
+            .load();
+    }
+
     @Bean
     public SpeechConfig speechConfig() {
-        log.info("Initializing Azure Speech Config - Region: {}, Language: {}", region, language);
+        // Try to get from .env file first, then fall back to application properties
+        String key = dotenv.get("AZURE_SPEECH_SUBSCRIPTION_KEY");
+        if (key == null || key.equals("YOUR_AZURE_SPEECH_KEY")) {
+            key = subscriptionKey;
+        }
 
-        SpeechConfig config = SpeechConfig.fromSubscription(subscriptionKey, region);
+        String reg = dotenv.get("AZURE_SPEECH_REGION");
+        if (reg == null) {
+            reg = region;
+        }
+
+        log.info("Initializing Azure Speech Config - Region: {}, Language: {}", reg, language);
+        log.debug("Using API Key: {}...", key != null && key.length() > 10 ? key.substring(0, 10) : "NOT SET");
+
+        SpeechConfig config = SpeechConfig.fromSubscription(key, reg);
         config.setSpeechRecognitionLanguage(language);
 
         // Enable detailed output format
