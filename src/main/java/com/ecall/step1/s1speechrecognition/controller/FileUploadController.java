@@ -18,10 +18,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FileUploadController {
 
-    private final AudioFileRecognitionService audioFileRecognitionService;
     private final OptimizedAudioFileService optimizedAudioFileService;
 
-    @PostMapping
+    @PostMapping("/legacy")
     public ResponseEntity<Map<String, Object>> uploadAudioFile(@RequestParam("file") MultipartFile file) {
         try {
             log.info("Received audio file: {}, size: {} bytes", file.getOriginalFilename(), file.getSize());

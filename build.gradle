@@ -32,6 +32,13 @@ dependencies {
     // JSON processing
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    // Audio processing libraries
+    implementation 'com.googlecode.soundlibs:mp3spi:1.9.5.4'
+    implementation 'com.googlecode.soundlibs:vorbisspi:1.0.3.3'
+
+    // Environment variables support
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
