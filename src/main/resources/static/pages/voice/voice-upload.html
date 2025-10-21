@@ -203,6 +203,10 @@
         .speaker-2 { background: #F3E5F5; color: #7B1FA2; }
         .speaker-3 { background: #E8F5E9; color: #388E3C; }
         .speaker-4 { background: #FFF3E0; color: #F57C00; }
+        .speaker-operator { background: #E3F2FD; color: #1976D2; }  /* Blue for operator */
+        .speaker-caller { background: #FFEBEE; color: #C62828; }     /* Red for caller */
+        .speaker-경찰관 { background: #E3F2FD; color: #1976D2; }      /* Blue for Korean police */
+        .speaker-신고자 { background: #FFEBEE; color: #C62828; }      /* Red for Korean caller */
         .speaker-unknown { background: #F5F5F5; color: #757575; }
 
         .transcript-text {
@@ -275,36 +279,113 @@
             font-size: 0.9em;
             color: #555;
         }
+
+        .language-selector {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f7ff;
+            border-radius: 8px;
+        }
+
+        .language-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .language-option {
+            flex: 1;
+        }
+
+        .language-option input[type="radio"] {
+            display: none;
+        }
+
+        .language-option label {
+            display: block;
+            padding: 12px;
+            text-align: center;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .language-option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .language-option label:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎙️ 음성 파일 업로드 & 화자 분리</h1>
+            <h1>🎙️ Voice File Upload & Speaker Diarization</h1>
+            <p class="subtitle">Upload an audio file and AI will automatically separate speakers and convert to text</p>
             <p class="subtitle">오디오 파일을 업로드하면 AI가 자동으로 화자를 분리하고 텍스트로 변환합니다</p>
         </div>
 
         <div class="upload-section">
+            <div class="language-selector">
+                <strong>Select Language / 언어 선택:</strong>
+                <div class="language-options">
+                    <div class="language-option">
+                        <input type="radio" id="lang-ko" name="language" value="ko-KR" checked>
+                        <label for="lang-ko">🇰🇷 Korean / 한국어</label>
+                    </div>
+                    <div class="language-option">
+                        <input type="radio" id="lang-en" name="language" value="en-US">
+                        <label for="lang-en">🇺🇸 English / 영어</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="language-selector" id="methodSelector" style="display: none;">
+                <strong>Select Diarization Method / 화자 구분 방법:</strong>
+                <div class="language-options">
+                    <div class="language-option">
+                        <input type="radio" id="method-multichannel" name="method" value="multichannel" checked>
+                        <label for="method-multichannel">🎚️ Multichannel (Best) / 멀티채널</label>
+                    </div>
+                    <div class="language-option">
+                        <input type="radio" id="method-hybrid" name="method" value="hybrid">
+                        <label for="method-hybrid">🔬 Hybrid / 하이브리드</label>
+                    </div>
+                    <div class="language-option">
+                        <input type="radio" id="method-pattern" name="method" value="pattern">
+                        <label for="method-pattern">📝 Pattern / 패턴</label>
+                    </div>
+                </div>
+            </div>
+
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📁</div>
-                <div class="upload-text">클릭하여 파일 선택 또는 여기에 드래그</div>
-                <div class="upload-hint">WAV, MP3, M4A, OGG, FLAC 지원 (최대 100MB)</div>
+                <div class="upload-text">Click to select file or drag here / 클릭하여 파일 선택 또는 여기에 드래그</div>
+                <div class="upload-hint">WAV, MP3, M4A, OGG, FLAC supported (Max 100MB)</div>
             </div>
             <input type="file" id="fileInput" accept="audio/*">
 
             <div class="file-info" id="fileInfo">
-                <strong>선택된 파일:</strong> <span id="fileName"></span><br>
-                <strong>크기:</strong> <span id="fileSize"></span>
+                <strong>Selected File / 선택된 파일:</strong> <span id="fileName"></span><br>
+                <strong>Size / 크기:</strong> <span id="fileSize"></span>
             </div>
 
             <div class="error-message" id="errorMessage"></div>
 
-            <button class="process-btn" id="processBtn" disabled>음성 분석 시작</button>
+            <button class="process-btn" id="processBtn" disabled>Start Analysis / 음성 분석 시작</button>
 
             <div class="supported-formats">
-                <strong>지원 형식:</strong>
+                <strong>Supported Formats / 지원 형식:</strong>
                 <div class="format-list">
-                    <span class="format-tag">WAV (추천)</span>
+                    <span class="format-tag">WAV (Recommended)</span>
                     <span class="format-tag">MP3</span>
                     <span class="format-tag">M4A</span>
                     <span class="format-tag">OGG</span>
@@ -315,8 +396,8 @@
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>음성을 분석중입니다... 잠시만 기다려주세요</p>
-            <p style="color: #999; margin-top: 10px; font-size: 0.9em;">화자 분리 및 텍스트 변환 처리중</p>
+            <p>Analyzing voice... Please wait / 음성을 분석중입니다... 잠시만 기다려주세요</p>
+            <p style="color: #999; margin-top: 10px; font-size: 0.9em;">Processing speaker diarization and text conversion / 화자 분리 및 텍스트 변환 처리중</p>
         </div>
 
         <div class="results-section" id="resultsSection">
@@ -346,6 +427,18 @@
 
     <script>
         let selectedFile = null;
+        const methodSelector = document.getElementById('methodSelector');
+
+        // Show/hide method selector based on language
+        document.querySelectorAll('input[name="language"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'en-US') {
+                    methodSelector.style.display = 'block';
+                } else {
+                    methodSelector.style.display = 'none';
+                }
+            });
+        });
 
         // DOM elements
         const uploadArea = document.getElementById('uploadArea');
@@ -423,8 +516,17 @@
         processBtn.addEventListener('click', async () => {
             if (!selectedFile) return;
 
+            // Get selected language
+            const selectedLanguage = document.querySelector('input[name="language"]:checked').value;
+
             const formData = new FormData();
             formData.append('file', selectedFile);
+            formData.append('language', selectedLanguage);
+
+            // Add method if English is selected
+            if (selectedLanguage === 'en-US') {
+                formData.append('method', document.querySelector('input[name="method"]:checked').value);
+            }
 
             processBtn.disabled = true;
             loading.classList.add('show');
@@ -492,8 +594,19 @@
 
         function getSpeakerClass(speakerId) {
             if (!speakerId || speakerId === 'Unknown') return 'speaker-unknown';
+
+            // Handle English speakers
+            if (speakerId === 'Operator') return 'speaker-operator';
+            if (speakerId === 'Caller') return 'speaker-caller';
+
+            // Handle Korean speakers
+            if (speakerId === '경찰관') return 'speaker-경찰관';
+            if (speakerId === '신고자') return 'speaker-신고자';
+
+            // Handle numbered speakers
             const speakerNum = parseInt(speakerId.replace(/\D/g, ''));
-            if (speakerNum <= 4) return `speaker-${speakerNum}`;
+            if (speakerNum && speakerNum <= 4) return `speaker-${speakerNum}`;
+
             return 'speaker-unknown';
         }
 

@@ -13,4 +13,5 @@ public class RecognitionResult {
     private LocalDateTime timestamp;
     private String type;
     private boolean interim;
+    private Integer channelIndex;
 }
