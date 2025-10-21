@@ -64,4 +64,35 @@ public class AzureSpeechConfig {
         // Will be overridden for WebSocket streaming
         return AudioConfig.fromDefaultMicrophoneInput();
     }
+
+    @Bean(name = "englishSpeechConfig")
+    public SpeechConfig englishSpeechConfig() {
+        // Try to get from .env file first, then fall back to application properties
+        String key = dotenv.get("AZURE_SPEECH_SUBSCRIPTION_KEY");
+        if (key == null || key.equals("YOUR_AZURE_SPEECH_KEY")) {
+            key = subscriptionKey;
+        }
+
+        String reg = dotenv.get("AZURE_SPEECH_REGION");
+        if (reg == null) {
+            reg = region;
+        }
+
+        log.info("Initializing Azure English Speech Config - Region: {}, Language: en-US", reg);
+
+        SpeechConfig config = SpeechConfig.fromSubscription(key, reg);
+        config.setSpeechRecognitionLanguage("en-US");
+
+        // Enable detailed output format for better diarization
+        config.setOutputFormat(OutputFormat.Detailed);
+
+        // Enable speaker diarization
+        config.setProperty("DiarizationEnabled", "true");
+        config.setProperty("DiarizationSpeakerCount", "2");
+
+        // Enable profanity filtering (optional)
+        config.setProfanity(ProfanityOption.Masked);
+
+        return config;
+    }
 }

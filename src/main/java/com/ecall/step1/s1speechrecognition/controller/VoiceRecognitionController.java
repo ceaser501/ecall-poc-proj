@@ -2,10 +2,7 @@ package com.ecall.step1.s1speechrecognition.controller;
 
 import com.ecall.step1.s1speechrecognition.dto.VoiceUploadResponse;
 import com.ecall.step1.s1speechrecognition.model.RecognitionResult;
-import com.ecall.step1.s1speechrecognition.service.DiarizationService;
-import com.ecall.step1.s1speechrecognition.service.ImprovedDiarizationService;
-import com.ecall.step1.s1speechrecognition.service.SmartDiarizationService;
-import com.ecall.step1.s1speechrecognition.service.EnhancedDiarizationService;
+import com.ecall.step1.s1speechrecognition.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,24 +18,25 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class VoiceRecognitionController {
 
-    private final DiarizationService diarizationService;
-    private final ImprovedDiarizationService improvedDiarizationService;
-    private final SmartDiarizationService smartDiarizationService;
     private final EnhancedDiarizationService enhancedDiarizationService;
+    private final EnhancedMultichannelService enhancedMultichannelService;
+    private final HybridDiarizationService hybridDiarizationService;
 
     @PostMapping("/upload")
-    public ResponseEntity<VoiceUploadResponse> uploadWithDiarization(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<VoiceUploadResponse> uploadWithDiarization(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "language", defaultValue = "ko-KR") String language) {
         long startTime = System.currentTimeMillis();
 
         try {
-            log.info("Received audio file for diarization: {}, size: {} bytes",
-                     file.getOriginalFilename(), file.getSize());
+            log.info("Received audio file for diarization: {}, size: {} bytes, language: {}",
+                     file.getOriginalFilename(), file.getSize(), language);
 
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(
                     VoiceUploadResponse.builder()
                         .success(false)
-                        .error("파일이 비어있습니다.")
+                        .error("File is empty. / 파일이 비어있습니다.")
                         .build()
                 );
             }
@@ -48,13 +46,23 @@ public class VoiceRecognitionController {
                 return ResponseEntity.badRequest().body(
                     VoiceUploadResponse.builder()
                         .success(false)
-                        .error("오디오 파일만 업로드 가능합니다.")
+                        .error("Only audio files are allowed. / 오디오 파일만 업로드 가능합니다.")
                         .build()
                 );
             }
 
-            // 향상된 화자분리 서비스 사용 (대화 턴 기반)
-            List<RecognitionResult> results = enhancedDiarizationService.transcribeWithEnhancedDiarization(file);
+            List<RecognitionResult> results;
+
+            // Choose service based on language and method
+            if (language.toLowerCase().startsWith("en")) {
+                // Use hybrid diarization for English (better for single channel)
+                log.info("Using hybrid diarization service for English");
+                results = hybridDiarizationService.transcribeWithDiarization(file);
+            } else {
+                // Use Korean diarization service (default)
+                log.info("Using Korean diarization service");
+                results = enhancedDiarizationService.transcribeWithEnhancedDiarization(file);
+            }
 
             long processingTime = System.currentTimeMillis() - startTime;
 
@@ -77,10 +85,15 @@ public class VoiceRecognitionController {
             return ResponseEntity.internalServerError().body(
                 VoiceUploadResponse.builder()
                     .success(false)
-                    .error("파일 처리 중 오류가 발생했습니다: " + e.getMessage())
+                    .error("Error processing file: " + e.getMessage())
                     .build()
             );
         }
+    }
+
+    @PostMapping("/upload/english")
+    public ResponseEntity<VoiceUploadResponse> uploadEnglishWithDiarization(@RequestParam("file") MultipartFile file) {
+        return uploadWithDiarization(file, "en-US");
     }
 
     @GetMapping("/status")
