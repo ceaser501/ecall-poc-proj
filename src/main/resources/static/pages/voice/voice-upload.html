@@ -334,36 +334,22 @@
         </div>
 
         <div class="upload-section">
+            <!-- API 선택 -->
             <div class="language-selector">
-                <strong>Select Language / 언어 선택:</strong>
+                <strong>음성 인식 API 선택 / Select Speech Recognition API:</strong>
                 <div class="language-options">
                     <div class="language-option">
-                        <input type="radio" id="lang-ko" name="language" value="ko-KR" checked>
-                        <label for="lang-ko">🇰🇷 Korean / 한국어</label>
+                        <input type="radio" id="api-clova" name="api" value="clova" checked>
+                        <label for="api-clova">🌐 Clova Speech API</label>
                     </div>
                     <div class="language-option">
-                        <input type="radio" id="lang-en" name="language" value="en-US">
-                        <label for="lang-en">🇺🇸 English / 영어</label>
+                        <input type="radio" id="api-azure" name="api" value="azure">
+                        <label for="api-azure">☁️ Azure Speech API</label>
                     </div>
                 </div>
-            </div>
-
-            <div class="language-selector" id="methodSelector" style="display: none;">
-                <strong>Select Diarization Method / 화자 구분 방법:</strong>
-                <div class="language-options">
-                    <div class="language-option">
-                        <input type="radio" id="method-multichannel" name="method" value="multichannel" checked>
-                        <label for="method-multichannel">🎚️ Multichannel (Best) / 멀티채널</label>
-                    </div>
-                    <div class="language-option">
-                        <input type="radio" id="method-hybrid" name="method" value="hybrid">
-                        <label for="method-hybrid">🔬 Hybrid / 하이브리드</label>
-                    </div>
-                    <div class="language-option">
-                        <input type="radio" id="method-pattern" name="method" value="pattern">
-                        <label for="method-pattern">📝 Pattern / 패턴</label>
-                    </div>
-                </div>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    ℹ️ 두 API 모두 한국어/영어 동시 인식을 지원합니다. 화자는 자동으로 2~5명으로 설정됩니다.
+                </p>
             </div>
 
             <div class="upload-area" id="uploadArea">
@@ -403,7 +389,10 @@
         <div class="results-section" id="resultsSection">
             <div class="results-header">
                 <h2 class="results-title">분석 결과</h2>
-                <button class="process-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="resetUpload()">새 파일 업로드</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="process-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="downloadTranscript()">📥 텍스트 다운로드</button>
+                    <button class="process-btn" style="width: auto; padding: 10px 20px; margin: 0;" onclick="resetUpload()">새 파일 업로드</button>
+                </div>
             </div>
 
             <div class="stats">
@@ -427,18 +416,7 @@
 
     <script>
         let selectedFile = null;
-        const methodSelector = document.getElementById('methodSelector');
-
-        // Show/hide method selector based on language
-        document.querySelectorAll('input[name="language"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.value === 'en-US') {
-                    methodSelector.style.display = 'block';
-                } else {
-                    methodSelector.style.display = 'none';
-                }
-            });
-        });
+        let currentTranscriptData = null; // 다운로드용 데이터 저장
 
         // DOM elements
         const uploadArea = document.getElementById('uploadArea');
@@ -516,17 +494,20 @@
         processBtn.addEventListener('click', async () => {
             if (!selectedFile) return;
 
-            // Get selected language
-            const selectedLanguage = document.querySelector('input[name="language"]:checked').value;
-
+            // Get selected API
+            const selectedAPI = document.querySelector('input[name="api"]:checked').value;
+            
             const formData = new FormData();
             formData.append('file', selectedFile);
-            formData.append('language', selectedLanguage);
-
-            // Add method if English is selected
-            if (selectedLanguage === 'en-US') {
-                formData.append('method', document.querySelector('input[name="method"]:checked').value);
+            
+            // Clova API는 화자 수 파라미터 필요
+            if (selectedAPI === 'clova') {
+                formData.append('minSpeakers', 2);
+                formData.append('maxSpeakers', 5);
             }
+
+            // API에 따라 다른 엔드포인트 사용
+            const endpoint = selectedAPI === 'clova' ? '/api/voice/upload/clova' : '/api/voice/upload/legacy';
 
             processBtn.disabled = true;
             loading.classList.add('show');
@@ -534,29 +515,94 @@
             hideError();
 
             try {
-                const response = await fetch('/api/voice/upload', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     body: formData
                 });
 
+                // HTTP 상태 코드 체크
+                if (!response.ok) {
+                    console.error('HTTP Error:', response.status, response.statusText);
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
-                    displayResults(data);
+                    // API에 따라 다른 처리 함수 호출
+                    if (selectedAPI === 'clova') {
+                        displayClovaResults(data);
+                    } else {
+                        displayAzureResults(data);
+                    }
                 } else {
-                    showError(data.error || '처리 중 오류가 발생했습니다.');
+                    const errorMsg = data.error || '처리 중 오류가 발생했습니다.';
+                    console.error('API Error:', errorMsg);
+                    if (data.details) {
+                        console.error('Error Details:', data.details);
+                    }
+                    showError(errorMsg);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showError('서버 연결 오류가 발생했습니다.');
+                console.error('Fetch Error:', error);
+                showError('서버 연결 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
             } finally {
                 loading.classList.remove('show');
                 processBtn.disabled = false;
             }
         });
 
-        function displayResults(data) {
+        function displayClovaResults(data) {
             resultsSection.classList.add('show');
+            currentTranscriptData = data; // 다운로드를 위해 데이터 저장
+
+            // Update stats
+            document.getElementById('speakerCount').textContent = data.speakerCount || 0;
+            document.getElementById('segmentCount').textContent = data.speakerSegments.length;
+
+            // Calculate total duration
+            let maxTime = 0;
+            if (data.speakerSegments && data.speakerSegments.length > 0) {
+                data.speakerSegments.forEach(segment => {
+                    if (segment.endTime > maxTime) maxTime = segment.endTime;
+                });
+            }
+            document.getElementById('duration').textContent = formatDuration(maxTime);
+
+            // Display transcript
+            transcript.innerHTML = '';
+            if (data.speakerSegments && data.speakerSegments.length > 0) {
+                data.speakerSegments.forEach(segment => {
+                    const item = document.createElement('div');
+                    item.className = 'transcript-item';
+
+                    const speakerClass = getSpeakerClass(segment.speakerId);
+                    const timeRange = `${formatTime(segment.startTime)} - ${formatTime(segment.endTime)}`;
+
+                    item.innerHTML = `
+                        <span class="speaker-label ${speakerClass}">화자 ${segment.speakerId + 1}</span>
+                        <div class="transcript-text">${segment.text}</div>
+                        <div class="transcript-time">${timeRange}</div>
+                    `;
+
+                    transcript.appendChild(item);
+                });
+            } else {
+                // 전체 텍스트만 있는 경우
+                transcript.innerHTML = `
+                    <div class="transcript-item">
+                        <span class="speaker-label speaker-unknown">전체 텍스트</span>
+                        <div class="transcript-text">${data.fullText || '텍스트를 찾을 수 없습니다.'}</div>
+                    </div>
+                `;
+            }
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function displayAzureResults(data) {
+            resultsSection.classList.add('show');
+            currentTranscriptData = data; // 다운로드를 위해 데이터 저장
 
             // Update stats
             document.getElementById('speakerCount').textContent = data.speakerCount || 0;
@@ -593,7 +639,7 @@
         }
 
         function getSpeakerClass(speakerId) {
-            if (!speakerId || speakerId === 'Unknown') return 'speaker-unknown';
+            if (speakerId === null || speakerId === undefined || !speakerId || speakerId === 'Unknown') return 'speaker-unknown';
 
             // Handle English speakers
             if (speakerId === 'Operator') return 'speaker-operator';
@@ -604,8 +650,9 @@
             if (speakerId === '신고자') return 'speaker-신고자';
 
             // Handle numbered speakers
-            const speakerNum = parseInt(speakerId.replace(/\D/g, ''));
-            if (speakerNum && speakerNum <= 4) return `speaker-${speakerNum}`;
+            // speakerId가 숫자인 경우 (0부터 시작하므로 +1)
+            const speakerNum = typeof speakerId === 'number' ? speakerId + 1 : parseInt(speakerId.toString().replace(/\D/g, ''));
+            if (speakerNum >= 1 && speakerNum <= 4) return `speaker-${speakerNum}`;
 
             return 'speaker-unknown';
         }
@@ -632,8 +679,50 @@
             errorMessage.classList.remove('show');
         }
 
+        function downloadTranscript() {
+            if (!currentTranscriptData) {
+                alert('다운로드할 데이터가 없습니다.');
+                return;
+            }
+
+            let textContent = '=== 음성 인식 대본 ===\n\n';
+            textContent += `파일명: ${selectedFile.name}\n`;
+            textContent += `분석 시간: ${new Date().toLocaleString('ko-KR')}\n`;
+            textContent += `화자 수: ${currentTranscriptData.speakerCount || 0}\n\n`;
+            textContent += '========================================\n\n';
+
+            // Clova API 결과
+            if (currentTranscriptData.speakerSegments) {
+                currentTranscriptData.speakerSegments.forEach(segment => {
+                    const timeRange = `[${formatTime(segment.startTime)} - ${formatTime(segment.endTime)}]`;
+                    textContent += `화자 ${segment.speakerId + 1} ${timeRange}:\n`;
+                    textContent += `${segment.text}\n\n`;
+                });
+            }
+            // Azure API 결과
+            else if (currentTranscriptData.results) {
+                currentTranscriptData.results.forEach(result => {
+                    const time = formatTime(result.offset / 10000000);
+                    textContent += `화자 ${result.speakerId} [${time}]:\n`;
+                    textContent += `${result.text}\n\n`;
+                });
+            }
+
+            // 텍스트 파일로 다운로드
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcript_${selectedFile.name.split('.')[0]}_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         function resetUpload() {
             selectedFile = null;
+            currentTranscriptData = null;
             fileInput.value = '';
             fileInfo.classList.remove('show');
             processBtn.disabled = true;

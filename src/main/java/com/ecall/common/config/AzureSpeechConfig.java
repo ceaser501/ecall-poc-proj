@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
+
 @Slf4j
 @Configuration
 public class AzureSpeechConfig {
@@ -89,6 +91,57 @@ public class AzureSpeechConfig {
         // Enable speaker diarization
         config.setProperty("DiarizationEnabled", "true");
         config.setProperty("DiarizationSpeakerCount", "2");
+
+        // Enable profanity filtering (optional)
+        config.setProfanity(ProfanityOption.Masked);
+
+        return config;
+    }
+
+    @Bean
+    public AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig() {
+        // Try to get from .env file first, then fall back to application properties
+        String key = dotenv.get("AZURE_SPEECH_SUBSCRIPTION_KEY");
+        if (key == null || key.equals("YOUR_AZURE_SPEECH_KEY")) {
+            key = subscriptionKey;
+        }
+
+        String reg = dotenv.get("AZURE_SPEECH_REGION");
+        if (reg == null) {
+            reg = region;
+        }
+
+        log.info("Initializing Azure Auto Language Detection - Region: {}, Languages: ko-KR, en-US", reg);
+
+        // Create list of candidate languages
+        ArrayList<String> candidateLanguages = new ArrayList<>();
+        candidateLanguages.add("ko-KR");  // Korean
+        candidateLanguages.add("en-US");  // English
+
+        // Create auto detect config
+        return AutoDetectSourceLanguageConfig.fromLanguages(candidateLanguages);
+    }
+
+    @Bean(name = "multiLangSpeechConfig")
+    public SpeechConfig multiLangSpeechConfig() {
+        // Try to get from .env file first, then fall back to application properties
+        String key = dotenv.get("AZURE_SPEECH_SUBSCRIPTION_KEY");
+        if (key == null || key.equals("YOUR_AZURE_SPEECH_KEY")) {
+            key = subscriptionKey;
+        }
+
+        String reg = dotenv.get("AZURE_SPEECH_REGION");
+        if (reg == null) {
+            reg = region;
+        }
+
+        log.info("Initializing Azure Multi-Language Speech Config - Region: {}", reg);
+
+        SpeechConfig config = SpeechConfig.fromSubscription(key, reg);
+        // Don't set a specific language - let auto-detect handle it
+
+        // Enable detailed output format
+        config.setOutputFormat(OutputFormat.Detailed);
 
         // Enable profanity filtering (optional)
         config.setProfanity(ProfanityOption.Masked);

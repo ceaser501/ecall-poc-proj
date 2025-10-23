@@ -36,7 +36,19 @@ azure:
   speech:
     subscription-key: ${AZURE_SPEECH_SUBSCRIPTION_KEY:YOUR_AZURE_SPEECH_KEY}
     region: ${AZURE_SPEECH_REGION:koreacentral}
-    language: ${AZURE_SPEECH_LANGUAGE:ko-KR}
+    language: ko-KR
+
+# Clova Speech Service 설정
+clova:
+  speech:
+    secret-key: ${CLOVA_SPEECH_SECRET_KEY:YOUR_CLOVA_SECRET_KEY}
+    invoke-url: ${CLOVA_SPEECH_INVOKE_URL:YOUR_CLOVA_INVOKE_URL}
+    language: ko-KR
+
+# Audio Conversion 설정
+audio:
+  conversion:
+    ffmpeg-path: C:/Program Files/ffmpeg-8.0-full_build/bin/ffmpeg.exe  # FFmpeg 실행 파일 전체 경로
 
 # 로깅 설정
 logging:

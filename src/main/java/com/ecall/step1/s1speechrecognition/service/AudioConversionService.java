@@ -1,6 +1,7 @@
 package com.ecall.step1.s1speechrecognition.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,6 +11,9 @@ import java.io.*;
 @Slf4j
 @Service
 public class AudioConversionService {
+
+    @Value("${audio.conversion.ffmpeg-path:ffmpeg}")
+    private String ffmpegPath;
 
     private static final AudioFormat TARGET_FORMAT = new AudioFormat(
             16000,      // Sample rate
@@ -110,11 +114,81 @@ public class AudioConversionService {
     }
 
     private File convertWithFallback(File inputFile) throws IOException {
-        log.info("Using fallback conversion method");
+        log.info("Using fallback conversion method with FFmpeg");
 
-        // For now, just return the original file and let Azure handle it
-        // In production, you might want to use external tools like FFmpeg
-        return inputFile;
+        // Try to convert using FFmpeg
+        File tempOutputFile = File.createTempFile("ffmpeg-converted-", ".wav");
+        tempOutputFile.deleteOnExit();
+
+        try {
+            log.info("Using FFmpeg path: {}", ffmpegPath);
+            
+            // Check if FFmpeg is available
+            ProcessBuilder checkBuilder = new ProcessBuilder(ffmpegPath, "-version");
+            Process checkProcess = checkBuilder.start();
+            int checkExitCode = checkProcess.waitFor();
+            
+            if (checkExitCode != 0) {
+                log.error("FFmpeg is not available on this system");
+                throw new IOException("FFmpeg is required to convert this audio format but is not installed");
+            }
+
+            // Convert using FFmpeg: input -> 16kHz, 16-bit, mono PCM WAV
+            ProcessBuilder builder = new ProcessBuilder(
+                    ffmpegPath,
+                    "-i", inputFile.getAbsolutePath(),
+                    "-ar", "16000",           // Sample rate: 16kHz
+                    "-ac", "1",               // Channels: mono
+                    "-sample_fmt", "s16",     // Sample format: 16-bit signed
+                    "-y",                     // Overwrite output file
+                    tempOutputFile.getAbsolutePath()
+            );
+
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+
+            // Log FFmpeg output
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    log.debug("FFmpeg: {}", line);
+                }
+            }
+
+            int exitCode = process.waitFor();
+            
+            if (exitCode != 0) {
+                log.error("FFmpeg conversion failed with exit code: {}", exitCode);
+                throw new IOException("FFmpeg conversion failed");
+            }
+
+            log.info("Successfully converted using FFmpeg: {} bytes", tempOutputFile.length());
+            
+            // Clean up input file
+            inputFile.delete();
+            
+            return tempOutputFile;
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("FFmpeg conversion was interrupted", e);
+            tempOutputFile.delete();
+            throw new IOException("Audio conversion was interrupted", e);
+        } catch (IOException e) {
+            log.error("FFmpeg conversion failed", e);
+            tempOutputFile.delete();
+            
+            // If FFmpeg fails, throw a clear error
+            throw new IOException(
+                "이 오디오 파일 형식은 지원되지 않습니다. " +
+                "WAV, MP3 형식을 사용하거나, FFmpeg를 시스템에 설치해주세요. " +
+                "FFmpeg 경로: " + ffmpegPath + " " +
+                "(application.yml에서 audio.conversion.ffmpeg-path를 전체 경로로 설정하세요) " +
+                "원본 파일: " + inputFile.getName() + ", 오류: " + e.getMessage(),
+                e
+            );
+        }
     }
 
     private boolean isWavFile(String filename) {

@@ -21,20 +21,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class OptimizedAudioFileService {
 
     private final SpeechConfig speechConfig;
+    private final AudioConversionService audioConversionService;
+    private final AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig;
 
     /**
      * 최적화된 파일 처리 - 빠른 속도 우선
      */
     public List<RecognitionResult> processFileOptimized(MultipartFile multipartFile) throws Exception {
-        // Save uploaded file temporarily
-        File tempFile = File.createTempFile("audio-", getFileExtension(multipartFile.getOriginalFilename()));
-        tempFile.deleteOnExit();
+        // Convert to WAV format first
+        File wavFile = audioConversionService.convertToWav(multipartFile);
 
-        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-            fos.write(multipartFile.getBytes());
-        }
-
-        log.info("Processing file with optimized recognizer: {}", tempFile.getName());
+        log.info("Processing file with optimized recognizer: {}", wavFile.getName());
 
         List<RecognitionResult> results = Collections.synchronizedList(new ArrayList<>());
         CountDownLatch latch = new CountDownLatch(1);
@@ -43,29 +40,38 @@ public class OptimizedAudioFileService {
         long[] lastSpeechEnd = {0}; // Track last speech end time
 
         // Create audio config from file
-        AudioConfig audioConfig = AudioConfig.fromWavFileInput(tempFile.getAbsolutePath());
-
-        // Use the existing config - clone would be ideal but not available
-        // So we'll reuse with optimized settings
-        SpeechConfig fastConfig = speechConfig;
+        AudioConfig audioConfig = AudioConfig.fromWavFileInput(wavFile.getAbsolutePath());
 
         // Optimize for speed
-        fastConfig.setSpeechRecognitionLanguage("ko-KR");
-        fastConfig.setProperty(PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
-        fastConfig.setProperty(PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1000");
-        fastConfig.setProperty(PropertyId.Speech_SegmentationSilenceTimeoutMs, "1000");
+        speechConfig.setProperty(PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, "5000");
+        speechConfig.setProperty(PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "1000");
+        speechConfig.setProperty(PropertyId.Speech_SegmentationSilenceTimeoutMs, "1000");
 
-        // Enable continuous recognition for better performance
-        fastConfig.setProperty(PropertyId.SpeechServiceConnection_RecoLanguage, "ko-KR");
-
-        // Create recognizer
-        SpeechRecognizer recognizer = new SpeechRecognizer(fastConfig, audioConfig);
+        // Create recognizer with auto language detection
+        log.info("Creating recognizer with auto language detection (ko-KR, en-US)");
+        SpeechRecognizer recognizer = new SpeechRecognizer(
+            speechConfig, 
+            autoDetectSourceLanguageConfig, 
+            audioConfig
+        );
 
         // Set up event handlers
         recognizer.recognized.addEventListener((s, e) -> {
             if (e.getResult().getReason() == ResultReason.RecognizedSpeech) {
                 String text = e.getResult().getText();
                 if (text == null || text.trim().isEmpty()) return;
+
+                // Get detected language
+                String detectedLanguage = "Unknown";
+                try {
+                    AutoDetectSourceLanguageResult autoDetectResult = 
+                        AutoDetectSourceLanguageResult.fromResult(e.getResult());
+                    if (autoDetectResult != null) {
+                        detectedLanguage = autoDetectResult.getLanguage();
+                    }
+                } catch (Exception ex) {
+                    log.debug("Could not detect language: {}", ex.getMessage());
+                }
 
                 long offset = e.getResult().getOffset() != null ? e.getResult().getOffset().longValue() : 0L;
                 long duration = e.getResult().getDuration() != null ? e.getResult().getDuration().longValue() : 0L;
@@ -88,7 +94,7 @@ public class OptimizedAudioFileService {
                 result.setType("recognized");
 
                 results.add(result);
-                log.info("Recognized [Speaker {}]: {}", currentSpeaker[0], text);
+                log.info("Recognized [Speaker {}, Language: {}]: {}", currentSpeaker[0], detectedLanguage, text);
             }
         });
 
