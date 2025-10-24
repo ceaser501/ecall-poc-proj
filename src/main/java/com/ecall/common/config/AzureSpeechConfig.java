@@ -98,8 +98,8 @@ public class AzureSpeechConfig {
         return config;
     }
 
-    @Bean
-    public AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig() {
+    @Bean(name = "autoDetectSpeechConfig")
+    public SpeechConfig autoDetectSpeechConfig() {
         // Try to get from .env file first, then fall back to application properties
         String key = dotenv.get("AZURE_SPEECH_SUBSCRIPTION_KEY");
         if (key == null || key.equals("YOUR_AZURE_SPEECH_KEY")) {
@@ -112,6 +112,22 @@ public class AzureSpeechConfig {
         }
 
         log.info("Initializing Azure Auto Language Detection - Region: {}, Languages: ko-KR, en-US", reg);
+
+        SpeechConfig config = SpeechConfig.fromSubscription(key, reg);
+        // Don't set specific language - will use AutoDetectSourceLanguageConfig
+
+        // Enable detailed output format
+        config.setOutputFormat(OutputFormat.Detailed);
+
+        // Enable profanity filtering (optional)
+        config.setProfanity(ProfanityOption.Masked);
+
+        return config;
+    }
+
+    @Bean
+    public AutoDetectSourceLanguageConfig autoDetectSourceLanguageConfig() {
+        log.info("Creating AutoDetectSourceLanguageConfig for languages: ko-KR, en-US");
 
         // Create list of candidate languages
         ArrayList<String> candidateLanguages = new ArrayList<>();

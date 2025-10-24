@@ -28,14 +28,22 @@ public class ClovaDiarizationService {
      * 음성 파일을 업로드하고 화자 분리 및 STT를 수행합니다.
      */
     public DiarizationResult performDiarization(File audioFile, int minSpeakers, int maxSpeakers) {
+        return performDiarization(audioFile, minSpeakers, maxSpeakers, "ko-KR");
+    }
+
+    /**
+     * 음성 파일을 업로드하고 화자 분리 및 STT를 수행합니다.
+     * @param language 언어 코드 (ko-KR: 한국어, en-US: 영어, ja: 일본어, zh-CN: 중국어)
+     */
+    public DiarizationResult performDiarization(File audioFile, int minSpeakers, int maxSpeakers, String language) {
         try {
-            log.info("화자 분리 시작 - 파일: {}, 최소 화자: {}, 최대 화자: {}", 
-                audioFile.getName(), minSpeakers, maxSpeakers);
+            log.info("화자 분리 시작 - 파일: {}, 최소 화자: {}, 최대 화자: {}, 언어: {}",
+                audioFile.getName(), minSpeakers, maxSpeakers, language);
 
             // Clova Speech API 요청 설정
             ClovaSpeechClient.NestRequestEntity requestEntity = new ClovaSpeechClient.NestRequestEntity();
-            // 한/영 동시인식을 위한 언어 설정
-            requestEntity.setLanguage("enko");  // 한/영 동시인식 모드
+            // 언어 설정
+            requestEntity.setLanguage(language);
             requestEntity.setCompletion("sync");
             
             // 화자 분리를 위한 필수 설정
