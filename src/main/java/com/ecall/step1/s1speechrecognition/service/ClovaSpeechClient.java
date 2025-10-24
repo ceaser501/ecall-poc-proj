@@ -235,13 +235,28 @@ public class ClovaSpeechClient {
      */
     public String upload(File file, NestRequestEntity nestRequestEntity) {
         log.info("Clova Speech API 호출 시작 - 파일: {}", file.getName());
-        HttpPost httpPost = new HttpPost(invokeUrl + "/recognizer/upload");
+
+        String fullUrl = invokeUrl + "/recognizer/upload";
+        log.info("Clova API Full URL: {}", fullUrl);
+        log.info("Secret Key (masked): {}...", secretKey != null ? secretKey.substring(0, Math.min(10, secretKey.length())) : "null");
+
+        String paramsJson = gson.toJson(nestRequestEntity);
+        log.info("Request params: {}", paramsJson);
+
+        HttpPost httpPost = new HttpPost(fullUrl);
         httpPost.setHeaders(getHeaders());
         HttpEntity httpEntity = MultipartEntityBuilder.create()
-            .addTextBody("params", gson.toJson(nestRequestEntity), ContentType.APPLICATION_JSON)
+            .addTextBody("params", paramsJson, ContentType.APPLICATION_JSON)
             .addBinaryBody("media", file, ContentType.MULTIPART_FORM_DATA, file.getName())
             .build();
         httpPost.setEntity(httpEntity);
+
+        log.info("Sending POST request to: {}", httpPost.getURI());
+        for (org.apache.http.Header header : httpPost.getAllHeaders()) {
+            log.debug("Header: {} = {}", header.getName(),
+                header.getName().contains("KEY") ? "***" : header.getValue());
+        }
+
         return execute(httpPost);
     }
 

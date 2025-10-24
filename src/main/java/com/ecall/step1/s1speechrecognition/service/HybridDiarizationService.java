@@ -190,9 +190,11 @@ public class HybridDiarizationService {
     }
 
     private void identifyClearSpeakers(List<RecognitionResult> results) {
+        log.info("=== identifyClearSpeakers: Processing {} segments ===", results.size());
         for (int i = 0; i < results.size(); i++) {
             RecognitionResult result = results.get(i);
             String text = result.getText().toLowerCase();
+            String originalSpeaker = result.getSpeakerId();
 
             // 911 콜 시작 패턴
             if (text.contains("911") && text.contains("emergency")) {
@@ -281,10 +283,16 @@ public class HybridDiarizationService {
                 result.setSpeakerId("Caller");
                 continue;
             }
+
+            // 로그 출력
+            if (!result.getSpeakerId().equals(originalSpeaker)) {
+                log.info("[{}] \"{}\" -> {}", i, result.getText().substring(0, Math.min(50, result.getText().length())), result.getSpeakerId());
+            }
         }
     }
 
     private void applyTurnTakingPattern(List<RecognitionResult> results) {
+        log.info("=== applyTurnTakingPattern: Processing {} segments ===", results.size());
         // 대화 턴 추적
         String lastConfirmedSpeaker = "Operator";
 
@@ -341,6 +349,8 @@ public class HybridDiarizationService {
 
                 lastConfirmedSpeaker = current.getSpeakerId();
             }
+
+            log.info("[{}] \"{}\" -> {}", i, current.getText().substring(0, Math.min(40, current.getText().length())), current.getSpeakerId());
         }
     }
 

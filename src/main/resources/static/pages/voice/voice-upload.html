@@ -347,8 +347,14 @@
                         <label for="api-azure">☁️ Azure Speech API</label>
                     </div>
                 </div>
+            </div>
+
+            <!-- 자동 언어 감지 안내 -->
+            <div class="language-selector" style="border: 2px solid #667eea; background: #f0f3ff;">
+                <strong>🤖 자동 언어 감지 / Auto Language Detection</strong>
                 <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                    ℹ️ 두 API 모두 한국어/영어 동시 인식을 지원합니다. 화자는 자동으로 2~5명으로 설정됩니다.
+                    ℹ️ AI가 오디오 파일의 언어를 자동으로 감지합니다. (한국어/영어 지원)<br>
+                    AI automatically detects the language of the audio file. (Korean/English supported)
                 </p>
             </div>
 
@@ -496,10 +502,11 @@
 
             // Get selected API
             const selectedAPI = document.querySelector('input[name="api"]:checked').value;
-            
+
             const formData = new FormData();
             formData.append('file', selectedFile);
-            
+            // language 파라미터를 전달하지 않음 - 서버에서 자동 감지
+
             // Clova API는 화자 수 파라미터 필요
             if (selectedAPI === 'clova') {
                 formData.append('minSpeakers', 2);
@@ -507,7 +514,7 @@
             }
 
             // API에 따라 다른 엔드포인트 사용
-            const endpoint = selectedAPI === 'clova' ? '/api/voice/upload/clova' : '/api/voice/upload/legacy';
+            const endpoint = selectedAPI === 'clova' ? '/api/voice/upload/clova' : '/api/voice/upload';
 
             processBtn.disabled = true;
             loading.classList.add('show');
