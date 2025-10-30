@@ -2,8 +2,10 @@ package com.ecall.step1.s1speechrecognition.controller;
 
 import com.ecall.step1.s1speechrecognition.dto.DiarizationResult;
 import com.ecall.step1.s1speechrecognition.model.RecognitionResult;
+import com.ecall.step1.s1speechrecognition.service.AudioConversionService;
 import com.ecall.step1.s1speechrecognition.service.AudioFileRecognitionService;
 import com.ecall.step1.s1speechrecognition.service.ClovaDiarizationService;
+import com.ecall.step1.s1speechrecognition.service.LanguageDetectionService;
 import com.ecall.step1.s1speechrecognition.service.OptimizedAudioFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,8 @@ public class FileUploadController {
 
     private final OptimizedAudioFileService optimizedAudioFileService;
     private final ClovaDiarizationService clovaDiarizationService;
+    private final LanguageDetectionService languageDetectionService;
+    private final AudioConversionService audioConversionService;
 
     @PostMapping("/legacy")
     public ResponseEntity<Map<String, Object>> uploadAudioFile(@RequestParam("file") MultipartFile file) {
@@ -77,9 +81,10 @@ public class FileUploadController {
     public ResponseEntity<Map<String, Object>> uploadAudioFileWithClova(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "minSpeakers", defaultValue = "1") int minSpeakers,
-            @RequestParam(value = "maxSpeakers", defaultValue = "5") int maxSpeakers) {
+            @RequestParam(value = "maxSpeakers", defaultValue = "5") int maxSpeakers,
+            @RequestParam(value = "language", required = false) String language) {
         try {
-            log.info("Clova API로 음성 파일 처리 시작 - 파일: {}, 크기: {} bytes, 화자 수: {}~{}", 
+            log.info("Clova API로 음성 파일 처리 시작 - 파일: {}, 크기: {} bytes, 화자 수: {}~{}",
                 file.getOriginalFilename(), file.getSize(), minSpeakers, maxSpeakers);
 
             // 파일 유효성 검사
@@ -99,14 +104,44 @@ public class FileUploadController {
                 ));
             }
 
-            // 임시 파일로 저장
+            // 임시 파일로 먼저 저장
             Path tempFile = Files.createTempFile("clova_upload_", "_" + file.getOriginalFilename());
             file.transferTo(tempFile.toFile());
 
             try {
-                // Clova API로 화자 분리 및 STT 수행
+                // 언어가 지정되지 않으면 자동 감지
+                String detectedLanguage = language;
+                if (detectedLanguage == null || detectedLanguage.isEmpty()) {
+                    log.info("언어가 지정되지 않음 - 자동 언어 감지 시작");
+
+                    // 언어 감지를 위한 임시 복사본 생성 (원본 파일은 Clova API에 사용)
+                    Path tempCopyForDetection = Files.createTempFile("detect_", "_" + file.getOriginalFilename());
+                    Files.copy(tempFile, tempCopyForDetection, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                    try {
+                        // 복사본을 WAV로 변환하여 언어 감지
+                        File wavFile = audioConversionService.convertToWavFromFile(tempCopyForDetection.toFile());
+                        try {
+                            detectedLanguage = languageDetectionService.detectLanguage(wavFile);
+                            log.info("자동 감지된 언어: {}", detectedLanguage);
+                        } finally {
+                            if (wavFile.exists()) {
+                                wavFile.delete();
+                            }
+                        }
+                    } finally {
+                        // 복사본 정리 (convertToWavFromFile이 삭제하지 않은 경우를 위해)
+                        Files.deleteIfExists(tempCopyForDetection);
+                    }
+                } else {
+                    log.info("사용자 지정 언어: {}", language);
+                }
+
+                log.info("사용할 언어: {}", detectedLanguage);
+
+                // Clova API로 화자 분리 및 STT 수행 (원본 temp 파일 사용)
                 DiarizationResult result = clovaDiarizationService.performDiarization(
-                    tempFile.toFile(), minSpeakers, maxSpeakers);
+                    tempFile.toFile(), minSpeakers, maxSpeakers, detectedLanguage);
 
                 return ResponseEntity.ok(Map.of(
                     "success", true,

@@ -23,6 +23,13 @@ public class AudioConversionService {
             false       // Big endian
     );
 
+    public File convertToWavFromFile(File sourceFile) throws IOException, UnsupportedAudioFileException {
+        String originalFilename = sourceFile.getName();
+        log.info("Converting audio file to WAV format: {}", originalFilename);
+
+        return convertFileToWav(sourceFile, originalFilename);
+    }
+
     public File convertToWav(MultipartFile multipartFile) throws IOException, UnsupportedAudioFileException {
         String originalFilename = multipartFile.getOriginalFilename();
         log.info("Converting audio file to WAV format: {}", originalFilename);
@@ -34,6 +41,11 @@ public class AudioConversionService {
         try (FileOutputStream fos = new FileOutputStream(tempInputFile)) {
             fos.write(multipartFile.getBytes());
         }
+
+        return convertFileToWav(tempInputFile, originalFilename);
+    }
+
+    private File convertFileToWav(File tempInputFile, String originalFilename) throws IOException, UnsupportedAudioFileException {
 
         // Check if it's already a WAV file with correct format
         if (isWavFile(originalFilename)) {
