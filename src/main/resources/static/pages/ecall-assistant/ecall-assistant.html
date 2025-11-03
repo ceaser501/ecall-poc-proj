@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Call Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: #2563eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .call-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .call-id-label {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .call-id {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-label {
+            color: #6b7280;
+        }
+
+        .status-value {
+            font-weight: 600;
+        }
+
+        .status-separator {
+            color: #d1d5db;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-recording {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-recording::before {
+            content: '●';
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .btn-end-call {
+            background: #dc2626;
+            color: white;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: #e5e7eb;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr 400px;
+            gap: 24px;
+            padding: 24px 32px;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        /* Left Panel - Required Fields */
+        .alert-box {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .field-group {
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .field-input, .field-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9fafb;
+        }
+
+        .field-input:focus, .field-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: white;
+        }
+
+        .auto-saved {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #10b981;
+            margin-top: 20px;
+        }
+
+        /* Center Panel - Live Transcript */
+        .detected-entities {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .entities-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .entity-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .entity-tag {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .entity-tag.location {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .entity-tag.hazard {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .entity-tag.number {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .transcript {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .message-sender {
+            font-weight: 600;
+        }
+
+        .message-time {
+            color: #6b7280;
+        }
+
+        .message-emotion {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .emotion-panic {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .emotion-tense {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .message-asr {
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        .message-content {
+            background: #f3f4f6;
+            padding: 12px 16px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .message.operator .message-content {
+            background: #2563eb;
+            color: white;
+            margin-left: 40px;
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .transcript-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-dispatch {
+            flex: 1;
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-dispatch-now {
+            flex: 1;
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-shortcut {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* Right Panel */
+        .next-questions {
+            margin-bottom: 32px;
+        }
+
+        .question-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .question-item:hover {
+            background: #f9fafb;
+        }
+
+        .question-text {
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .caller-state {
+            margin-bottom: 24px;
+        }
+
+        .emotion-level {
+            margin-top: 12px;
+        }
+
+        .emotion-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .emotion-value {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .emotion-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .emotion-fill {
+            height: 100%;
+            background: linear-gradient(to right, #10b981, #f59e0b, #ef4444);
+            width: 90%;
+        }
+
+        .emotion-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .arousal-level {
+            margin-top: 16px;
+        }
+
+        .arousal-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .risk-indicators {
+            margin-top: 20px;
+        }
+
+        .risk-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+        }
+
+        .agitation-chart {
+            margin-top: 20px;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 60px;
+            margin-top: 8px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: #93c5fd;
+            border-radius: 2px 2px 0 0;
+        }
+
+        /* Footer */
+        .footer {
+            background: white;
+            padding: 12px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+            font-size: 13px;
+        }
+
+        .footer-left {
+            display: flex;
+            gap: 16px;
+        }
+
+        .status-ok {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">E</div>
+                <div class="logo-text">E-Call Assistant</div>
+            </div>
+            <div class="call-info">
+                <div class="call-id-label">Call ID</div>
+                <div class="call-id">CALL-2025-11-02-0912</div>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <div class="status-item">
+                <span class="status-label">Answered</span>
+                <span class="status-value">03:42</span>
+            </div>
+            <span class="status-separator">•</span>
+            <div class="status-item">
+                <span class="status-label">Dispatch</span>
+                <span class="status-value">—</span>
+            </div>
+            <span class="status-separator">•</span>
+            <div class="status-item">
+                <span class="status-label">End</span>
+                <span class="status-value">—</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button class="btn btn-recording">Recording</button>
+            <button class="icon-btn">🎤</button>
+            <button class="icon-btn">📊</button>
+            <button class="btn btn-end-call">End Call</button>
+            <button class="icon-btn">🌙</button>
+            <button class="icon-btn">⚙️</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Left Panel - Required Fields -->
+        <div class="panel">
+            <h2 class="panel-title">Required Fields</h2>
+
+            <div class="alert-box">
+                ⚠️ Not dispatchable: 6 missing
+            </div>
+
+            <div class="field-group">
+                <div class="field-label">
+                    ○ Location
+                    <span style="color: #9ca3af;">ⓘ</span>
+                </div>
+                <input type="text" class="field-input" placeholder="Enter location...">
+            </div>
+
+            <div class="field-group">
+                <div class="field-label">
+                    ○ Incident Type
+                    <span style="color: #9ca3af;">ⓘ</span>
+                </div>
+                <select class="field-select">
+                    <option>Select type...</option>
+                    <option>Fire</option>
+                    <option>Medical</option>
+                    <option>Police</option>
+                </select>
+            </div>
+
+            <div class="field-group">
+                <div class="field-label">
+                    ○ Patients / Count
+                    <span style="color: #9ca3af;">ⓘ</span>
+                </div>
+                <select class="field-select">
+                    <option>Select...</option>
+                </select>
+            </div>
+
+            <div class="field-group">
+                <div class="field-label">
+                    ○ Caller Relation
+                    <span style="color: #9ca3af;">ⓘ</span>
+                </div>
+                <select class="field-select">
+                    <option>Select...</option>
+                </select>
+            </div>
+
+            <div class="field-group">
+                <div class="field-label">
+                    ○ Callback Number
+                    <span style="color: #9ca3af;">ⓘ</span>
+                </div>
+                <input type="text" class="field-input" placeholder="(555) 123-4567">
+            </div>
+
+            <div class="field-group">
+                <div class="field-label">
+                    ○ Safety Risks
+                    <span style="color: #9ca3af;">ⓘ</span>
+                </div>
+                <select class="field-select">
+                    <option>Select risks...</option>
+                </select>
+            </div>
+
+            <div class="auto-saved">
+                <span style="color: #10b981;">✓</span> Auto-saved
+            </div>
+        </div>
+
+        <!-- Center Panel - Live Transcript -->
+        <div class="panel">
+            <h2 class="panel-title">Live Transcript</h2>
+
+            <div class="detected-entities">
+                <div class="entities-label">Detected Entities</div>
+                <div class="entity-tags">
+                    <span class="entity-tag location">📍 LOC Starbucks, City Hall Station (89%)</span>
+                    <span class="entity-tag hazard">⚠️ HAZ smoke (91%)</span>
+                    <span class="entity-tag number"># NUM unknown (45%)</span>
+                </div>
+            </div>
+
+            <div class="transcript">
+                <div class="message caller">
+                    <div class="message-header">
+                        <span class="message-sender">Caller</span>
+                        <span class="message-time">00:03</span>
+                        <span class="message-emotion emotion-panic">⚠️ Panic</span>
+                        <span class="message-asr">ASR 0.87</span>
+                    </div>
+                    <div class="message-content">
+                        There's thick <span class="highlight">smoke</span> near the subway <span class="highlight">Starbucks</span>.
+                    </div>
+                </div>
+
+                <div class="message operator">
+                    <div class="message-header">
+                        <span class="message-sender">Operator</span>
+                        <span class="message-time">00:08</span>
+                    </div>
+                    <div class="message-content">
+                        What's the exact address? Can you see flames?
+                    </div>
+                </div>
+
+                <div class="message caller">
+                    <div class="message-header">
+                        <span class="message-sender">Caller</span>
+                        <span class="message-time">00:15</span>
+                        <span class="message-emotion emotion-tense">⚠️ Tense</span>
+                        <span class="message-asr">ASR 0.92</span>
+                    </div>
+                    <div class="message-content">
+                        It's at the <span class="highlight">City Hall Station</span> black <span class="highlight">smoke</span> coming from inside.
+                    </div>
+                </div>
+            </div>
+
+            <div class="transcript-actions">
+                <button class="btn btn-dispatch">
+                    Dispatch Recommendation <span class="btn-shortcut">F9</span>
+                </button>
+                <button class="btn btn-dispatch-now">
+                    Dispatch Now <span class="btn-shortcut">F12</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div>
+            <!-- Next Questions -->
+            <div class="panel">
+                <h2 class="panel-title">Next Questions</h2>
+
+                <div class="question-item">
+                    <div class="question-text">How many people are in the immediate area?</div>
+                    <span>➜</span>
+                </div>
+
+                <div class="question-item">
+                    <div class="question-text">Is anyone having difficulty breathing?</div>
+                    <span>➜</span>
+                </div>
+
+                <div class="question-item">
+                    <div class="question-text">Are exits accessible and clear?</div>
+                    <span>➜</span>
+                </div>
+            </div>
+
+            <!-- Caller State -->
+            <div class="panel" style="margin-top: 24px;">
+                <h2 class="panel-title">Caller State</h2>
+
+                <div class="emotion-level">
+                    <div class="emotion-label">
+                        <span style="font-weight: 500;">Emotion Level</span>
+                        <span class="emotion-value">Panic</span>
+                    </div>
+                    <div class="emotion-bar">
+                        <div class="emotion-fill"></div>
+                    </div>
+                    <div class="emotion-labels">
+                        <span>Calm</span>
+                        <span>Tense</span>
+                        <span>Panic</span>
+                    </div>
+                </div>
+
+                <div class="arousal-level">
+                    <div style="font-size: 14px; font-weight: 500; color: #6b7280;">Arousal</div>
+                    <div class="arousal-value">85 <span style="font-size: 14px; color: #6b7280;">%</span></div>
+                </div>
+
+                <div class="risk-indicators">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Risk Indicators</div>
+                    <div class="risk-item">
+                        <div class="checkbox"></div>
+                        <span>Violence risk</span>
+                    </div>
+                    <div class="risk-item">
+                        <div class="checkbox"></div>
+                        <span>Self-harm risk</span>
+                    </div>
+                    <div class="risk-item">
+                        <div class="checkbox"></div>
+                        <span>Intoxication</span>
+                    </div>
+                    <div class="risk-item">
+                        <div class="checkbox"></div>
+                        <span>Child/Elderly</span>
+                    </div>
+                </div>
+
+                <div class="agitation-chart">
+                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 8px;">Agitation (last 30s)</div>
+                    <div class="chart-bars">
+                        <div class="chart-bar" style="height: 20%;"></div>
+                        <div class="chart-bar" style="height: 25%;"></div>
+                        <div class="chart-bar" style="height: 40%;"></div>
+                        <div class="chart-bar" style="height: 50%;"></div>
+                        <div class="chart-bar" style="height: 65%;"></div>
+                        <div class="chart-bar" style="height: 75%;"></div>
+                        <div class="chart-bar" style="height: 85%;"></div>
+                        <div class="chart-bar" style="height: 90%;"></div>
+                        <div class="chart-bar" style="height: 95%;"></div>
+                        <div class="chart-bar" style="height: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-left">
+            <div>STT: <span class="status-ok">OK</span></div>
+            <span>•</span>
+            <div>NLU: <span class="status-ok">OK</span></div>
+            <span>•</span>
+            <div>Network: <span style="font-weight: 600;">32ms</span></div>
+        </div>
+        <div style="color: #6b7280;">Recording saved: REC_0912.wav</div>
+    </div>
+
+    <script>
+        // Timer simulation
+        let seconds = 222; // 03:42
+        setInterval(() => {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            document.querySelector('.header-center .status-value').textContent =
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }, 1000);
+    </script>
+</body>
+</html>
