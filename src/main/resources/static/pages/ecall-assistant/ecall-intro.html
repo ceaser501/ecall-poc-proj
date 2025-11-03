@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Call Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f7;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+        }
+
+        .subtitle {
+            font-size: 21px;
+            color: #6e6e73;
+            line-height: 1.4;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 18px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            font-size: 48px;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+
+        .card-description {
+            font-size: 16px;
+            color: #6e6e73;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 20px;
+            color: #6e6e73;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .subtitle {
+                font-size: 18px;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>E-Call Assistant</h1>
+            <p class="subtitle">긴급 전화 자동 분석 및 관리 시스템</p>
+        </div>
+
+        <div class="menu-grid">
+            <a href="ecall-dashboard.html" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-1.png" alt="Dashboard" class="card-icon">
+                <div class="card-title">대시보드</div>
+                <div class="card-description">실시간 통화 현황 및 리소스 관리</div>
+            </a>
+
+            <a href="#" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-2.png" alt="Fire" class="card-icon">
+                <div class="card-title">화재 대응</div>
+                <div class="card-description">화재 관련 긴급 통화 관리</div>
+            </a>
+
+            <a href="#" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-1.png" alt="Medical" class="card-icon">
+                <div class="card-title">의료 대응</div>
+                <div class="card-description">응급 의료 상황 관리</div>
+            </a>
+
+            <a href="#" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-3.png" alt="Police" class="card-icon">
+                <div class="card-title">경찰 대응</div>
+                <div class="card-description">치안 관련 긴급 상황 관리</div>
+            </a>
+
+            <a href="/pages/voice/voice-combined.html" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-8.png" alt="Voice" class="card-icon">
+                <div class="card-title">음성 분석</div>
+                <div class="card-description">실시간 음성 인식 및 화자 분리</div>
+            </a>
+
+            <a href="#" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-10.png" alt="Location" class="card-icon">
+                <div class="card-title">위치 추적</div>
+                <div class="card-description">긴급 상황 위치 정보 관리</div>
+            </a>
+
+            <a href="#" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-15.png" alt="Settings" class="card-icon">
+                <div class="card-title">설정</div>
+                <div class="card-description">시스템 설정 및 환경 구성</div>
+            </a>
+
+            <a href="#" class="menu-card">
+                <img src="/assets/images/ecallAssistant_icon/Icon-4.png" alt="Reports" class="card-icon">
+                <div class="card-title">통계 및 보고서</div>
+                <div class="card-description">대응 현황 및 성과 분석</div>
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 E-Call Assistant. All rights reserved.</p>
+            <p style="margin-top: 8px;">긴급 전화 자동 분석 시스템 POC</p>
+        </div>
+    </div>
+
+    <script>
+        // Prevent default for placeholder links
+        document.querySelectorAll('a[href="#"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('준비 중입니다.');
+            });
+        });
+    </script>
+</body>
+</html>
