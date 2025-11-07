@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Call Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.294.0/lucide.min.css">
     <style>
         * {
             margin: 0;
@@ -13,173 +14,411 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f7;
+            background: linear-gradient(135deg, rgb(248, 250, 252) 0%, rgb(226, 232, 240) 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            width: 100%;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
         }
 
         h1 {
-            font-size: 48px;
+            font-size: 2.25rem;
             font-weight: 700;
-            color: #1d1d1f;
-            margin-bottom: 16px;
+            color: rgb(15, 23, 42);
+            margin-bottom: 0.5rem;
         }
 
-        .subtitle {
-            font-size: 21px;
-            color: #6e6e73;
-            line-height: 1.4;
+        h2 {
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid rgb(226, 232, 240);
+        }
+
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: rgb(15, 23, 42);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: rgb(71, 85, 105);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
         }
 
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
         }
 
-        .menu-card {
-            background: white;
-            border-radius: 18px;
-            padding: 32px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            text-decoration: none;
-            display: block;
-        }
-
-        .menu-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-icon {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 20px;
-            font-size: 48px;
-        }
-
-        .card-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin-bottom: 12px;
-        }
-
-        .card-description {
-            font-size: 16px;
-            color: #6e6e73;
-            line-height: 1.5;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 60px;
-            padding: 20px;
-            color: #6e6e73;
-            font-size: 14px;
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 36px;
+        @media (max-width: 1024px) {
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
+        }
 
-            .subtitle {
-                font-size: 18px;
-            }
-
+        @media (max-width: 640px) {
             .menu-grid {
                 grid-template-columns: 1fr;
             }
         }
+
+        .menu-card {
+            position: relative;
+            height: 100%;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid rgb(226, 232, 240);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+            animation: fadeInUp 0.4s ease-out both;
+        }
+
+        .menu-card:nth-child(1) { animation-delay: 0s; }
+        .menu-card:nth-child(2) { animation-delay: 0.05s; }
+        .menu-card:nth-child(3) { animation-delay: 0.1s; }
+        .menu-card:nth-child(4) { animation-delay: 0.15s; }
+        .menu-card:nth-child(5) { animation-delay: 0.2s; }
+        .menu-card:nth-child(6) { animation-delay: 0.25s; }
+        .menu-card:nth-child(7) { animation-delay: 0.3s; }
+        .menu-card:nth-child(8) { animation-delay: 0.35s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .menu-card:hover {
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            border-color: rgb(203, 213, 225);
+        }
+
+        .menu-card-gradient {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .menu-card:hover .menu-card-gradient {
+            opacity: 1;
+        }
+
+        .menu-card-content {
+            position: relative;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            color: rgb(15, 23, 42);
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        .card-icon {
+            flex-shrink: 0;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .menu-card:hover .card-icon {
+            transform: scale(1.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-icon svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: white;
+        }
+
+        .card-description {
+            color: rgb(71, 85, 105);
+            flex-grow: 1;
+            line-height: 1.625;
+            margin-top: 0.5rem;
+            white-space: pre-line;
+        }
+
+        .card-footer {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgb(241, 245, 249);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-footer span {
+            color: rgb(100, 116, 139);
+        }
+
+        .card-arrow {
+            width: 1rem;
+            height: 1rem;
+            color: rgb(148, 163, 184);
+            transition: transform 0.3s;
+        }
+
+        .menu-card:hover .card-arrow {
+            transform: translateX(4px);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: rgb(100, 116, 139);
+        }
+
+        .footer p {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Color schemes */
+        .blue-gradient { background: linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(37, 99, 235) 100%); }
+        .blue-bg { background: linear-gradient(135deg, rgb(239, 246, 255) 0%, rgb(219, 234, 254) 100%); }
+
+        .red-gradient { background: linear-gradient(135deg, rgb(239, 68, 68) 0%, rgb(220, 38, 38) 100%); }
+        .red-bg { background: linear-gradient(135deg, rgb(254, 242, 242) 0%, rgb(254, 226, 226) 100%); }
+
+        .orange-gradient { background: linear-gradient(135deg, rgb(249, 115, 22) 0%, rgb(234, 88, 12) 100%); }
+        .orange-bg { background: linear-gradient(135deg, rgb(255, 247, 237) 0%, rgb(255, 237, 213) 100%); }
+
+        .green-gradient { background: linear-gradient(135deg, rgb(34, 197, 94) 0%, rgb(22, 163, 74) 100%); }
+        .green-bg { background: linear-gradient(135deg, rgb(240, 253, 244) 0%, rgb(220, 252, 231) 100%); }
+
+        .purple-gradient { background: linear-gradient(135deg, rgb(168, 85, 247) 0%, rgb(147, 51, 234) 100%); }
+        .purple-bg { background: linear-gradient(135deg, rgb(250, 245, 255) 0%, rgb(243, 232, 255) 100%); }
+
+        .teal-gradient { background: linear-gradient(135deg, rgb(20, 184, 166) 0%, rgb(13, 148, 136) 100%); }
+        .teal-bg { background: linear-gradient(135deg, rgb(240, 253, 250) 0%, rgb(204, 251, 241) 100%); }
+
+        .indigo-gradient { background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(79, 70, 229) 100%); }
+        .indigo-bg { background: linear-gradient(135deg, rgb(238, 242, 255) 0%, rgb(224, 231, 255) 100%); }
+
+        .gray-gradient { background: linear-gradient(135deg, rgb(107, 114, 128) 0%, rgb(75, 85, 99) 100%); }
+        .gray-bg { background: linear-gradient(135deg, rgb(249, 250, 251) 0%, rgb(243, 244, 246) 100%); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-container">
             <h1>E-Call Assistant</h1>
-            <p class="subtitle">긴급 전화 자동 분석 및 관리 시스템</p>
-        </div>
-
-        <div class="menu-grid">
-            <a href="ecall-dashboard.html" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-1.png" alt="Dashboard" class="card-icon">
-                <div class="card-title">대시보드</div>
-                <div class="card-description">실시간 통화 현황 및 리소스 관리</div>
-            </a>
-
-            <a href="#" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-2.png" alt="Fire" class="card-icon">
-                <div class="card-title">화재 대응</div>
-                <div class="card-description">화재 관련 긴급 통화 관리</div>
-            </a>
-
-            <a href="#" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-1.png" alt="Medical" class="card-icon">
-                <div class="card-title">의료 대응</div>
-                <div class="card-description">응급 의료 상황 관리</div>
-            </a>
-
-            <a href="#" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-3.png" alt="Police" class="card-icon">
-                <div class="card-title">경찰 대응</div>
-                <div class="card-description">치안 관련 긴급 상황 관리</div>
-            </a>
-
-            <a href="/pages/voice/voice-combined.html" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-8.png" alt="Voice" class="card-icon">
-                <div class="card-title">음성 분석</div>
-                <div class="card-description">실시간 음성 인식 및 화자 분리</div>
-            </a>
-
-            <a href="#" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-10.png" alt="Location" class="card-icon">
-                <div class="card-title">위치 추적</div>
-                <div class="card-description">긴급 상황 위치 정보 관리</div>
-            </a>
-
-            <a href="#" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-15.png" alt="Settings" class="card-icon">
-                <div class="card-title">설정</div>
-                <div class="card-description">시스템 설정 및 환경 구성</div>
-            </a>
-
-            <a href="#" class="menu-card">
-                <img src="/assets/images/ecallAssistant_icon/Icon-4.png" alt="Reports" class="card-icon">
-                <div class="card-title">통계 및 보고서</div>
-                <div class="card-description">대응 현황 및 성과 분석</div>
-            </a>
-        </div>
-
-        <div class="footer">
-            <p>&copy; 2025 E-Call Assistant. All rights reserved.</p>
-            <p style="margin-top: 8px;">긴급 전화 자동 분석 시스템 POC</p>
+            <p>Emergency Call Analysis and Management System</p>
         </div>
     </div>
 
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="menu-grid">
+            <!-- Card 1: Dashboard -->
+            <div class="menu-card" onclick="navigateTo('ecall-dashboard.html')">
+                <div class="menu-card-gradient blue-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Comprehensive Dashboard</h2>
+                        <div class="card-icon blue-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">Real-time Report &
+Dispatch Monitoring</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Report Reception -->
+            <div class="menu-card" onclick="navigateTo('ecall-assistant.html')">
+                <div class="menu-card-gradient red-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Report Reception</h2>
+                        <div class="card-icon red-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">Voice/Text Intake &
+Incident Classification</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Dispatch Console -->
+            <div class="menu-card">
+                <div class="menu-card-gradient orange-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Dispatch Console</h2>
+                        <div class="card-icon orange-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">Responder Assignment &
+Field Control</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Response History -->
+            <div class="menu-card">
+                <div class="menu-card-gradient green-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Response History</h2>
+                        <div class="card-icon green-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">Incident Review &
+Timeline Tracking</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Administrator Panel -->
+            <div class="menu-card" onclick="navigateTo('../dashboard/test-dashboard.html')">
+                <div class="menu-card-gradient purple-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Administrator Panel</h2>
+                        <div class="card-icon purple-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">User, Role &
+Department Management</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 6: Manual Management -->
+            <div class="menu-card">
+                <div class="menu-card-gradient teal-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Manual Management</h2>
+                        <div class="card-icon teal-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">Manual Library &
+Keyword Search</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 7: Statistics & Reports -->
+            <div class="menu-card">
+                <div class="menu-card-gradient indigo-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Statistics & Reports</h2>
+                        <div class="card-icon indigo-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">Analytics, Metrics &
+Visualization</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 8: Settings -->
+            <div class="menu-card">
+                <div class="menu-card-gradient gray-bg"></div>
+                <div class="menu-card-content">
+                    <div class="card-header">
+                        <h2 class="card-title">Settings</h2>
+                        <div class="card-icon gray-gradient">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m5.2-14.8l-4.2 4.2m0 5.2l-4.2 4.2M23 12h-6m-6 0H1m14.8-5.2l-4.2 4.2m0 5.2l-4.2 4.2"/></svg>
+                        </div>
+                    </div>
+                    <p class="card-description">System Configuration &
+Preferences</p>
+                    <div class="card-footer">
+                        <span>Get Started</span>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2025 E-Call Assistant. All rights reserved.</p>
+        <p>Emergency Call Analysis System POC</p>
+    </div>
+
     <script>
-        // Prevent default for placeholder links
-        document.querySelectorAll('a[href="#"]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                alert('준비 중입니다.');
-            });
-        });
+        function navigateTo(url) {
+            window.location.href = url;
+        }
     </script>
 </body>
 </html>
