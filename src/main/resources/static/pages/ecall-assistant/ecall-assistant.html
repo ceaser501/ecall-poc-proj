@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Call Assistant</title>
+    <title>Report Reception - E-Call Assistant</title>
     <style>
         * {
             margin: 0;
@@ -13,779 +13,1097 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
+            background: linear-gradient(135deg, rgb(248, 250, 252) 0%, rgb(226, 232, 240) 100%);
+            min-height: 100vh;
         }
 
         /* Header */
         .header {
             background: white;
-            padding: 16px 32px;
+            border-bottom: 1px solid rgb(226, 232, 240);
+        }
+
+        .header-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 0.75rem;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: #2563eb;
-            border-radius: 8px;
+        .header-icon {
+            background: linear-gradient(135deg, rgb(239, 68, 68) 0%, rgb(220, 38, 38) 100%);
+            padding: 0.625rem;
+            border-radius: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .header-icon svg {
+            width: 1.25rem;
+            height: 1.25rem;
             color: white;
-            font-weight: bold;
-            font-size: 20px;
         }
 
-        .logo-text {
-            font-size: 18px;
+        .header-title {
+            font-size: 1.25rem;
             font-weight: 600;
-        }
-
-        .call-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .call-id-label {
-            font-size: 11px;
-            color: #6b7280;
-        }
-
-        .call-id {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .header-center {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-size: 14px;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-label {
-            color: #6b7280;
-        }
-
-        .status-value {
-            font-weight: 600;
-        }
-
-        .status-separator {
-            color: #d1d5db;
+            color: rgb(15, 23, 42);
         }
 
         .header-right {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            background: rgb(34, 197, 94);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            color: rgb(71, 85, 105);
+        }
+
+        .status-time {
+            color: rgb(15, 23, 42);
+            font-weight: 600;
         }
 
         .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgb(226, 232, 240);
+            border-radius: 0.375rem;
+            background: white;
+            font-size: 0.875rem;
             font-weight: 500;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 0.5rem;
             transition: all 0.2s;
         }
 
-        .btn-recording {
-            background: #ef4444;
+        .btn:hover {
+            background: rgb(248, 250, 252);
+            border-color: rgb(203, 213, 225);
+        }
+
+        .btn-primary {
+            background: rgb(59, 130, 246);
+            border-color: rgb(59, 130, 246);
             color: white;
         }
 
-        .btn-recording::before {
-            content: '●';
-            animation: blink 1.5s infinite;
+        .btn-primary:hover {
+            background: rgb(37, 99, 235);
+            border-color: rgb(37, 99, 235);
         }
 
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
-        }
-
-        .btn-end-call {
-            background: #dc2626;
-            color: white;
-        }
-
-        .icon-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: #f3f4f6;
-            border-radius: 8px;
-            cursor: pointer;
+        .btn-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .icon-btn:hover {
-            background: #e5e7eb;
+        .btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
         }
 
         /* Main Content */
         .main-content {
-            display: grid;
-            grid-template-columns: 300px 1fr 400px;
-            gap: 24px;
-            padding: 24px 32px;
-            max-width: 1920px;
+            max-width: 1600px;
             margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) minmax(600px, 2fr) minmax(280px, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1400px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+
+            .left-sidebar, .right-sidebar {
+                display: none;
+            }
         }
 
         .panel {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid rgb(226, 232, 240);
+        }
+
+        .panel-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid rgb(226, 232, 240);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .panel-title {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 600;
-            margin-bottom: 20px;
-        }
-
-        /* Left Panel - Required Fields */
-        .alert-box {
-            background: #fee2e2;
-            color: #dc2626;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 20px;
+            color: rgb(15, 23, 42);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 0.5rem;
         }
 
-        .field-group {
-            margin-bottom: 20px;
+        .panel-body {
+            padding: 1.25rem;
         }
 
-        .field-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 14px;
+        /* Left Sidebar - Caller Info */
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
             font-weight: 500;
+            color: rgb(51, 65, 85);
+            margin-bottom: 0.375rem;
         }
 
-        .field-input, .field-select {
+        .form-input, .form-select {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #f9fafb;
-        }
-
-        .field-input:focus, .field-select:focus {
-            outline: none;
-            border-color: #2563eb;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid rgb(226, 232, 240);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
             background: white;
+            transition: all 0.2s;
         }
 
-        .auto-saved {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: #10b981;
-            margin-top: 20px;
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: rgb(59, 130, 246);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* Center Panel - Live Transcript */
-        .detected-entities {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .form-input:read-only {
+            background: rgb(248, 250, 252);
         }
 
-        .entities-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 8px;
+        .btn-update {
+            width: 100%;
+            background: rgb(71, 85, 105);
+            border-color: rgb(71, 85, 105);
+            color: white;
+            margin-top: 0.75rem;
         }
 
-        .entity-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+        .btn-update:hover {
+            background: rgb(51, 65, 85);
+            border-color: rgb(51, 65, 85);
         }
 
-        .entity-tag {
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 500;
+        .divider {
+            margin: 1.25rem 0;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgb(226, 232, 240);
         }
 
-        .entity-tag.location {
-            background: #dbeafe;
-            color: #1d4ed8;
+        .btn-checklist {
+            width: 100%;
+            justify-content: center;
         }
 
-        .entity-tag.hazard {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .entity-tag.number {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .transcript {
+        /* Center Panel - Transcript */
+        .transcript-panel {
+            height: 800px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+        }
+
+        .transcript-header-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: rgb(71, 85, 105);
+            font-size: 0.875rem;
+        }
+
+        .transcript-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
         .message {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid;
+        }
+
+        .message-operator {
+            background: rgb(240, 253, 244);
+            border-color: rgb(187, 247, 208);
+        }
+
+        .message-caller {
+            background: rgb(254, 249, 195);
+            border-color: rgb(253, 230, 138);
         }
 
         .message-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 12px;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
         }
 
         .message-sender {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sender-avatar {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
+        .operator-avatar {
+            background: rgb(34, 197, 94);
+        }
+
+        .caller-avatar {
+            background: rgb(59, 130, 246);
+        }
+
+        .sender-name {
+            font-weight: 600;
+            color: rgb(15, 23, 42);
+        }
+
         .message-time {
-            color: #6b7280;
+            color: rgb(100, 116, 139);
+            font-size: 0.875rem;
         }
 
-        .message-emotion {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .emotion-panic {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .emotion-tense {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .message-asr {
-            color: #6b7280;
-            font-size: 11px;
-        }
-
-        .message-content {
-            background: #f3f4f6;
-            padding: 12px 16px;
-            border-radius: 8px;
+        .message-text {
+            color: rgb(51, 65, 85);
             line-height: 1.5;
+            margin-left: 2rem;
         }
 
-        .message.operator .message-content {
-            background: #2563eb;
-            color: white;
-            margin-left: 40px;
-        }
-
-        .highlight {
-            background: #fef3c7;
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
-
-        .transcript-actions {
+        .transcript-footer {
+            border-top: 1px solid rgb(226, 232, 240);
+            padding: 0.75rem;
+            background: rgb(248, 250, 252);
             display: flex;
-            gap: 12px;
-            margin-top: 20px;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .btn-dispatch {
-            flex: 1;
-            background: #2563eb;
-            color: white;
+        .recording-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            background: rgb(239, 68, 68);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
         }
 
-        .btn-dispatch-now {
-            flex: 1;
-            background: #10b981;
-            color: white;
+        .recording-text {
+            color: rgb(71, 85, 105);
+            font-size: 0.875rem;
         }
 
-        .btn-shortcut {
-            font-size: 11px;
-            opacity: 0.7;
+        /* Right Sidebar */
+        .operator-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
-        /* Right Panel */
-        .next-questions {
-            margin-bottom: 32px;
+        .operator-avatar-lg {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: rgb(226, 232, 240);
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
-        .question-item {
+        .operator-avatar-lg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .operator-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+
+        .operator-name {
+            font-weight: 600;
+            color: rgb(15, 23, 42);
+        }
+
+        .operator-dept {
+            color: rgb(71, 85, 105);
+            font-size: 0.875rem;
+        }
+
+        .operator-exp {
+            color: rgb(100, 116, 139);
+            font-size: 0.875rem;
+        }
+
+        .manual-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .manual-item {
+            background: rgb(241, 245, 249);
+            padding: 0.625rem;
+            border-radius: 0.5rem;
+            color: rgb(51, 65, 85);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .manual-item:hover {
+            background: rgb(226, 232, 240);
+        }
+
+        .timeline-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+        }
+
+        .timeline-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 8px;
+            color: rgb(51, 65, 85);
+            font-size: 0.875rem;
+        }
+
+        .timeline-time {
+            color: rgb(100, 116, 139);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgb(226, 232, 240);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: rgb(15, 23, 42);
+        }
+
+        .modal-desc {
+            margin-top: 0.5rem;
+            color: rgb(71, 85, 105);
+            font-size: 0.875rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgb(226, 232, 240);
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: rgb(100, 116, 139);
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: rgb(15, 23, 42);
+        }
+
+        /* Checklist */
+        .checklist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgb(248, 250, 252);
+            border-radius: 0.5rem;
+        }
+
+        .checklist-question {
+            color: rgb(51, 65, 85);
+            flex: 1;
+        }
+
+        .checklist-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .btn-yes, .btn-no {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 0.375rem;
+            border: 1px solid;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.2s;
+        }
+
+        .btn-yes {
+            background: white;
+            border-color: rgb(226, 232, 240);
+            color: rgb(71, 85, 105);
+        }
+
+        .btn-yes.active {
+            background: rgb(34, 197, 94);
+            border-color: rgb(34, 197, 94);
+            color: white;
+        }
+
+        .btn-no {
+            background: white;
+            border-color: rgb(226, 232, 240);
+            color: rgb(71, 85, 105);
+        }
+
+        .btn-no.active {
+            background: rgb(239, 68, 68);
+            border-color: rgb(239, 68, 68);
+            color: white;
+        }
+
+        /* Upload Modal */
+        .upload-area {
+            border: 2px dashed rgb(203, 213, 225);
+            border-radius: 0.5rem;
+            padding: 3rem 2rem;
+            text-align: center;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .question-item:hover {
-            background: #f9fafb;
+        .upload-area:hover {
+            border-color: rgb(59, 130, 246);
         }
 
-        .question-text {
-            font-size: 14px;
-            flex: 1;
+        .upload-icon {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 0.75rem;
+            color: rgb(148, 163, 184);
         }
 
-        .caller-state {
-            margin-bottom: 24px;
+        .upload-text {
+            color: rgb(51, 65, 85);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
         }
 
-        .emotion-level {
-            margin-top: 12px;
+        .upload-subtext {
+            color: rgb(100, 116, 139);
+            font-size: 0.875rem;
         }
 
-        .emotion-label {
+        .file-input {
+            display: none;
+        }
+
+        .uploaded-file {
+            background: rgb(239, 246, 255);
+            border: 1px solid rgb(191, 219, 254);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 13px;
         }
 
-        .emotion-value {
-            background: #fee2e2;
-            color: #dc2626;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .emotion-bar {
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 4px;
-        }
-
-        .emotion-fill {
-            height: 100%;
-            background: linear-gradient(to right, #10b981, #f59e0b, #ef4444);
-            width: 90%;
-        }
-
-        .emotion-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #6b7280;
-        }
-
-        .arousal-level {
-            margin-top: 16px;
-        }
-
-        .arousal-value {
-            font-size: 24px;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        .risk-indicators {
-            margin-top: 20px;
-        }
-
-        .risk-item {
+        .file-info-wrapper {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 0.75rem;
         }
 
-        .checkbox {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #d1d5db;
-            border-radius: 4px;
+        .file-icon {
+            color: rgb(37, 99, 235);
         }
 
-        .agitation-chart {
-            margin-top: 20px;
-        }
-
-        .chart-bars {
+        .file-details {
             display: flex;
-            align-items: flex-end;
-            gap: 4px;
-            height: 60px;
-            margin-top: 8px;
+            flex-direction: column;
+            gap: 0.25rem;
         }
 
-        .chart-bar {
-            flex: 1;
-            background: #93c5fd;
-            border-radius: 2px 2px 0 0;
+        .file-name {
+            color: rgb(15, 23, 42);
+            font-weight: 500;
         }
 
-        /* Footer */
-        .footer {
-            background: white;
-            padding: 12px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
-            font-size: 13px;
+        .file-size {
+            color: rgb(100, 116, 139);
+            font-size: 0.875rem;
         }
 
-        .footer-left {
-            display: flex;
-            gap: 16px;
+        .remove-file-btn {
+            background: none;
+            border: none;
+            color: rgb(71, 85, 105);
+            cursor: pointer;
+            padding: 0.25rem;
         }
 
-        .status-ok {
-            color: #10b981;
-            font-weight: 600;
-        }
-
-        @media (max-width: 1400px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
+        .remove-file-btn:hover {
+            color: rgb(15, 23, 42);
         }
     </style>
 </head>
 <body>
     <!-- Header -->
     <div class="header">
-        <div class="header-left">
-            <div class="logo">
-                <div class="logo-icon">E</div>
-                <div class="logo-text">E-Call Assistant</div>
+        <div class="header-container">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </div>
+                <h1 class="header-title">Report Reception — ECA103</h1>
             </div>
-            <div class="call-info">
-                <div class="call-id-label">Call ID</div>
-                <div class="call-id">CALL-2025-11-02-0912</div>
-            </div>
-        </div>
 
-        <div class="header-center">
-            <div class="status-item">
-                <span class="status-label">Answered</span>
-                <span class="status-value">03:42</span>
+            <div class="header-right">
+                <button class="btn btn-primary" onclick="showUploadModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+                    Upload Audio File
+                </button>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text">On Call</span>
+                    <span class="status-time" id="callTimer">03:42</span>
+                </div>
+                <button class="btn btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m5.2-14.8l-4.2 4.2m0 5.2l-4.2 4.2M23 12h-6m-6 0H1m14.8-5.2l-4.2 4.2m0 5.2l-4.2 4.2"/></svg>
+                </button>
+                <button class="btn btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </button>
             </div>
-            <span class="status-separator">•</span>
-            <div class="status-item">
-                <span class="status-label">Dispatch</span>
-                <span class="status-value">—</span>
-            </div>
-            <span class="status-separator">•</span>
-            <div class="status-item">
-                <span class="status-label">End</span>
-                <span class="status-value">—</span>
-            </div>
-        </div>
-
-        <div class="header-right">
-            <button class="btn btn-recording">Recording</button>
-            <button class="icon-btn">🎤</button>
-            <button class="icon-btn">📊</button>
-            <button class="btn btn-end-call">End Call</button>
-            <button class="icon-btn">🌙</button>
-            <button class="icon-btn">⚙️</button>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- Left Panel - Required Fields -->
-        <div class="panel">
-            <h2 class="panel-title">Required Fields</h2>
-
-            <div class="alert-box">
-                ⚠️ Not dispatchable: 6 missing
-            </div>
-
-            <div class="field-group">
-                <div class="field-label">
-                    ○ Location
-                    <span style="color: #9ca3af;">ⓘ</span>
-                </div>
-                <input type="text" class="field-input" placeholder="Enter location...">
-            </div>
-
-            <div class="field-group">
-                <div class="field-label">
-                    ○ Incident Type
-                    <span style="color: #9ca3af;">ⓘ</span>
-                </div>
-                <select class="field-select">
-                    <option>Select type...</option>
-                    <option>Fire</option>
-                    <option>Medical</option>
-                    <option>Police</option>
-                </select>
-            </div>
-
-            <div class="field-group">
-                <div class="field-label">
-                    ○ Patients / Count
-                    <span style="color: #9ca3af;">ⓘ</span>
-                </div>
-                <select class="field-select">
-                    <option>Select...</option>
-                </select>
-            </div>
-
-            <div class="field-group">
-                <div class="field-label">
-                    ○ Caller Relation
-                    <span style="color: #9ca3af;">ⓘ</span>
-                </div>
-                <select class="field-select">
-                    <option>Select...</option>
-                </select>
-            </div>
-
-            <div class="field-group">
-                <div class="field-label">
-                    ○ Callback Number
-                    <span style="color: #9ca3af;">ⓘ</span>
-                </div>
-                <input type="text" class="field-input" placeholder="(555) 123-4567">
-            </div>
-
-            <div class="field-group">
-                <div class="field-label">
-                    ○ Safety Risks
-                    <span style="color: #9ca3af;">ⓘ</span>
-                </div>
-                <select class="field-select">
-                    <option>Select risks...</option>
-                </select>
-            </div>
-
-            <div class="auto-saved">
-                <span style="color: #10b981;">✓</span> Auto-saved
-            </div>
-        </div>
-
-        <!-- Center Panel - Live Transcript -->
-        <div class="panel">
-            <h2 class="panel-title">Live Transcript</h2>
-
-            <div class="detected-entities">
-                <div class="entities-label">Detected Entities</div>
-                <div class="entity-tags">
-                    <span class="entity-tag location">📍 LOC Starbucks, City Hall Station (89%)</span>
-                    <span class="entity-tag hazard">⚠️ HAZ smoke (91%)</span>
-                    <span class="entity-tag number"># NUM unknown (45%)</span>
-                </div>
-            </div>
-
-            <div class="transcript">
-                <div class="message caller">
-                    <div class="message-header">
-                        <span class="message-sender">Caller</span>
-                        <span class="message-time">00:03</span>
-                        <span class="message-emotion emotion-panic">⚠️ Panic</span>
-                        <span class="message-asr">ASR 0.87</span>
+        <div class="grid-container">
+            <!-- Left Sidebar -->
+            <div class="left-sidebar">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            Caller Information
+                        </h2>
                     </div>
-                    <div class="message-content">
-                        There's thick <span class="highlight">smoke</span> near the subway <span class="highlight">Starbucks</span>.
-                    </div>
-                </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="form-label">Caller Number</label>
+                            <input type="text" class="form-input" value="010-8734-2910" readonly>
+                        </div>
 
-                <div class="message operator">
-                    <div class="message-header">
-                        <span class="message-sender">Operator</span>
-                        <span class="message-time">00:08</span>
-                    </div>
-                    <div class="message-content">
-                        What's the exact address? Can you see flames?
-                    </div>
-                </div>
+                        <div class="form-group">
+                            <label class="form-label">Caller Name</label>
+                            <input type="text" class="form-input" value="Minsu Kim">
+                        </div>
 
-                <div class="message caller">
-                    <div class="message-header">
-                        <span class="message-sender">Caller</span>
-                        <span class="message-time">00:15</span>
-                        <span class="message-emotion emotion-tense">⚠️ Tense</span>
-                        <span class="message-asr">ASR 0.92</span>
-                    </div>
-                    <div class="message-content">
-                        It's at the <span class="highlight">City Hall Station</span> black <span class="highlight">smoke</span> coming from inside.
+                        <div class="form-group">
+                            <label class="form-label">Incident Location</label>
+                            <input type="text" class="form-input" value="152 Daechi-dong, Gangnam-gu, Seoul">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Incident Type</label>
+                            <select class="form-select" id="incidentType" onchange="updateChecklist()">
+                                <option value="emergency">Emergency</option>
+                                <option value="fire">Fire</option>
+                                <option value="crime">Crime</option>
+                                <option value="accident">Accident</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Severity Level</label>
+                            <select class="form-select">
+                                <option value="1">Level 1 (Minor)</option>
+                                <option value="2">Level 2</option>
+                                <option value="3">Level 3</option>
+                                <option value="4" selected>Level 4 (Severe)</option>
+                                <option value="5">Level 5 (Critical)</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-update">Update</button>
+
+                        <div class="divider">
+                            <button class="btn btn-checklist" onclick="showChecklistModal()">
+                                View Checklist
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="transcript-actions">
-                <button class="btn btn-dispatch">
-                    Dispatch Recommendation <span class="btn-shortcut">F9</span>
-                </button>
-                <button class="btn btn-dispatch-now">
-                    Dispatch Now <span class="btn-shortcut">F12</span>
-                </button>
+            <!-- Center Panel -->
+            <div class="center-panel">
+                <div class="panel transcript-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Live Transcript</h2>
+                        <div class="transcript-header-info">
+                            <span>AI Confidence: 94%</span>
+                            <button class="btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Play
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="transcript-messages">
+                        <div class="message message-operator">
+                            <div class="message-header">
+                                <div class="message-sender">
+                                    <div class="sender-avatar operator-avatar">O</div>
+                                    <span class="sender-name">Operator</span>
+                                </div>
+                                <span class="message-time">14:23:35</span>
+                            </div>
+                            <div class="message-text">
+                                I understand. Is the patient conscious? Are their eyes open?
+                            </div>
+                        </div>
+
+                        <div class="message message-caller">
+                            <div class="message-header">
+                                <div class="message-sender">
+                                    <div class="sender-avatar caller-avatar">C</div>
+                                    <span class="sender-name">Caller</span>
+                                </div>
+                                <span class="message-time">14:23:40</span>
+                            </div>
+                            <div class="message-text">
+                                Their eyes are closed. They look pale and... there's a lot of blood! What should I do?!
+                            </div>
+                        </div>
+
+                        <div class="message message-operator">
+                            <div class="message-header">
+                                <div class="message-sender">
+                                    <div class="sender-avatar operator-avatar">O</div>
+                                    <span class="sender-name">Operator</span>
+                                </div>
+                                <span class="message-time">14:23:48</span>
+                            </div>
+                            <div class="message-text">
+                                Stay calm. An ambulance is on the way. Are they breathing?
+                            </div>
+                        </div>
+
+                        <div class="message message-caller">
+                            <div class="message-header">
+                                <div class="message-sender">
+                                    <div class="sender-avatar caller-avatar">C</div>
+                                    <span class="sender-name">Caller</span>
+                                </div>
+                                <span class="message-time">14:23:53</span>
+                            </div>
+                            <div class="message-text">
+                                Yes... they're breathing but it sounds rough. Please hurry!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transcript-footer">
+                        <div class="recording-dot"></div>
+                        <span class="recording-text">Voice recognition active...</span>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Right Panel -->
-        <div>
-            <!-- Next Questions -->
-            <div class="panel">
-                <h2 class="panel-title">Next Questions</h2>
-
-                <div class="question-item">
-                    <div class="question-text">How many people are in the immediate area?</div>
-                    <span>➜</span>
-                </div>
-
-                <div class="question-item">
-                    <div class="question-text">Is anyone having difficulty breathing?</div>
-                    <span>➜</span>
-                </div>
-
-                <div class="question-item">
-                    <div class="question-text">Are exits accessible and clear?</div>
-                    <span>➜</span>
-                </div>
-            </div>
-
-            <!-- Caller State -->
-            <div class="panel" style="margin-top: 24px;">
-                <h2 class="panel-title">Caller State</h2>
-
-                <div class="emotion-level">
-                    <div class="emotion-label">
-                        <span style="font-weight: 500;">Emotion Level</span>
-                        <span class="emotion-value">Panic</span>
+            <!-- Right Sidebar -->
+            <div class="right-sidebar">
+                <!-- Operator Info -->
+                <div class="panel" style="margin-bottom: 1.25rem;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Operator Information</h2>
                     </div>
-                    <div class="emotion-bar">
-                        <div class="emotion-fill"></div>
-                    </div>
-                    <div class="emotion-labels">
-                        <span>Calm</span>
-                        <span>Tense</span>
-                        <span>Panic</span>
+                    <div class="panel-body">
+                        <div class="operator-info">
+                            <div class="operator-avatar-lg">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2364748b'%3EJP%3C/text%3E%3C/svg%3E" alt="Operator">
+                            </div>
+                            <div class="operator-details">
+                                <p class="operator-name">Jihyun Park</p>
+                                <p class="operator-dept">Emergency Center</p>
+                                <p class="operator-exp">3 years exp.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="arousal-level">
-                    <div style="font-size: 14px; font-weight: 500; color: #6b7280;">Arousal</div>
-                    <div class="arousal-value">85 <span style="font-size: 14px; color: #6b7280;">%</span></div>
-                </div>
-
-                <div class="risk-indicators">
-                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Risk Indicators</div>
-                    <div class="risk-item">
-                        <div class="checkbox"></div>
-                        <span>Violence risk</span>
+                <!-- Response Manual -->
+                <div class="panel" style="margin-bottom: 1.25rem;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Response Manual</h2>
                     </div>
-                    <div class="risk-item">
-                        <div class="checkbox"></div>
-                        <span>Self-harm risk</span>
-                    </div>
-                    <div class="risk-item">
-                        <div class="checkbox"></div>
-                        <span>Intoxication</span>
-                    </div>
-                    <div class="risk-item">
-                        <div class="checkbox"></div>
-                        <span>Child/Elderly</span>
+                    <div class="panel-body">
+                        <div class="manual-list">
+                            <div class="manual-item">CPR Procedure</div>
+                            <div class="manual-item">Bleeding Control</div>
+                            <div class="manual-item">Shock Management</div>
+                            <div class="manual-item">Airway Support</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="agitation-chart">
-                    <div style="font-size: 14px; font-weight: 500; margin-bottom: 8px;">Agitation (last 30s)</div>
-                    <div class="chart-bars">
-                        <div class="chart-bar" style="height: 20%;"></div>
-                        <div class="chart-bar" style="height: 25%;"></div>
-                        <div class="chart-bar" style="height: 40%;"></div>
-                        <div class="chart-bar" style="height: 50%;"></div>
-                        <div class="chart-bar" style="height: 65%;"></div>
-                        <div class="chart-bar" style="height: 75%;"></div>
-                        <div class="chart-bar" style="height: 85%;"></div>
-                        <div class="chart-bar" style="height: 90%;"></div>
-                        <div class="chart-bar" style="height: 95%;"></div>
-                        <div class="chart-bar" style="height: 100%;"></div>
+                <!-- Timeline -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Timeline
+                        </h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="timeline-list">
+                            <div class="timeline-item">
+                                <span>Call Started</span>
+                                <span class="timeline-time">14:23:15</span>
+                            </div>
+                            <div class="timeline-item">
+                                <span>Location Confirmed</span>
+                                <span class="timeline-time">14:23:42</span>
+                            </div>
+                            <div class="timeline-item">
+                                <span>Elapsed Time</span>
+                                <span class="timeline-time">03:42</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-        <div class="footer-left">
-            <div>STT: <span class="status-ok">OK</span></div>
-            <span>•</span>
-            <div>NLU: <span class="status-ok">OK</span></div>
-            <span>•</span>
-            <div>Network: <span style="font-weight: 600;">32ms</span></div>
+    <!-- Checklist Modal -->
+    <div id="checklistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeChecklistModal()">&times;</button>
+                <h2 class="modal-title">Incident Type Checklist</h2>
+                <p class="modal-desc" id="checklistDesc">Questions to assess the emergency situation.</p>
+            </div>
+            <div class="modal-body">
+                <div class="checklist-items" id="checklistItems">
+                    <!-- Dynamically generated -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeChecklistModal()">Close</button>
+            </div>
         </div>
-        <div style="color: #6b7280;">Recording saved: REC_0912.wav</div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+                <h2 class="modal-title">Upload Audio File</h2>
+                <p class="modal-desc">Upload an MP3 audio file for transcription and analysis.</p>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" onclick="document.getElementById('audioFile').click()">
+                    <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+                    <div class="upload-text">Click to upload or drag and drop</div>
+                    <div class="upload-subtext">MP3 files only</div>
+                </div>
+                <input type="file" id="audioFile" class="file-input" accept=".mp3,audio/mp3,audio/mpeg" onchange="handleFileSelect(event)">
+                <div id="uploadedFileInfo"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeUploadModal()">Cancel</button>
+                <button class="btn btn-primary" id="uploadBtn" disabled onclick="uploadFile()">Upload</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Timer simulation
-        let seconds = 222; // 03:42
+        // Checklist data
+        const checklistData = {
+            emergency: [
+                'Is the patient conscious?',
+                'Is the patient breathing?',
+                'Is there any bleeding?',
+                'Does the patient complain of chest pain?',
+                'Is there any vomiting?'
+            ],
+            fire: [
+                'Did the fire occur inside the building?',
+                'Are there any casualties?',
+                'Has evacuation been completed?',
+                'Do you smell gas?'
+            ],
+            crime: [
+                'Is the perpetrator at the scene?',
+                'Is the perpetrator armed?',
+                'Are there any injured persons?',
+                'Is the caller in a safe location?'
+            ],
+            accident: [
+                'Are there any injured persons?',
+                'Is the vehicle blocking the road?',
+                'Is there any fuel leakage?',
+                'Is an ambulance needed?'
+            ]
+        };
+
+        const checklistDescriptions = {
+            emergency: 'Questions to assess the emergency situation.',
+            fire: 'Questions to assess the fire situation.',
+            crime: 'Questions to assess the crime situation.',
+            accident: 'Questions to assess the accident situation.'
+        };
+
+        let currentChecklist = {};
+        let selectedFile = null;
+
+        // Timer
+        let seconds = 222;
         setInterval(() => {
             seconds++;
             const mins = Math.floor(seconds / 60);
             const secs = seconds % 60;
-            document.querySelector('.header-center .status-value').textContent =
+            document.getElementById('callTimer').textContent =
                 `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }, 1000);
+
+        // Checklist functions
+        function showChecklistModal() {
+            const type = document.getElementById('incidentType').value;
+            updateChecklist();
+            document.getElementById('checklistModal').style.display = 'block';
+        }
+
+        function closeChecklistModal() {
+            document.getElementById('checklistModal').style.display = 'none';
+        }
+
+        function updateChecklist() {
+            const type = document.getElementById('incidentType').value;
+            const questions = checklistData[type];
+            const description = checklistDescriptions[type];
+
+            document.getElementById('checklistDesc').textContent = description;
+
+            const container = document.getElementById('checklistItems');
+            container.innerHTML = '';
+
+            questions.forEach((question, index) => {
+                const item = document.createElement('div');
+                item.className = 'checklist-item';
+                item.innerHTML = `
+                    <span class="checklist-question">${question}</span>
+                    <div class="checklist-buttons">
+                        <button class="btn-yes" onclick="toggleAnswer(${index}, true)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Yes
+                        </button>
+                        <button class="btn-no" onclick="toggleAnswer(${index}, false)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            No
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+
+            currentChecklist = {};
+        }
+
+        function toggleAnswer(index, answer) {
+            const items = document.getElementById('checklistItems').children;
+            const yesBtn = items[index].querySelector('.btn-yes');
+            const noBtn = items[index].querySelector('.btn-no');
+
+            if (currentChecklist[index] === answer) {
+                currentChecklist[index] = null;
+                yesBtn.classList.remove('active');
+                noBtn.classList.remove('active');
+            } else {
+                currentChecklist[index] = answer;
+                if (answer) {
+                    yesBtn.classList.add('active');
+                    noBtn.classList.remove('active');
+                } else {
+                    yesBtn.classList.remove('active');
+                    noBtn.classList.add('active');
+                }
+            }
+        }
+
+        // Upload functions
+        function showUploadModal() {
+            document.getElementById('uploadModal').style.display = 'block';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+            selectedFile = null;
+            document.getElementById('uploadedFileInfo').innerHTML = '';
+            document.getElementById('uploadBtn').disabled = true;
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                document.getElementById('uploadedFileInfo').innerHTML = `
+                    <div class="uploaded-file">
+                        <div class="file-info-wrapper">
+                            <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <div class="file-details">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-size">${fileSize} MB</div>
+                            </div>
+                        </div>
+                        <button class="remove-file-btn" onclick="removeFile()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('uploadBtn').disabled = false;
+            }
+        }
+
+        function removeFile() {
+            selectedFile = null;
+            document.getElementById('audioFile').value = '';
+            document.getElementById('uploadedFileInfo').innerHTML = '';
+            document.getElementById('uploadBtn').disabled = true;
+        }
+
+        function uploadFile() {
+            if (selectedFile) {
+                console.log('Uploading file:', selectedFile.name);
+                alert('File uploaded: ' + selectedFile.name);
+                closeUploadModal();
+            }
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
