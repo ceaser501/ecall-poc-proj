@@ -55,3 +55,6 @@ bin/
 # API Keys and Secrets
 application-local.yml
 application-secret.yml
+
+# Database SQL Scripts
+supabase.sql

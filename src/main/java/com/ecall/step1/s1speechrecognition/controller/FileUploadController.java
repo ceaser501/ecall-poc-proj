@@ -1,5 +1,7 @@
 package com.ecall.step1.s1speechrecognition.controller;
 
+import com.ecall.auth.service.CallerService;
+import com.ecall.auth.service.EmergencyService;
 import com.ecall.step1.s1speechrecognition.dto.DiarizationResult;
 import com.ecall.step1.s1speechrecognition.model.RecognitionResult;
 import com.ecall.step1.s1speechrecognition.service.AudioConversionService;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +34,9 @@ public class FileUploadController {
     private final ClovaDiarizationService clovaDiarizationService;
     private final LanguageDetectionService languageDetectionService;
     private final AudioConversionService audioConversionService;
+    private final CallerService callerService;
+    private final EmergencyService emergencyService;
+    private final com.ecall.auth.service.MediaAssetService mediaAssetService;
 
     @PostMapping("/legacy")
     public ResponseEntity<Map<String, Object>> uploadAudioFile(@RequestParam("file") MultipartFile file) {
@@ -82,7 +88,10 @@ public class FileUploadController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "minSpeakers", defaultValue = "1") int minSpeakers,
             @RequestParam(value = "maxSpeakers", defaultValue = "5") int maxSpeakers,
-            @RequestParam(value = "language", required = false) String language) {
+            @RequestParam(value = "language", required = false) String language,
+            @RequestParam(value = "callerPhoneNumber", required = false) String callerPhoneNumber,
+            @RequestParam(value = "callerName", required = false) String callerName,
+            @RequestParam(value = "operatorId", required = false) String operatorId) {
         try {
             log.info("Clova API로 음성 파일 처리 시작 - 파일: {}, 크기: {} bytes, 화자 수: {}~{}",
                 file.getOriginalFilename(), file.getSize(), minSpeakers, maxSpeakers);
@@ -143,15 +152,38 @@ public class FileUploadController {
                 DiarizationResult result = clovaDiarizationService.performDiarization(
                     tempFile.toFile(), minSpeakers, maxSpeakers, detectedLanguage);
 
-                return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "filename", file.getOriginalFilename(),
-                    "size", file.getSize(),
-                    "fullText", result.getFullText(),
-                    "speakerCount", result.getSpeakerCount(),
-                    "speakerSegments", result.getSpeakerSegments(),
-                    "transcript", formatTranscript(result)
-                ));
+                // Save media asset (audio file)
+                String mediaAssetId = null;
+                try {
+                    // Read file bytes
+                    byte[] fileBytes = Files.readAllBytes(tempFile);
+
+                    // Save to media_asset table
+                    mediaAssetId = mediaAssetService.saveMediaAsset(
+                        file.getOriginalFilename(),
+                        file.getContentType(),
+                        fileBytes,
+                        operatorId != null ? operatorId : "system"
+                    );
+                    log.info("Media asset saved with ID: {}", mediaAssetId);
+                } catch (Exception e) {
+                    log.error("Failed to save media asset: {}", e.getMessage(), e);
+                    // Continue even if media asset save fails
+                }
+
+                // Build response
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("success", true);
+                responseData.put("filename", file.getOriginalFilename());
+                responseData.put("size", file.getSize());
+                responseData.put("fullText", result.getFullText());
+                responseData.put("speakerCount", result.getSpeakerCount());
+                responseData.put("speakerSegments", result.getSpeakerSegments());
+                responseData.put("transcript", formatTranscript(result));
+                responseData.put("language", detectedLanguage); // Add detected language
+                responseData.put("mediaAssetId", mediaAssetId); // Add media asset ID
+
+                return ResponseEntity.ok(responseData);
 
             } finally {
                 // 임시 파일 삭제

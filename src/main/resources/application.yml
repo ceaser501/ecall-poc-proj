@@ -14,12 +14,13 @@ spring:
   # 정적 리소스 설정
   web:
     resources:
-      static-locations: classpath:/static/
+      static-locations: file:src/main/resources/static/,classpath:/static/
       cache:
         period: 0  # 개발 중에는 캐시 비활성화
 
   # 개발 편의를 위한 설정
   devtools:
+
     restart:
       enabled: true
     livereload:
@@ -44,6 +45,21 @@ clova:
     secret-key: ${CLOVA_SPEECH_SECRET_KEY:YOUR_CLOVA_SECRET_KEY}
     invoke-url: ${CLOVA_SPEECH_INVOKE_URL:YOUR_CLOVA_INVOKE_URL}
     language: ko-KR
+
+# Supabase 설정
+supabase:
+  url: ${SUPABASE_URL:https://your-project.supabase.co}
+  key: ${SUPABASE_KEY:your-anon-key}
+
+# Kakao Map API 설정 (Optional)
+kakao:
+  api:
+    key: ${KAKAO_API_KEY:}
+
+# OpenAI API 설정 (Optional - for AI-powered location extraction)
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
 
 # Audio Conversion 설정
 audio:

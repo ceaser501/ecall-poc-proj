@@ -23,6 +23,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+    // BCrypt for password hashing
+    implementation 'org.springframework.security:spring-security-crypto:6.2.0'
+
+    // Spring Boot DevTools for auto-reload
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Lombok for @Slf4j
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
