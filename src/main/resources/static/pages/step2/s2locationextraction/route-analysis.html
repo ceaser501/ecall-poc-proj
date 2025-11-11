@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경로 분석 테스트 - E-CALL POC</title>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3d8af1dddd94ffe1e0d8465532d945f2&libraries=services"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 40%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        .btn-route {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        #map {
+            width: 100%;
+            height: 500px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 경로 분석</h1>
+        <div class="controls">
+            <input type="text" id="start" placeholder="출발지 (예: 강남역)">
+            <input type="text" id="end" placeholder="목적지 (예: 판교역)">
+            <button id="routeBtn" class="btn-route">경로 찾기</button>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <script>
+        const mapContainer = document.getElementById('map');
+        const mapOption = {
+            center: new kakao.maps.LatLng(37.566826, 126.9786567),
+            level: 7
+        };
+        const map = new kakao.maps.Map(mapContainer, mapOption);
+        const geocoder = new kakao.maps.services.Geocoder();
+        let polyline = new kakao.maps.Polyline({strokeColor: '#FF0000', strokeWeight: 6, strokeOpacity: 0.8});
+        let markers = [];
+
+        document.getElementById('routeBtn').addEventListener('click', function() {
+            const startAddr = document.getElementById('start').value;
+            const endAddr = document.getElementById('end').value;
+
+            if (!startAddr || !endAddr) {
+                alert('출발지와 목적지를 모두 입력해주세요.');
+                return;
+            }
+
+            geocodeAddress(startAddr, (startCoords) => {
+                geocodeAddress(endAddr, (endCoords) => {
+                    findRoute(startCoords, endCoords);
+                });
+            });
+        });
+
+        function geocodeAddress(address, callback) {
+            geocoder.addressSearch(address, function(result, status) {
+                if (status === kakao.maps.services.Status.OK) {
+                    callback(new kakao.maps.LatLng(result[0].y, result[0].x));
+                } else {
+                    alert(`'${address}' 주소 검색에 실패했습니다.`);
+                }
+            });
+        }
+
+        async function findRoute(start, end) {
+            // Clear existing markers and polylines
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+            polyline.setMap(null);
+
+            try {
+                const response = await fetch(`/step2/map/route?startLat=${start.getLat()}&startLng=${start.getLng()}&endLat=${end.getLat()}&endLng=${end.getLng()}`);
+                if (!response.ok) throw new Error(`Route request failed: ${response.status}`);
+                const pathCoordinates = await response.json();
+
+                if (pathCoordinates.length === 0) {
+                    alert("경로를 찾을 수 없습니다.");
+                    return;
+                }
+
+                const linePath = pathCoordinates.map(coord => new kakao.maps.LatLng(coord.latitude, coord.longitude));
+                polyline.setPath(linePath);
+                polyline.setMap(map);
+
+                addMarker(start, '출발지');
+                addMarker(end, '목적지');
+
+                const bounds = new kakao.maps.LatLngBounds();
+                linePath.forEach(point => bounds.extend(point));
+                map.setBounds(bounds);
+
+            } catch (error) {
+                console.error("Error in route analysis:", error);
+                alert(`경로 분석 중 오류가 발생했습니다: ${error.message}`);
+            }
+        }
+
+        function addMarker(position, title) {
+            const marker = new kakao.maps.Marker({ position, title });
+            marker.setMap(map);
+            markers.push(marker);
+        }
+    </script>
+</body>
+</html>

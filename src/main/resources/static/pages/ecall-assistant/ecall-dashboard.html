@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Call Assistant</title>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3d8af1dddd94ffe1e0d8465532d945f2&libraries=services,drawing"></script>
     <style>
         * {
             margin: 0;
@@ -175,6 +177,8 @@
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         .panel-title {
@@ -184,7 +188,7 @@
             color: #1d1d1f;
         }
 
-        /* Incoming Calls Queue */
+        /* Incident List (Left Panel) */
         .filter-buttons {
             display: flex;
             gap: 8px;
@@ -213,93 +217,77 @@
             background: #f9fafb;
         }
 
-        .call-item {
+        .incident-item {
             padding: 16px;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             margin-bottom: 12px;
         }
 
-        .call-header {
+        .incident-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
-        .priority-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 700;
+        .category-badge {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
             color: white;
         }
+        .category-disaster { background-color: #f59e0b; }
+        .category-medical { background-color: #10b981; }
+        .category-crime { background-color: #3b82f6; }
+        .category-traffic { background-color: #facc15; color: #1d1d1f;}
+        .category-rescue { background-color: #8b5cf6; }
+        .category-other { background-color: #6b7280; }
 
-        .priority-badge.p1 {
-            background: #ef4444;
-        }
-
-        .priority-badge.p2 {
-            background: #f59e0b;
-        }
-
-        .priority-badge.p3 {
-            background: #3b82f6;
-        }
-
-        .call-type {
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .call-location {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .call-time {
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-badge {
+        .urgency-level {
             padding: 4px 10px;
             border-radius: 12px;
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .urgency-1 { background-color: #374151; color: white; } /* Gray 700 */
+        .urgency-2 { background-color: #6b7280; color: white; } /* Gray 500 */
+        .urgency-3 { background-color: #9ca3af; color: white; } /* Gray 400 */
+        .urgency-4 { background-color: #d1d5db; color: #1f2937; } /* Gray 300 */
+        .urgency-5 { background-color: #e5e7eb; color: #1f2937; } /* Gray 200 */
+
+        .incident-details {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .detail-item img {
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
+        }
+
+        .incident-status {
             font-weight: 600;
         }
+        .status-handling { color: #f59e0b; }
+        .status-assigned { color: #3b82f6; }
+        .status-on-scene { color: #8b5cf6; }
+        .status-closed { color: #10b981; }
 
-        .status-badge.panic {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .status-badge.tense {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .status-badge.calm {
-            background: #d1fae5;
-            color: #059669;
-        }
-
-        .status-badge.gaps {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .call-actions {
+        .incident-actions {
             display: flex;
             gap: 8px;
-            margin-top: 12px;
+            margin-top: 16px;
         }
 
         .action-btn {
@@ -324,6 +312,12 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+        .action-btn:disabled {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
         /* Live Incidents Map */
         .map-container {
@@ -335,238 +329,103 @@
             overflow: hidden;
         }
 
-        .incident-marker {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            position: absolute;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-        }
-
-        .incident-marker.fire {
-            background: #ef4444;
-            top: 30%;
-            left: 40%;
-        }
-
-        .incident-marker.medical {
-            background: #10b981;
-            top: 50%;
-            right: 30%;
-        }
-
-        .incident-marker.police {
-            background: #3b82f6;
-            bottom: 25%;
-            right: 15%;
-        }
-
-        .incident-marker.other {
-            background: #6b7280;
-            bottom: 35%;
-            left: 25%;
-        }
-
         .map-legend {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, auto);
             justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            gap: 8px 20px;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .legend-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
         }
 
-        .map-controls {
+        /* Resources & Dispatches */
+        .resource-item { margin-bottom: 20px; }
+        .resource-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .resource-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .resource-count { font-size: 13px; color: #6b7280; }
+        .resource-bar { height: 12px; background: #e5e7eb; border-radius: 6px; overflow: hidden; display: flex; }
+        .bar-segment { height: 100%; }
+        .bar-segment.green { background: #10b981; }
+        .bar-segment.yellow { background: #f59e0b; }
+        .bar-segment.red { background: #ef4444; }
+        
+        .dispatch-item { padding: 12px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+        .dispatch-item:last-child { border-bottom: none; }
+        .dispatch-info { flex: 1; }
+        .dispatch-time { font-size: 13px; font-weight: 600; color: #1d1d1f; margin-bottom: 2px; }
+        .dispatch-type { font-size: 13px; color: #6b7280; }
+        .dispatch-unit { font-size: 12px; color: #9ca3af; }
+        .dispatch-eta { font-size: 12px; color: #6b7280; text-align: right; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
             display: flex;
-            gap: 8px;
-            margin-top: 12px;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
         }
-
-        .map-control-btn {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #e5e7eb;
+        .modal-overlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
             background: white;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s;
         }
-
-        .map-control-btn:hover {
-            background: #f9fafb;
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
         }
-
-        /* Resources Now */
-        .resource-item {
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
-
-        .resource-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .resource-name {
-            font-size: 14px;
+        .modal-title {
+            font-size: 18px;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-
-        .resource-count {
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        .resource-bar {
-            height: 12px;
-            background: #e5e7eb;
-            border-radius: 6px;
-            overflow: hidden;
-            display: flex;
-        }
-
-        .bar-segment {
-            height: 100%;
-        }
-
-        .bar-segment.green {
-            background: #10b981;
-        }
-
-        .bar-segment.yellow {
-            background: #f59e0b;
-        }
-
-        .bar-segment.red {
-            background: #ef4444;
-        }
-
-        /* Recent Dispatches */
-        .dispatch-item {
-            padding: 12px;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dispatch-item:last-child {
-            border-bottom: none;
-        }
-
-        .dispatch-info {
-            flex: 1;
-        }
-
-        .dispatch-time {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin-bottom: 2px;
-        }
-
-        .dispatch-type {
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        .dispatch-unit {
-            font-size: 12px;
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
             color: #9ca3af;
         }
-
-        .dispatch-eta {
-            font-size: 12px;
-            color: #6b7280;
-            text-align: right;
+        .modal-body p {
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.6;
         }
 
-        /* Footer */
-        .footer {
-            background: white;
-            padding: 12px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
-            margin-top: 24px;
-        }
-
-        .footer-left {
-            display: flex;
-            gap: 24px;
-            font-size: 13px;
-        }
-
-        .footer-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .footer-label {
-            color: #6b7280;
-        }
-
-        .footer-value {
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-
-        .footer-right {
-            display: flex;
-            gap: 20px;
-            font-size: 13px;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-ok {
-            color: #10b981;
-            font-weight: 600;
-        }
-
-        @media (max-width: 1400px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        @media (max-width: 1400px) { .content-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -576,20 +435,13 @@
             <div class="logo">E</div>
             <div class="app-title">E-Call Assistant</div>
         </div>
-
         <div class="search-bar">
-            <input type="text" class="search-input" placeholder="Search calls, address, caller #">
+            <input type="text" class="search-input" placeholder="Search incidents, address, caller #">
         </div>
-
         <div class="header-right">
             <div class="time-display" id="currentTime">14:58</div>
             <div class="status-indicator"></div>
-            <button class="icon-button" title="Dark Mode">
-                <img src="/assets/images/ecallAssistant_icon/Icon-16.png" alt="Dark Mode" style="width: 20px; height: 20px;">
-            </button>
-            <button class="icon-button" title="Settings">
-                <img src="/assets/images/ecallAssistant_icon/Icon-15.png" alt="Settings" style="width: 20px; height: 20px;">
-            </button>
+            <button class="icon-button" title="Settings"><img src="/assets/images/ecallAssistant_icon/Icon-15.png" alt="Settings" style="width: 20px; height: 20px;"></button>
         </div>
     </div>
 
@@ -599,26 +451,17 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">Active Calls</div>
-                <div class="stat-value">
-                    12
-                    <img src="/assets/images/ecallAssistant_icon/Icon-12.png" alt="Trend" class="stat-trend">
-                </div>
+                <div class="stat-value">12 <img src="/assets/images/ecallAssistant_icon/Icon-12.png" alt="Trend" class="stat-trend"></div>
             </div>
-
             <div class="stat-card">
                 <div class="stat-label">Waiting Queue</div>
                 <div class="stat-value">4</div>
                 <div class="stat-subtitle">2×P1, 1×P2, 1×P3</div>
             </div>
-
             <div class="stat-card">
                 <div class="stat-label">Avg Answer Time</div>
-                <div class="stat-value">
-                    00:28
-                    <img src="/assets/images/ecallAssistant_icon/Icon-11.png" alt="Down" style="width: 20px; height: 20px;">
-                </div>
+                <div class="stat-value">00:28 <img src="/assets/images/ecallAssistant_icon/Icon-11.png" alt="Down" style="width: 20px; height: 20px;"></div>
             </div>
-
             <div class="stat-card">
                 <div class="stat-label">Units Available</div>
                 <div class="stat-value">23</div>
@@ -628,268 +471,232 @@
 
         <!-- Three Column Layout -->
         <div class="content-grid">
-            <!-- Incoming Calls Queue -->
+            <!-- Incident Queue (Dynamically Generated) -->
             <div class="panel">
-                <h2 class="panel-title">Incoming Calls Queue</h2>
-
+                <h2 class="panel-title">Incident Queue</h2>
                 <div class="filter-buttons">
-                    <button class="filter-btn active">All</button>
-                    <button class="filter-btn">P1</button>
-                    <button class="filter-btn">P2</button>
-                    <button class="filter-btn">P3</button>
-                    <button class="filter-btn">Medical</button>
-                    <button class="filter-btn">Fire</button>
-                    <button class="filter-btn">Police</button>
-                    <button class="filter-btn">Other</button>
+                    <button class="filter-btn active" data-filter="All">All</button>
+                    <button class="filter-btn" data-filter="Disaster">Disaster</button>
+                    <button class="filter-btn" data-filter="Medical">Medical</button>
+                    <button class="filter-btn" data-filter="Crime">Crime</button>
+                    <button class="filter-btn" data-filter="Traffic">Traffic</button>
+                    <button class="filter-btn" data-filter="Rescue">Rescue</button>
+                    <button class="filter-btn" data-filter="Other">Other</button>
                 </div>
-
-                <!-- Call Item 1 -->
-                <div class="call-item">
-                    <div class="call-header">
-                        <span class="priority-badge p1">P1</span>
-                        <span class="call-type">Fire</span>
-                    </div>
-                    <div class="call-location">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-10.png" alt="Location" style="width: 14px; height: 14px;">
-                        Starbucks, New York Subway Station
-                    </div>
-                    <div class="call-time">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-8.png" alt="Time" style="width: 14px; height: 14px;">
-                        00:32
-                        <span class="status-badge panic"><img src="/assets/images/ecallAssistant_icon/Icon-7.png" alt="Alert" style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;">Panic</span>
-                        <span class="status-badge gaps"><img src="/assets/images/ecallAssistant_icon/Icon-6.png" alt="Warning" style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;">Gaps: exact</span>
-                    </div>
-                    <div class="call-actions">
-                        <button class="action-btn primary">Open</button>
-                        <button class="action-btn">Assign</button>
-                    </div>
-                </div>
-
-                <!-- Call Item 2 -->
-                <div class="call-item">
-                    <div class="call-header">
-                        <span class="priority-badge p2">P2</span>
-                        <span class="call-type">Medical</span>
-                    </div>
-                    <div class="call-location">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-10.png" alt="Location" style="width: 14px; height: 14px;">
-                        12-7 Maple Ave, Apt 301
-                    </div>
-                    <div class="call-time">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-8.png" alt="Time" style="width: 14px; height: 14px;">
-                        00:18
-                        <span class="status-badge tense"><img src="/assets/images/ecallAssistant_icon/Icon-5.png" alt="Tense" style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;">Tense</span>
-                        <span class="status-badge gaps"><img src="/assets/images/ecallAssistant_icon/Icon-6.png" alt="Warning" style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;">Gaps: patient count</span>
-                    </div>
-                    <div class="call-actions">
-                        <button class="action-btn primary">Open</button>
-                        <button class="action-btn">Assign</button>
-                    </div>
-                </div>
-
-                <!-- Call Item 3 -->
-                <div class="call-item">
-                    <div class="call-header">
-                        <span class="priority-badge p3">P3</span>
-                        <span class="call-type">Noise</span>
-                    </div>
-                    <div class="call-location">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-10.png" alt="Location" style="width: 14px; height: 14px;">
-                        Pier 4, Harbor Dr.
-                    </div>
-                    <div class="call-time">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-8.png" alt="Time" style="width: 14px; height: 14px;">
-                        00:08
-                        <span class="status-badge calm"><img src="/assets/images/ecallAssistant_icon/Icon-4.png" alt="Calm" style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;">Calm</span>
-                        <span style="font-size: 11px; color: #9ca3af;">No gaps</span>
-                    </div>
-                    <div class="call-actions">
-                        <button class="action-btn primary">Open</button>
-                        <button class="action-btn">Assign</button>
-                    </div>
+                <div id="incident-list">
+                    <!-- Incident items will be dynamically inserted here -->
                 </div>
             </div>
 
             <!-- Live Incidents Map -->
             <div class="panel">
                 <h2 class="panel-title">Live Incidents Map</h2>
-
-                <div class="map-container">
-                    <div class="incident-marker fire">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-17.png" alt="Fire" style="width: 20px; height: 20px;">
-                    </div>
-                    <div class="incident-marker fire" style="top: 20%; left: 25%;">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-17.png" alt="Fire" style="width: 20px; height: 20px;">
-                    </div>
-                    <div class="incident-marker medical">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-13.png" alt="Medical" style="width: 20px; height: 20px;">
-                    </div>
-                    <div class="incident-marker police">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-3.png" alt="Police" style="width: 20px; height: 20px;">
-                    </div>
-                    <div class="incident-marker other">
-                        <img src="/assets/images/ecallAssistant_icon/Icon-15.png" alt="Other" style="width: 20px; height: 20px;">
-                    </div>
-                </div>
-
+                <div id="map" class="map-container"></div>
                 <div class="map-legend">
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background: #ef4444;"></div>
-                        Fire
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background: #10b981;"></div>
-                        Medical
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background: #3b82f6;"></div>
-                        Police
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background: #6b7280;"></div>
-                        Other
-                    </div>
-                </div>
-
-                <div class="map-controls">
-                    <button class="map-control-btn">Show Units</button>
-                    <button class="map-control-btn">Traffic</button>
-                    <button class="map-control-btn">Heatmap</button>
+                    <div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div>Disaster</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #10b981;"></div>Medical</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #3b82f6;"></div>Crime</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #facc15;"></div>Traffic</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #8b5cf6;"></div>Rescue</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #6b7280;"></div>Other</div>
                 </div>
             </div>
 
             <!-- Resources & Dispatches -->
             <div>
-                <!-- Resources Now -->
                 <div class="panel" style="margin-bottom: 20px;">
                     <h2 class="panel-title">Resources Now</h2>
-
                     <div class="resource-item">
                         <div class="resource-header">
-                            <div class="resource-name">
-                                <img src="/assets/images/ecallAssistant_icon/Icon-2.png" alt="Fire" style="width: 16px; height: 16px;">
-                                Fire
-                            </div>
+                            <div class="resource-name"><img src="/assets/images/ecallAssistant_icon/Icon-2.png" alt="Fire" style="width: 16px; height: 16px;"> Fire</div>
                             <div class="resource-count">9 / 2 / 3</div>
                         </div>
                         <div class="resource-bar">
-                            <div class="bar-segment green" style="flex: 9;"></div>
-                            <div class="bar-segment yellow" style="flex: 2;"></div>
-                            <div class="bar-segment red" style="flex: 3;"></div>
+                            <div class="bar-segment green" style="flex: 9;"></div><div class="bar-segment yellow" style="flex: 2;"></div><div class="bar-segment red" style="flex: 3;"></div>
                         </div>
                     </div>
-
                     <div class="resource-item">
                         <div class="resource-header">
-                            <div class="resource-name">
-                                <img src="/assets/images/ecallAssistant_icon/Icon-1.png" alt="EMS" style="width: 16px; height: 16px;">
-                                EMS
-                            </div>
+                            <div class="resource-name"><img src="/assets/images/ecallAssistant_icon/Icon-1.png" alt="EMS" style="width: 16px; height: 16px;"> EMS</div>
                             <div class="resource-count">8 / 3 / 1</div>
                         </div>
                         <div class="resource-bar">
-                            <div class="bar-segment green" style="flex: 8;"></div>
-                            <div class="bar-segment yellow" style="flex: 3;"></div>
-                            <div class="bar-segment red" style="flex: 1;"></div>
+                            <div class="bar-segment green" style="flex: 8;"></div><div class="bar-segment yellow" style="flex: 3;"></div><div class="bar-segment red" style="flex: 1;"></div>
                         </div>
                     </div>
-
                     <div class="resource-item">
                         <div class="resource-header">
-                            <div class="resource-name">
-                                <img src="/assets/images/ecallAssistant_icon/Icon-3.png" alt="Police" style="width: 16px; height: 16px;">
-                                Police
-                            </div>
+                            <div class="resource-name"><img src="/assets/images/ecallAssistant_icon/Icon-3.png" alt="Police" style="width: 16px; height: 16px;"> Police</div>
                             <div class="resource-count">6 / 1 / 2</div>
                         </div>
                         <div class="resource-bar">
-                            <div class="bar-segment green" style="flex: 6;"></div>
-                            <div class="bar-segment yellow" style="flex: 1;"></div>
-                            <div class="bar-segment red" style="flex: 2;"></div>
+                            <div class="bar-segment green" style="flex: 6;"></div><div class="bar-segment yellow" style="flex: 1;"></div><div class="bar-segment red" style="flex: 2;"></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Recent Dispatches -->
                 <div class="panel">
                     <h2 class="panel-title">Recent Dispatches</h2>
-
-                    <div class="dispatch-item">
-                        <div class="dispatch-info">
-                            <div class="dispatch-time">10:18</div>
-                            <div class="dispatch-type">Fire</div>
-                            <div class="dispatch-unit">E-12</div>
-                        </div>
-                        <div class="dispatch-eta">ETA 4 min</div>
-                    </div>
-
-                    <div class="dispatch-item">
-                        <div class="dispatch-info">
-                            <div class="dispatch-time">10:15</div>
-                            <div class="dispatch-type">Medical</div>
-                            <div class="dispatch-unit">A-03</div>
-                        </div>
-                        <div class="dispatch-eta">ETA 2 min</div>
-                    </div>
-
-                    <div class="dispatch-item">
-                        <div class="dispatch-info">
-                            <div class="dispatch-time">10:12</div>
-                            <div class="dispatch-type">Police</div>
-                            <div class="dispatch-unit">P-45</div>
-                        </div>
-                        <div class="dispatch-eta">ETA 6 min</div>
-                    </div>
-
-                    <div class="dispatch-item">
-                        <div class="dispatch-info">
-                            <div class="dispatch-time">10:09</div>
-                            <div class="dispatch-type">Fire</div>
-                            <div class="dispatch-unit">L-07</div>
-                        </div>
-                        <div class="dispatch-eta">ETA 8 min</div>
-                    </div>
-
-                    <div class="dispatch-item">
-                        <div class="dispatch-info">
-                            <div class="dispatch-time">10:05</div>
-                            <div class="dispatch-type">Medical</div>
-                            <div class="dispatch-unit">A-11</div>
-                        </div>
-                        <div class="dispatch-eta">ETA 1 min</div>
-                    </div>
+                    <div class="dispatch-item"><div class="dispatch-info"><div class="dispatch-time">10:18</div><div class="dispatch-type">Fire</div><div class="dispatch-unit">E-12</div></div><div class="dispatch-eta">ETA 4 min</div></div>
+                    <div class="dispatch-item"><div class="dispatch-info"><div class="dispatch-time">10:15</div><div class="dispatch-type">Medical</div><div class="dispatch-unit">A-03</div></div><div class="dispatch-eta">ETA 2 min</div></div>
+                    <div class="dispatch-item"><div class="dispatch-info"><div class="dispatch-time">10:12</div><div class="dispatch-type">Police</div><div class="dispatch-unit">P-45</div></div><div class="dispatch-eta">ETA 6 min</div></div>
+                    <div class="dispatch-item"><div class="dispatch-info"><div class="dispatch-time">10:09</div><div class="dispatch-type">Fire</div><div class="dispatch-unit">L-07</div></div><div class="dispatch-eta">ETA 8 min</div></div>
+                    <div class="dispatch-item"><div class="dispatch-info"><div class="dispatch-time">10:05</div><div class="dispatch-type">Medical</div><div class="dispatch-unit">A-11</div></div><div class="dispatch-eta">ETA 1 min</div></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-        <div class="footer-left">
-            <div class="footer-item">
-                <span class="footer-label">SLA Today</span>
-                <span class="footer-value">91%</span>
+    <!-- Dispatch Modal -->
+    <div id="dispatchModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Dispatch Information</h3>
+                <button class="modal-close-btn">&times;</button>
             </div>
-            <div class="footer-item">
-                <span class="footer-label">Breaches</span>
-                <span class="footer-value">3</span>
-            </div>
-        </div>
-
-        <div class="footer-right">
-            <div class="status-item">
-                <span class="footer-label">STT:</span>
-                <span class="status-ok">OK</span>
-            </div>
-            <div class="status-item">
-                <span class="footer-label">NLU:</span>
-                <span class="status-ok">OK</span>
+            <div class="modal-body">
+                <p id="responderInfo"></p>
+                <p>Dispatch has been assigned.</p>
             </div>
         </div>
     </div>
 
     <script>
-        // Update time
+        // =================================================================
+        // SINGLE SOURCE OF TRUTH FOR INCIDENT DATA
+        // =================================================================
+        const incidentData = [
+            { id: 'incident-1', category: 'Medical', urgency: 2, address: '134 Sinchon-dong, Seodaemun-gu, Seoul', lat: 37.5602, lng: 126.9423, time: '14:32 ~ 14:38', agent: 'Operator 1', status: 'Dispatch Assigned', statusClass: 'status-assigned', responder: 'Firefighter Kim (Engine 12)', disabled: false },
+            { id: 'incident-2', category: 'Traffic', urgency: 4, address: '57-1 Nogosan-dong, Mapo-gu, Seoul', lat: 37.5551, lng: 126.9369, time: '14:28 ~ 14:35', agent: 'Operator 2', status: 'On Scene', statusClass: 'status-on-scene', responder: 'Officer Park (Patrol 34)', disabled: false },
+            { id: 'incident-3', category: 'Crime', urgency: 1, address: '200-1 Yeonhui-dong, Seodaemun-gu, Seoul', lat: 37.5731, lng: 126.9358, time: '14:25 ~ (Ongoing)', agent: 'Operator 1', status: 'Handling Call', statusClass: 'status-handling', responder: 'Detective Lee (Unit 1)', disabled: false },
+            { id: 'incident-4', category: 'Rescue', urgency: 3, address: 'San 1-1, Bugahyeon-dong, Seodaemun-gu, Seoul', lat: 37.5659, lng: 126.9533, time: '14:10 ~ 14:22', agent: 'Operator 3', status: 'Closed', statusClass: 'status-closed', responder: 'Rescue Team Choi (Rescue 2)', disabled: true },
+            { id: 'incident-5', category: 'Disaster', urgency: 1, address: '1-3 Sinchon-dong, Seodaemun-gu, Seoul', lat: 37.5597, lng: 126.9363, time: '15:01 ~ (Ongoing)', agent: 'Operator 4', status: 'Handling Call', statusClass: 'status-handling', responder: 'Chief Anderson (Command 1)', disabled: false },
+            { id: 'incident-6', category: 'Other', urgency: 5, address: 'Yonsei-ro 50, Seodaemun-gu, Seoul', lat: 37.5600, lng: 126.9389, time: '15:05 ~ 15:10', agent: 'Operator 2', status: 'Closed', statusClass: 'status-closed', responder: 'N/A', disabled: true },
+            { id: 'incident-7', category: 'Medical', urgency: 2, address: '120-5, Daeheung-dong, Mapo-gu, Seoul', lat: 37.5488, lng: 126.9431, time: '15:08 ~ (Ongoing)', agent: 'Operator 1', status: 'Dispatch Assigned', statusClass: 'status-assigned', responder: 'Paramedic Jun (Ambulance 5)', disabled: false },
+            { id: 'incident-8', category: 'Crime', urgency: 3, address: '24-1, Changcheon-dong, Seodaemun-gu, Seoul', lat: 37.5575, lng: 126.9355, time: '15:11 ~ (Ongoing)', agent: 'Operator 3', status: 'Handling Call', statusClass: 'status-handling', responder: 'Officer Choi (Patrol 18)', disabled: false },
+            { id: 'incident-9', category: 'Traffic', urgency: 3, address: 'Sinchon Station Exit 2', lat: 37.5551, lng: 126.9369, time: '15:12 ~ 15:20', agent: 'Operator 2', status: 'On Scene', statusClass: 'status-on-scene', responder: 'Traffic Officer Lee (Moto 7)', disabled: false },
+            { id: 'incident-10', category: 'Rescue', urgency: 2, address: 'Ansan Park, Seodaemun-gu', lat: 37.5760, lng: 126.9480, time: '15:15 ~ (Ongoing)', agent: 'Operator 4', status: 'Dispatch Assigned', statusClass: 'status-assigned', responder: 'Rescue Unit 3', disabled: false },
+            { id: 'incident-11', category: 'Disaster', urgency: 2, address: 'Near Ewha Womans Univ. Station', lat: 37.5573, lng: 126.9455, time: '15:18 ~ (Ongoing)', agent: 'Operator 1', status: 'Handling Call', statusClass: 'status-handling', responder: 'Fire Dept. Command', disabled: false },
+            { id: 'incident-12', category: 'Other', urgency: 4, address: 'Hongdae Playground', lat: 37.5514, lng: 126.9245, time: '15:20 ~ 15:25', agent: 'Operator 3', status: 'Closed', statusClass: 'status-closed', responder: 'N/A', disabled: true },
+            { id: 'incident-13', category: 'Medical', urgency: 1, address: 'Severance Hospital ER', lat: 37.5633, lng: 126.9405, time: '15:21 ~ (Ongoing)', agent: 'Operator 2', status: 'On Scene', statusClass: 'status-on-scene', responder: 'Dr. Park (EMS Liason)', disabled: false },
+            { id: 'incident-14', category: 'Crime', urgency: 2, address: 'Yeonnam-dong Community Center', lat: 37.5622, lng: 126.9240, time: '15:22 ~ (Ongoing)', agent: 'Operator 4', status: 'Dispatch Assigned', statusClass: 'status-assigned', responder: 'Detective Kang (Unit 5)', disabled: false },
+            { id: 'incident-15', category: 'Traffic', urgency: 5, address: 'Sogang Bridge North End', lat: 37.5442, lng: 126.9359, time: '15:25 ~ 15:30', agent: 'Operator 1', status: 'Closed', statusClass: 'status-closed', responder: 'Traffic Control', disabled: true }
+        ];
+
+        const categoryInfo = {
+            'Disaster': { color: '#f59e0b' },
+            'Medical':  { color: '#10b981' },
+            'Crime':    { color: '#3b82f6' },
+            'Traffic':  { color: '#facc15' },
+            'Rescue':   { color: '#8b5cf6' },
+            'Other':    { color: '#6b7280' }
+        };
+
+        // =================================================================
+        // INITIALIZATION
+        // =================================================================
+        document.addEventListener("DOMContentLoaded", function() {
+            renderIncidentList(incidentData);
+            initializeMap(incidentData);
+            setupEventListeners();
+            updateTime();
+            setInterval(updateTime, 1000);
+        });
+
+        // =================================================================
+        // UI RENDERING & EVENT LISTENERS
+        // =================================================================
+        function renderIncidentList(data) {
+            const listContainer = document.getElementById('incident-list');
+            listContainer.innerHTML = ''; // Clear existing list
+
+            data.forEach(incident => {
+                const disabledAttribute = incident.disabled ? 'disabled' : '';
+                const itemHTML = `
+                    <div class="incident-item" id="${incident.id}">
+                        <div class="incident-header">
+                            <span class="category-badge category-${incident.category.toLowerCase()}">${incident.category}</span>
+                            <span class="urgency-level urgency-${incident.urgency}">Urgency ${incident.urgency}</span>
+                        </div>
+                        <div class="incident-details">
+                            <div class="detail-item">
+                                <img src="/assets/images/ecallAssistant_icon/Icon-10.png" alt="Location">
+                                <span>${incident.address}</span>
+                            </div>
+                            <div class="detail-item">
+                                <img src="/assets/images/ecallAssistant_icon/Icon-8.png" alt="Time">
+                                <span>${incident.time}</span>
+                            </div>
+                            <div class="detail-item">
+                                <img src="/assets/images/ecallAssistant_icon/Icon-1.png" alt="Agent">
+                                <span>Agent: ${incident.agent}</span>
+                            </div>
+                            <div class="detail-item">
+                                <img src="/assets/images/ecallAssistant_icon/Icon-13.png" alt="Status">
+                                <span class="incident-status ${incident.statusClass}">${incident.status}</span>
+                            </div>
+                        </div>
+                        <div class="incident-actions">
+                            <button class="action-btn primary">Details</button>
+                            <button class="action-btn dispatch-btn" data-responder="${incident.responder}" ${disabledAttribute}>Dispatch</button>
+                        </div>
+                    </div>
+                `;
+                listContainer.innerHTML += itemHTML;
+            });
+        }
+
+        function setupEventListeners() {
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Reset styles for all buttons
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.style.backgroundColor = '';
+                        b.style.borderColor = '';
+                        b.style.color = '';
+                    });
+
+                    // Apply active state to the clicked button
+                    this.classList.add('active');
+                    const filterCategory = this.dataset.filter;
+
+                    // Apply category-specific color
+                    if (filterCategory !== 'All') {
+                        const color = categoryInfo[filterCategory].color;
+                        this.style.backgroundColor = color;
+                        this.style.borderColor = color;
+                        this.style.color = (filterCategory === 'Traffic') ? '#1d1d1f' : 'white';
+                    }
+                    
+                    // Filter data and re-render
+                    const filteredData = (filterCategory === 'All')
+                        ? incidentData
+                        : incidentData.filter(incident => incident.category === filterCategory);
+                    
+                    renderIncidentList(filteredData);
+                    filterMapMarkers(filterCategory);
+                });
+            });
+
+            // Modal Logic
+            const modal = document.getElementById('dispatchModal');
+            const closeBtn = modal.querySelector('.modal-close-btn');
+            const responderInfoP = document.getElementById('responderInfo');
+
+            document.getElementById('incident-list').addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('dispatch-btn')) {
+                    const responder = e.target.getAttribute('data-responder');
+                    responderInfoP.textContent = `Responder: ${responder}`;
+                    modal.classList.add('visible');
+                }
+            });
+
+            function closeModal() { modal.classList.remove('visible'); }
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        }
+
         function updateTime() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -897,22 +704,114 @@
             document.getElementById('currentTime').textContent = `${hours}:${minutes}`;
         }
 
-        updateTime();
-        setInterval(updateTime, 1000);
+        // =================================================================
+        // KAKAO MAP INTEGRATION
+        // =================================================================
+        let map;
+        let markers = [];
+        let infowindow;
 
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
+        function initializeMap(data) {
+            if (typeof kakao === 'undefined' || typeof kakao.maps === 'undefined') {
+                console.error("Kakao Maps API not loaded.");
+                document.getElementById('map').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Kakao Maps API could not be loaded. Please check the App Key.</div>';
+                return;
+            }
 
-        // Call timers (increment every second for active calls)
-        function updateCallTimers() {
-            // This would update call timers in real implementation
+            const mapContainer = document.getElementById('map');
+            const mapOption = {
+                center: new kakao.maps.LatLng(37.5659, 126.9384),
+                level: 8
+            };
+
+            map = new kakao.maps.Map(mapContainer, mapOption);
+            infowindow = new kakao.maps.InfoWindow({ zIndex: 1, removable: true });
+            
+            addIncidentMarkers(data);
         }
-        setInterval(updateCallTimers, 1000);
+
+        function addIncidentMarkers(data) {
+            const bounds = new kakao.maps.LatLngBounds();
+            
+            data.forEach(incident => {
+                const position = new kakao.maps.LatLng(incident.lat, incident.lng);
+                const info = categoryInfo[incident.category];
+                const pinSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 24 34">` +
+                               `<path fill="${info.color}" stroke="white" stroke-width="1.5" d="M12 0C7.03 0 3 4.03 3 9c0 6.17 7.43 15.45 8.23 16.5.4.53 1.14.53 1.54 0 .8-.95 8.23-10.33 8.23-16.5C21 4.03 16.97 0 12 0zm0 12.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 5.5 12 5.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>` +
+                               `</svg>`;
+                const imageSrc = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(pinSVG)}`;
+                const imageSize = new kakao.maps.Size(28, 40);
+                const imageOption = { offset: new kakao.maps.Point(14, 40) };
+                const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+                
+                const marker = new kakao.maps.Marker({
+                    map: map,
+                    position: position,
+                    title: `[${incident.category}] ${incident.address}`,
+                    image: markerImage
+                });
+                
+                marker.incident = incident; // Attach incident data to marker
+
+                kakao.maps.event.addListener(marker, 'click', function() {
+                    showIncidentInfo(marker, incident);
+                });
+
+                markers.push(marker);
+                bounds.extend(position);
+            });
+
+            if (markers.length > 0) {
+                map.setBounds(bounds);
+            }
+        }
+
+        function showIncidentInfo(marker, incident) {
+            infowindow.close();
+            const content = `
+                <div style="padding:10px;font-size:13px;min-width:250px;line-height:1.6;">
+                    <div style="font-weight:bold;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <span class="category-badge category-${incident.category.toLowerCase()}">${incident.category}</span>
+                        <span class="urgency-level urgency-${incident.urgency}">Urgency ${incident.urgency}</span>
+                    </div>
+                    <div style="margin-bottom:4px;">
+                        <img src="/assets/images/ecallAssistant_icon/Icon-10.png" alt="Location" style="width:12px; height:12px; margin-right:4px; vertical-align:middle;">
+                        <strong>${incident.address}</strong>
+                    </div>
+                    <div style="margin-bottom:4px;"><strong>Status:</strong> <span class="incident-status ${incident.statusClass}">${incident.status}</span></div>
+                    <div><strong>Agent:</strong> ${incident.agent}</div>
+                </div>`;
+            
+            const styledContent = `
+                <style>
+                    .category-badge { padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; color: white; }
+                    .category-disaster { background-color: #f59e0b; } .category-medical { background-color: #10b981; }
+                    .category-crime { background-color: #3b82f6; } .category-traffic { background-color: #facc15; color: #1d1d1f; }
+                    .category-rescue { background-color: #8b5cf6; } .category-other { background-color: #6b7280; }
+                    .urgency-level { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+                    .urgency-1 { background-color: #374151; color: white; } .urgency-2 { background-color: #6b7280; color: white; }
+                    .urgency-3 { background-color: #9ca3af; color: white; } .urgency-4 { background-color: #d1d5db; color: #1f2937; }
+                    .urgency-5 { background-color: #e5e7eb; color: #1f2937; }
+                    .incident-status { font-weight: 600; }
+                    .status-handling { color: #f59e0b; } .status-assigned { color: #3b82f6; }
+                    .status-on-scene { color: #8b5cf6; } .status-closed { color: #10b981; }
+                </style>
+                ${content}`;
+
+            infowindow.setContent(styledContent);
+            infowindow.open(map, marker);
+        }
+
+        function filterMapMarkers(category) {
+            infowindow.close();
+            markers.forEach(marker => {
+                if (category === 'All' || marker.incident.category === category) {
+                    marker.setMap(map);
+                } else {
+                    marker.setMap(null);
+                }
+            });
+        }
     </script>
 </body>
 </html>
