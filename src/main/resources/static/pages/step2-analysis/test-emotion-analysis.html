@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Step2 - 감정 타임라인 분석 테스트</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        h1 { color: #333; }
+        textarea { width: 100%; height: 250px; margin-bottom: 1em; padding: 0.5em; font-size: 1em; }
+        button { padding: 0.8em 1.5em; font-size: 1em; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        #result-container { margin-top: 1.5em; padding: 1em; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 5px; }
+        h2 { color: #333; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>Step2: 감정 타임라인 분석 테스트</h1>
+<p>아래 텍스트 상자에 분석할 전체 대화 내용을 붙여넣고 '분석 실행' 버튼을 클릭하세요.</p>
+
+<textarea id="conversationText">화자 1
+일이 구 입니다.
+0:00.00 - 0:01.38
+화자 2
+네 여기 저기 어디지? 고속터미널 네 맞은편 육교에 있는 육교 다리 밑인데요.
+0:01.38 - 0:10.23
+화자 1
+님 그렇게 말하면 저희가 알기가 어려우니까 고속 터미널 에서 그 육교가 어느 방향 쪽이에요? 거기 근처에 주소 아세요?
+0:10.23 - 0:19.46
+화자 2
+고서 터미널 지하철역 천번 출구 앞에 있는 육교거든요.
+0:19.46 - 0:24.06
+화자 1
+삼 번 출구요.
+0:24.06 - 0:25.38
+화자 2
+네네네.
+0:25.38 - 0:26.36
+화자 1
+고석 터미널. 삼호선 삼번 출구. 네네네. 칠호선이구나. 그쪽이.
+0:26.36 - 0:31.87
+화자 2
+네 칠호선. 삼 호선 다 단위. 그니까 어쨌든 삼 번 출구 칠호선일 거예요. 아마.
+0:31.87 - 0:36.76
+화자 1
+7호선. 3579 그 옆에 스타벅스 있고 그런 데 쪽 말하는 거죠?
+0:36.76 - 0:40.11
+화자 2
+네 맞아요. 맞아요. 맞아요.
+0:40.11 - 0:41.78
+화자 1
+예 그쪽 아 유스 쪽에
+0:41.78 - 0:44.02
+화자 2
+다리 밑인데 여기 남성 한 분이 쓰러져 계시는데요. 개념도 좀 하시는 것 같고
+0:44.02 - 0:50.64
+화자 1
+정리에도요 네 의식은 있고 호흡도 있고 그분이 막 끌고 있어요. 바르바르.
+0:50.64 - 0:59.51
+화자 2
+네네. 몸을 떨고 계시구요. 지금 약간 배설물도 나오시는 거 같거든요.
+0:59.51 - 1:05.28
+화자 1
+그래요 선생님 그쪽 근처에 한번 가 보시고 저희가 의료 지도도 해드릴 거니까 전화는 끊지 말고요. 잠시만요. 네 지금 구급차는 나갔어요. 저희가 취소해 드릴 거니까 잠시만 기다려 주세요.
+1:05.28 - 1:40.29</textarea>
+
+<button id="analyzeButton">분석 실행</button>
+
+<div id="result-container">
+    <h2>분석 결과:</h2>
+    <pre id="result"></pre>
+</div>
+
+<script>
+    document.getElementById('analyzeButton').addEventListener('click', function() {
+        const conversationText = document.getElementById('conversationText').value;
+        const resultElement = document.getElementById('result');
+        
+        resultElement.textContent = '분석 중...';
+        resultElement.classList.remove('error');
+
+        fetch('/api/step2/emotion-analysis/conversation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fullConversationText: conversationText
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                // 서버에서 4xx, 5xx 응답을 받았을 때
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // JSON 결과를 예쁘게 포맷팅하여 출력
+            resultElement.textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultElement.textContent = '오류가 발생했습니다. 자세한 내용은 브라우저의 개발자 콘솔(F12)을 확인하세요.\n' + error;
+            resultElement.classList.add('error');
+        });
+    });
+</script>
+
+</body>
+</html>
