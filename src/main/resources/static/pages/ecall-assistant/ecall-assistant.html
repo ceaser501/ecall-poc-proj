@@ -62,7 +62,7 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem;
         }
 
         .status-indicator {
@@ -74,9 +74,13 @@
         .status-dot {
             width: 0.5rem;
             height: 0.5rem;
-            background: rgb(34, 197, 94);
+            background: rgb(148, 163, 184);
             border-radius: 50%;
             animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.active {
+            background: rgb(34, 197, 94);
         }
 
         @keyframes pulse {
@@ -112,6 +116,17 @@
             border-color: rgb(203, 213, 225);
         }
 
+        .btn.active {
+            background: rgb(59, 130, 246);
+            border-color: rgb(59, 130, 246);
+            color: white;
+        }
+
+        .btn.active:hover {
+            background: rgb(37, 99, 235);
+            border-color: rgb(37, 99, 235);
+        }
+
         .btn-primary {
             background: rgb(59, 130, 246);
             border-color: rgb(59, 130, 246);
@@ -124,8 +139,8 @@
         }
 
         .btn-icon {
-            width: 2.5rem;
-            height: 2.5rem;
+            width: 2rem;
+            height: 2rem;
             padding: 0;
             display: flex;
             align-items: center;
@@ -133,8 +148,28 @@
         }
 
         .btn svg {
-            width: 1.25rem;
-            height: 1.25rem;
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .header-logout-btn {
+            background: #1e293b;
+            color: white;
+            padding: 0.375rem 0.625rem;
+            border: 1px solid #1e293b;
+            border-radius: 0.375rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 2rem;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .header-logout-btn:hover {
+            background: #0f172a;
+            border-color: #0f172a;
         }
 
         /* Main Content */
@@ -276,13 +311,13 @@
         }
 
         .message-operator {
-            background: rgb(240, 253, 244);
-            border-color: rgb(187, 247, 208);
+            background: rgb(236, 253, 245);
+            border-color: rgb(167, 243, 208);
         }
 
         .message-caller {
-            background: rgb(254, 249, 195);
-            border-color: rgb(253, 230, 138);
+            background: rgb(239, 246, 255);
+            border-color: rgb(191, 219, 254);
         }
 
         .message-header {
@@ -311,11 +346,11 @@
         }
 
         .operator-avatar {
-            background: rgb(34, 197, 94);
+            background: rgb(5, 150, 105);
         }
 
         .caller-avatar {
-            background: rgb(59, 130, 246);
+            background: rgb(37, 99, 235);
         }
 
         .sender-name {
@@ -340,6 +375,7 @@
             background: rgb(248, 250, 252);
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 0.5rem;
         }
 
@@ -658,6 +694,98 @@
         .remove-file-btn:hover {
             color: rgb(15, 23, 42);
         }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 600px;
+        }
+
+        .empty-state.hidden {
+            display: none;
+        }
+
+        .empty-state-content {
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .empty-state-icon-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state-icon {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: rgb(248, 250, 252);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: rgb(148, 163, 184);
+        }
+
+        .empty-state-pulse {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 24px;
+            height: 24px;
+            background: rgb(203, 213, 225);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .empty-state-pulse::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: rgb(148, 163, 184);
+            border-radius: 50%;
+        }
+
+        .empty-state-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: rgb(15, 23, 42);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state-description {
+            color: rgb(100, 116, 139);
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgb(248, 250, 252);
+            border-radius: 9999px;
+        }
+
+        .empty-state-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: rgb(148, 163, 184);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .empty-state-badge span {
+            color: rgb(100, 116, 139);
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
@@ -672,20 +800,19 @@
             </div>
 
             <div class="header-right">
-                <button class="btn btn-primary" onclick="showUploadModal()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
-                    Upload Audio File
-                </button>
                 <div class="status-indicator">
                     <div class="status-dot"></div>
-                    <span class="status-text">On Call</span>
-                    <span class="status-time" id="callTimer">03:42</span>
+                    <span class="status-text">Standby</span>
+                    <span class="status-time" id="callTimer">00:00</span>
                 </div>
-                <button class="btn btn-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m5.2-14.8l-4.2 4.2m0 5.2l-4.2 4.2M23 12h-6m-6 0H1m14.8-5.2l-4.2 4.2m0 5.2l-4.2 4.2"/></svg>
+                <button class="btn btn-icon" onclick="window.location.href='ecall-intro.html'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 </button>
                 <button class="btn btn-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </button>
+                <button class="header-logout-btn" onclick="logout()">
+                    Log Out
                 </button>
             </div>
         </div>
@@ -716,12 +843,13 @@
 
                         <div class="form-group">
                             <label class="form-label">Incident Location</label>
-                            <input type="text" class="form-input" value="152 Daechi-dong, Gangnam-gu, Seoul">
+                            <input type="text" class="form-input" id="incidentLocation" value="" placeholder="AI will detect location from conversation">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Incident Type</label>
                             <select class="form-select" id="incidentType" onchange="updateChecklist()">
+                                <option value="" selected>Analyzing...</option>
                                 <option value="emergency">Emergency</option>
                                 <option value="fire">Fire</option>
                                 <option value="crime">Crime</option>
@@ -731,7 +859,7 @@
 
                         <div class="form-group">
                             <label class="form-label">Severity Level</label>
-                            <select class="form-select">
+                            <select class="form-select" id="severityLevel">
                                 <option value="1">Level 1 (Minor)</option>
                                 <option value="2">Level 2</option>
                                 <option value="3">Level 3</option>
@@ -757,71 +885,48 @@
                     <div class="panel-header">
                         <h2 class="panel-title">Live Transcript</h2>
                         <div class="transcript-header-info">
-                            <span>AI Confidence: 94%</span>
-                            <button class="btn">
+                            <span id="aiConfidence">AI Confidence: 0%</span>
+                            <button class="btn" id="playBtn" onclick="playAudio()">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 Play
+                            </button>
+                            <button class="btn" id="speakerBtn" onclick="toggleSpeaker()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                                Speaker
                             </button>
                         </div>
                     </div>
 
-                    <div class="transcript-messages">
-                        <div class="message message-operator">
-                            <div class="message-header">
-                                <div class="message-sender">
-                                    <div class="sender-avatar operator-avatar">O</div>
-                                    <span class="sender-name">Operator</span>
+                    <div class="transcript-messages" id="transcriptMessages">
+                        <!-- Empty State - Waiting for Call -->
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-state-content">
+                                <div class="empty-state-icon-wrapper">
+                                    <div class="empty-state-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    </div>
+                                    <div class="empty-state-pulse"></div>
                                 </div>
-                                <span class="message-time">14:23:35</span>
-                            </div>
-                            <div class="message-text">
-                                I understand. Is the patient conscious? Are their eyes open?
+                                <h3 class="empty-state-title">Waiting for Incoming Call</h3>
+                                <p class="empty-state-description">The system is ready to receive emergency calls.</p>
+                                <div class="empty-state-badge">
+                                    <div class="empty-state-badge-dot"></div>
+                                    <span>Standby Mode</span>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="message message-caller">
-                            <div class="message-header">
-                                <div class="message-sender">
-                                    <div class="sender-avatar caller-avatar">C</div>
-                                    <span class="sender-name">Caller</span>
-                                </div>
-                                <span class="message-time">14:23:40</span>
-                            </div>
-                            <div class="message-text">
-                                Their eyes are closed. They look pale and... there's a lot of blood! What should I do?!
-                            </div>
-                        </div>
-
-                        <div class="message message-operator">
-                            <div class="message-header">
-                                <div class="message-sender">
-                                    <div class="sender-avatar operator-avatar">O</div>
-                                    <span class="sender-name">Operator</span>
-                                </div>
-                                <span class="message-time">14:23:48</span>
-                            </div>
-                            <div class="message-text">
-                                Stay calm. An ambulance is on the way. Are they breathing?
-                            </div>
-                        </div>
-
-                        <div class="message message-caller">
-                            <div class="message-header">
-                                <div class="message-sender">
-                                    <div class="sender-avatar caller-avatar">C</div>
-                                    <span class="sender-name">Caller</span>
-                                </div>
-                                <span class="message-time">14:23:53</span>
-                            </div>
-                            <div class="message-text">
-                                Yes... they're breathing but it sounds rough. Please hurry!
-                            </div>
-                        </div>
+                        <!-- Messages will be added here dynamically -->
                     </div>
 
                     <div class="transcript-footer">
-                        <div class="recording-dot"></div>
-                        <span class="recording-text">Voice recognition active...</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="recording-dot"></div>
+                            <span class="recording-text" id="recordingText">System ready - Waiting for call...</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="showUploadModal()" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; height: auto;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+                            Upload Audio File
+                        </button>
                     </div>
                 </div>
             </div>
@@ -835,13 +940,17 @@
                     </div>
                     <div class="panel-body">
                         <div class="operator-info">
-                            <div class="operator-avatar-lg">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2364748b'%3EJP%3C/text%3E%3C/svg%3E" alt="Operator">
+                            <div style="position: relative; width: 64px; height: 64px;">
+                                <div class="operator-avatar-lg">
+                                    <img id="operatorAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2364748b'%3EJP%3C/text%3E%3C/svg%3E" alt="Operator">
+                                </div>
+                                <label for="photoUpload" style="position: absolute; bottom: -4px; right: -4px; background: #2563eb; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">+</label>
+                                <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
                             </div>
                             <div class="operator-details">
-                                <p class="operator-name">Jihyun Park</p>
-                                <p class="operator-dept">Emergency Center</p>
-                                <p class="operator-exp">3 years exp.</p>
+                                <p id="operatorName" class="operator-name">Jihyun Park</p>
+                                <p id="operatorDept" class="operator-dept">Emergency Center</p>
+                                <p id="operatorExp" class="operator-exp">3 years exp.</p>
                             </div>
                         </div>
                     </div>
@@ -874,15 +983,19 @@
                         <div class="timeline-list">
                             <div class="timeline-item">
                                 <span>Call Started</span>
-                                <span class="timeline-time">14:23:15</span>
+                                <span class="timeline-time">--:--:--</span>
                             </div>
                             <div class="timeline-item">
                                 <span>Location Confirmed</span>
-                                <span class="timeline-time">14:23:42</span>
+                                <span class="timeline-time">--:--:--</span>
+                            </div>
+                            <div class="timeline-item">
+                                <span>Call Ended</span>
+                                <span class="timeline-time">--:--:--</span>
                             </div>
                             <div class="timeline-item">
                                 <span>Elapsed Time</span>
-                                <span class="timeline-time">03:42</span>
+                                <span class="timeline-time">00:00</span>
                             </div>
                         </div>
                     </div>
@@ -906,6 +1019,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn" onclick="closeChecklistModal()">Close</button>
+                <button class="btn btn-primary" onclick="saveChecklist()">Save Checklist</button>
             </div>
         </div>
     </div>
@@ -935,6 +1049,103 @@
     </div>
 
     <script>
+        // Load operator information from session
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(sessionStorage.getItem('user'));
+
+            if (user) {
+                // Update operator name
+                const operatorNameEl = document.getElementById('operatorName');
+                if (operatorNameEl) {
+                    operatorNameEl.textContent = user.name || 'Unknown';
+                }
+
+                // Update operator department
+                const operatorDeptEl = document.getElementById('operatorDept');
+                if (operatorDeptEl) {
+                    operatorDeptEl.textContent = user.organizationName || 'N/A';
+                }
+
+                // Calculate years of experience from join_date
+                const operatorExpEl = document.getElementById('operatorExp');
+                if (operatorExpEl && user.joinDate) {
+                    // Parse date string (yyyy-MM-dd) without timezone issues
+                    const joinDateStr = user.joinDate.split('T')[0]; // Remove time part if exists
+                    const [year, month, day] = joinDateStr.split('-').map(Number);
+                    const joinDate = new Date(year, month - 1, day); // month is 0-indexed
+
+                    const today = new Date();
+                    const yearsDiff = today.getFullYear() - joinDate.getFullYear();
+                    const monthsDiff = today.getMonth() - joinDate.getMonth();
+                    const daysDiff = today.getDate() - joinDate.getDate();
+
+                    // Adjust if birthday hasn't occurred this year
+                    let diffYears = yearsDiff;
+                    if (monthsDiff < 0 || (monthsDiff === 0 && daysDiff < 0)) {
+                        diffYears--;
+                    }
+
+                    operatorExpEl.textContent = `${diffYears} year${diffYears !== 1 ? 's' : ''} exp.`;
+                }
+
+                // Update avatar - show photo if available, otherwise show initials
+                const operatorAvatarEl = document.getElementById('operatorAvatar');
+                if (operatorAvatarEl) {
+                    if (user.photoUrl) {
+                        operatorAvatarEl.src = user.photoUrl;
+                    } else if (user.name) {
+                        const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                        const avatarSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2364748b'%3E${initials}%3C/text%3E%3C/svg%3E`;
+                        operatorAvatarEl.src = avatarSvg;
+                    }
+                }
+            }
+        });
+
+        // Handle photo upload
+        async function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const user = JSON.parse(sessionStorage.getItem('user'));
+            if (!user || !user.id) {
+                alert('User not logged in');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('operatorId', user.id);
+
+            try {
+                const response = await fetch('/api/auth/upload-photo', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update avatar immediately
+                    const operatorAvatarEl = document.getElementById('operatorAvatar');
+                    if (operatorAvatarEl) {
+                        operatorAvatarEl.src = result.fileUrl;
+                    }
+
+                    // Update session storage
+                    user.photoUrl = result.fileUrl;
+                    sessionStorage.setItem('user', JSON.stringify(user));
+
+                    alert('Photo uploaded successfully!');
+                } else {
+                    alert('Upload failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                alert('Upload failed. Please try again.');
+            }
+        }
+
         // Checklist data
         const checklistData = {
             emergency: [
@@ -973,16 +1184,50 @@
 
         let currentChecklist = {};
         let selectedFile = null;
+        let audioElement = null; // For audio playback
+        let transcriptSegments = [];
+        let isPlaying = false;
+        let callStartTime = null;
+        let timerInterval = null;
+        let displayedSegmentIndexes = new Set(); // Track which segments have been displayed
+        let accumulatedTranscript = ''; // Accumulated transcript for AI analysis
+        let aiLocationExtractionInProgress = false; // Prevent concurrent AI calls
+        let aiIncidentClassificationInProgress = false; // Prevent concurrent AI classification calls
+        let currentEmergencyId = null; // Store emergency ID for checklist saving
+        let detectedLanguage = null; // Store detected language from upload
+        let mediaAssetId = null; // Store media asset ID from upload
+        let callEndTime = null; // Store call end time for database
 
         // Timer
-        let seconds = 222;
-        setInterval(() => {
-            seconds++;
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            document.getElementById('callTimer').textContent =
-                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }, 1000);
+        let seconds = 0;
+        function startTimer() {
+            if (timerInterval) return; // Already running
+            // Update timer based on audio currentTime
+            timerInterval = setInterval(() => {
+                if (audioElement) {
+                    seconds = Math.floor(audioElement.currentTime);
+                } else {
+                    seconds++;
+                }
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                document.getElementById('callTimer').textContent = timeStr;
+
+                // Update elapsed time in timeline
+                const elapsedTimeEl = document.querySelector('.timeline-list .timeline-item:nth-child(4) .timeline-time');
+                if (elapsedTimeEl) {
+                    elapsedTimeEl.textContent = timeStr;
+                }
+            }, 100); // Update more frequently for smoother display
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
 
         // Checklist functions
         function showChecklistModal() {
@@ -995,10 +1240,77 @@
             document.getElementById('checklistModal').style.display = 'none';
         }
 
+        async function saveChecklist() {
+            // Check if we have an emergency ID
+            if (!currentEmergencyId) {
+                alert('Cannot save checklist: No emergency call record found. Please upload an audio file first.');
+                return;
+            }
+
+            // Check if any responses exist
+            const type = document.getElementById('incidentType').value;
+            const questions = checklistData[type];
+
+            if (!questions || questions.length === 0) {
+                alert('No checklist to save. Please select an incident type first.');
+                return;
+            }
+
+            // Collect all checklist responses
+            const responses = [];
+            questions.forEach((question, index) => {
+                const answer = currentChecklist[index];
+                if (answer !== undefined) {
+                    responses.push({
+                        question: question,
+                        answer: answer ? 'YES' : 'NO'
+                    });
+                }
+            });
+
+            if (responses.length === 0) {
+                alert('Please answer at least one question before saving.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/save-checklist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        emergencyCallId: currentEmergencyId,
+                        responses: responses
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Checklist saved successfully!');
+                    closeChecklistModal();
+                } else {
+                    alert('Failed to save checklist: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error saving checklist:', error);
+                alert('Error saving checklist. Please try again.');
+            }
+        }
+
         function updateChecklist() {
             const type = document.getElementById('incidentType').value;
             const questions = checklistData[type];
             const description = checklistDescriptions[type];
+
+            // If no checklist exists for this type, show a message
+            if (!questions || questions.length === 0) {
+                document.getElementById('checklistDesc').textContent = 'Please select an incident type to view checklist.';
+                document.getElementById('checklistItems').innerHTML = '<div style="text-align: center; padding: 2rem; color: #64748b;">No checklist available. Please select an incident type from the left panel.</div>';
+                currentChecklist = {};
+                return;
+            }
 
             document.getElementById('checklistDesc').textContent = description;
 
@@ -1090,11 +1402,776 @@
             document.getElementById('uploadBtn').disabled = true;
         }
 
-        function uploadFile() {
-            if (selectedFile) {
-                console.log('Uploading file:', selectedFile.name);
-                alert('File uploaded: ' + selectedFile.name);
-                closeUploadModal();
+        async function uploadFile() {
+            if (!selectedFile) return;
+
+            // Store file reference locally before upload
+            const audioFile = selectedFile;
+
+            try {
+                // Show loading state
+                document.getElementById('uploadBtn').disabled = true;
+                document.getElementById('uploadBtn').textContent = 'Processing...';
+
+                // Get operator ID from session
+                const user = JSON.parse(sessionStorage.getItem('user'));
+                const operatorId = user ? user.id : null;
+
+                // Get caller information from form (hardcoded for now)
+                const callerPhoneNumber = '010-8734-2910';
+                const callerName = 'Minsu Kim';
+
+                // Create FormData
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('minSpeakers', '1');
+                formData.append('maxSpeakers', '5');
+
+                // Add caller and operator information
+                if (callerPhoneNumber) {
+                    formData.append('callerPhoneNumber', callerPhoneNumber);
+                }
+                if (callerName) {
+                    formData.append('callerName', callerName);
+                }
+                if (operatorId) {
+                    formData.append('operatorId', operatorId);
+                }
+
+                // Call Clova API
+                const response = await fetch('/api/voice/upload/clova', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.speakerSegments) {
+                    transcriptSegments = result.speakerSegments;
+
+                    // Store language if returned
+                    if (result.language) {
+                        detectedLanguage = result.language;
+                        console.log('Detected language:', detectedLanguage);
+                    }
+
+                    // Store media asset ID if returned
+                    if (result.mediaAssetId) {
+                        mediaAssetId = result.mediaAssetId;
+                        console.log('Media asset ID:', mediaAssetId);
+                    }
+
+                    closeUploadModal();
+
+                    // Create audio element for playback
+                    try {
+                        const audioUrl = URL.createObjectURL(audioFile);
+                        audioElement = new Audio(audioUrl);
+
+                        // Reset displayed segments
+                        displayedSegmentIndexes.clear();
+
+                        // Sync transcript with audio playback
+                        audioElement.addEventListener('timeupdate', () => {
+                            syncTranscriptWithAudio();
+                        });
+
+                        // Auto-play audio and activate speaker button
+                        audioElement.play();
+                        const speakerBtn = document.getElementById('speakerBtn');
+                        if (speakerBtn) {
+                            speakerBtn.classList.add('active');
+                        }
+
+                        // Remove active class when audio ends
+                        audioElement.addEventListener('ended', () => {
+                            if (speakerBtn) {
+                                speakerBtn.classList.remove('active');
+                            }
+                        });
+                    } catch (audioError) {
+                        console.error('Error creating audio element:', audioError);
+                        // Audio playback will not be available, but transcript will still work
+                    }
+
+                    // Hide empty state
+                    const emptyState = document.getElementById('emptyState');
+                    if (emptyState) {
+                        emptyState.classList.add('hidden');
+                    }
+
+                    // Reset timer
+                    stopTimer();
+                    seconds = 0;
+
+                    // Initialize transcript display
+                    initializeTranscriptDisplay();
+                } else {
+                    alert('Failed to process audio file: ' + (result.error || result.message));
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('Error uploading file. Please try again.');
+            } finally {
+                document.getElementById('uploadBtn').disabled = false;
+                document.getElementById('uploadBtn').textContent = 'Upload';
+            }
+        }
+
+        function initializeTranscriptDisplay() {
+            if (!transcriptSegments || transcriptSegments.length === 0) return;
+
+            isPlaying = true;
+
+            // Reset accumulated transcript and AI extraction state for new call
+            accumulatedTranscript = '';
+            aiLocationExtractionInProgress = false;
+            aiIncidentClassificationInProgress = false;
+
+            // Update status to "On Call"
+            const statusTextEl = document.querySelector('.status-text');
+            if (statusTextEl) {
+                statusTextEl.textContent = 'On Call';
+            }
+
+            // Activate status dot
+            const statusDot = document.querySelector('.status-dot');
+            if (statusDot) {
+                statusDot.classList.add('active');
+            }
+
+            // Update recording text
+            const recordingTextEl = document.getElementById('recordingText');
+            if (recordingTextEl) {
+                recordingTextEl.textContent = 'Voice recognition active...';
+            }
+
+            // Start timer (now synced with actual audio)
+            startTimer();
+
+            // Update Call Started time
+            callStartTime = new Date();
+            const timeStr = formatTime(callStartTime);
+            const callStartedEl = document.querySelector('.timeline-list .timeline-item:nth-child(1) .timeline-time');
+            if (callStartedEl) {
+                callStartedEl.textContent = timeStr;
+            }
+        }
+
+        function syncTranscriptWithAudio() {
+            if (!audioElement || !transcriptSegments || transcriptSegments.length === 0) return;
+
+            const currentTime = audioElement.currentTime;
+            const locationConfirmIndex = Math.floor(transcriptSegments.length * 0.3);
+
+            // Find segments that should be displayed at current time
+            transcriptSegments.forEach((segment, index) => {
+                // Check if this segment should be displayed now and hasn't been displayed yet
+                if (currentTime >= segment.startTime && !displayedSegmentIndexes.has(index)) {
+                    displayedSegmentIndexes.add(index);
+                    addMessageToTranscript(segment, index);
+
+                    // Update AI Confidence (average of all displayed segments so far)
+                    const displayedSegments = transcriptSegments.filter((_, i) => displayedSegmentIndexes.has(i));
+                    updateAIConfidence(displayedSegments);
+
+                    // Update Location Confirmed
+                    if (index === locationConfirmIndex) {
+                        const locationTime = new Date(callStartTime.getTime() + segment.startTime * 1000);
+                        const locationTimeStr = formatTime(locationTime);
+                        const locationEl = document.querySelector('.timeline-list .timeline-item:nth-child(2) .timeline-time');
+                        if (locationEl) {
+                            locationEl.textContent = locationTimeStr;
+                        }
+                    }
+
+                    // Check if this is the last segment
+                    if (index === transcriptSegments.length - 1) {
+                        // Wait a bit then stop
+                        setTimeout(() => {
+                            stopTimer();
+                            isPlaying = false;
+
+                            // Update Call Ended time and store it for database
+                            callEndTime = new Date(callStartTime.getTime() + segment.endTime * 1000);
+                            const callEndTimeStr = formatTime(callEndTime);
+                            const callEndedEl = document.querySelector('.timeline-list .timeline-item:nth-child(3) .timeline-time');
+                            if (callEndedEl) {
+                                callEndedEl.textContent = callEndTimeStr;
+                            }
+
+                            // Reset status to Call Ended
+                            const statusTextEl = document.querySelector('.status-text');
+                            if (statusTextEl) {
+                                statusTextEl.textContent = 'Call Ended';
+                            }
+
+                            // Deactivate status dot
+                            const statusDot = document.querySelector('.status-dot');
+                            if (statusDot) {
+                                statusDot.classList.remove('active');
+                            }
+
+                            // Update recording text
+                            const recordingTextEl = document.getElementById('recordingText');
+                            if (recordingTextEl) {
+                                recordingTextEl.textContent = 'Call completed - System ready for next call';
+                            }
+
+                            // Complete emergency and save to database
+                            completeEmergency();
+                        }, 1000);
+                    }
+                }
+            });
+        }
+
+        function addMessageToTranscript(segment, index) {
+            const messagesContainer = document.querySelector('.transcript-messages');
+
+            // Determine if speaker is operator (speakerId 0) or caller (speakerId 1+)
+            const isOperator = segment.speakerId === 0;
+            const messageClass = isOperator ? 'message-operator' : 'message-caller';
+            const avatarClass = isOperator ? 'operator-avatar' : 'caller-avatar';
+            const senderName = isOperator ? 'Operator' : 'Caller';
+            const avatarLetter = isOperator ? 'O' : 'C';
+
+            // Format time (HH:MM:SS) - apply 2x speed
+            const time = new Date(callStartTime.getTime() + segment.startTime * 500);
+            const timeStr = formatTime(time);
+
+            // Normalize text for display (fix common speech recognition errors)
+            const normalizedText = normalizeLocationText(segment.text);
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${messageClass}`;
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <div class="message-sender">
+                        <div class="sender-avatar ${avatarClass}">${avatarLetter}</div>
+                        <span class="sender-name">${senderName}</span>
+                    </div>
+                    <span class="message-time">${timeStr}</span>
+                </div>
+                <div class="message-text">
+                    ${normalizedText}
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+
+            // Auto-scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Accumulate transcript for AI analysis (use normalized text)
+            const speaker = isOperator ? 'Operator' : 'Caller';
+            accumulatedTranscript += `${speaker}: ${normalizedText}\n`;
+
+            // Analyze message content to extract incident information
+            // Only analyze caller's messages (not operator's questions)
+            if (!isOperator) {
+                analyzeIncidentInfo(segment.text);
+            } else {
+                // Even for operator, extract location if mentioned
+                extractLocation(segment.text);
+            }
+        }
+
+        // AI-powered incident information extraction
+        function analyzeIncidentInfo(text) {
+            const lowerText = text.toLowerCase();
+
+            // Skip if it's a question (operator asking)
+            if (text.includes('?') || text.includes('emergency?') || text.includes("what's your emergency")) {
+                // Still extract location even from questions
+                extractLocation(text);
+                return;
+            }
+
+            // Analyze incident type - prioritize specific types over generic "emergency"
+            const incidentTypeEl = document.getElementById('incidentType');
+            if (incidentTypeEl && incidentTypeEl.value === '') {
+                // Priority 1: Crime (expanded keywords)
+                if (lowerText.includes('crime') || lowerText.includes('범죄') ||
+                    lowerText.includes('knife') || lowerText.includes('칼') ||
+                    lowerText.includes('gun') || lowerText.includes('총') ||
+                    lowerText.includes('weapon') || lowerText.includes('무기') ||
+                    lowerText.includes('chasing') || lowerText.includes('쫓') || lowerText.includes('따라') ||
+                    lowerText.includes('attack') || lowerText.includes('공격') ||
+                    lowerText.includes('threat') || lowerText.includes('위협') ||
+                    lowerText.includes('robbery') || lowerText.includes('강도') ||
+                    lowerText.includes('assault') || lowerText.includes('폭행') ||
+                    lowerText.includes('steal') || lowerText.includes('도둑') || lowerText.includes('절도') ||
+                    lowerText.includes('kidnap') || lowerText.includes('납치') ||
+                    lowerText.includes('murder') || lowerText.includes('살인') ||
+                    lowerText.includes('stab') || lowerText.includes('찌르')) {
+                    incidentTypeEl.value = 'crime';
+                    updateChecklist();
+                }
+                // Priority 2: Fire (expanded keywords)
+                else if (lowerText.includes('fire') || lowerText.includes('화재') ||
+                         lowerText.includes('불이') || lowerText.includes('불나') ||
+                         lowerText.includes('smoke') || lowerText.includes('연기') ||
+                         lowerText.includes('burning') || lowerText.includes('타고') || lowerText.includes('불타') ||
+                         lowerText.includes('flames') || lowerText.includes('화염') ||
+                         lowerText.includes('explosion') || lowerText.includes('폭발')) {
+                    incidentTypeEl.value = 'fire';
+                    updateChecklist();
+                }
+                // Priority 3: Accident (expanded keywords)
+                else if (lowerText.includes('accident') || lowerText.includes('사고') ||
+                         lowerText.includes('crash') || lowerText.includes('충돌') ||
+                         lowerText.includes('car') || lowerText.includes('차량') || lowerText.includes('교통') ||
+                         lowerText.includes('hit') || lowerText.includes('부딪') ||
+                         lowerText.includes('injured') || lowerText.includes('다쳤') || lowerText.includes('부상') ||
+                         lowerText.includes('hurt') || lowerText.includes('아프') ||
+                         lowerText.includes('bleeding') || lowerText.includes('피') || lowerText.includes('출혈') ||
+                         lowerText.includes('fell') || lowerText.includes('떨어') ||
+                         lowerText.includes('broken') || lowerText.includes('골절')) {
+                    incidentTypeEl.value = 'accident';
+                    updateChecklist();
+                }
+                // Priority 4: Emergency (only if explicitly stating emergency situation, not asking)
+                else if ((lowerText.includes('응급') || lowerText.includes('위급') || lowerText.includes('위험') ||
+                          lowerText.includes('도와주세요') || lowerText.includes('살려') ||
+                          lowerText.includes('help me') || lowerText.includes('save me')) &&
+                         !lowerText.includes('무슨') && !lowerText.includes('어떤') && !lowerText.includes('what')) {
+                    incidentTypeEl.value = 'emergency';
+                    updateChecklist();
+                }
+            }
+
+            // Analyze incident location
+            extractLocation(text);
+
+            // If incident type still not found by keywords, try AI classification
+            if (incidentTypeEl && incidentTypeEl.value === '' && accumulatedTranscript.length > 50) {
+                classifyIncidentTypeWithAI();
+            }
+
+            // Try AI-powered location extraction if accumulated transcript is sufficient
+            if (accumulatedTranscript.length > 50) {
+                extractLocationWithAI();
+            }
+        }
+
+        // AI-powered incident type classification using OpenAI
+        async function classifyIncidentTypeWithAI() {
+            // Check if type already found or AI classification already in progress
+            const incidentTypeEl = document.getElementById('incidentType');
+            if (!incidentTypeEl || incidentTypeEl.value || aiIncidentClassificationInProgress) {
+                return;
+            }
+
+            try {
+                aiIncidentClassificationInProgress = true;
+
+                const response = await fetch('/api/auth/classify-incident', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcript: accumulatedTranscript
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    if (result.success === 'true' && result.incidentType && result.incidentType.trim() !== '') {
+                        // Only update if incident type field is still empty
+                        if (!incidentTypeEl.value || incidentTypeEl.value === '') {
+                            incidentTypeEl.value = result.incidentType;
+                            updateChecklist();
+                            console.log('AI classified incident type:', result.incidentType);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error calling AI incident classification:', error);
+            } finally {
+                // Allow next classification after 5 seconds
+                setTimeout(() => {
+                    aiIncidentClassificationInProgress = false;
+                }, 5000);
+            }
+        }
+
+        // AI-powered location extraction using OpenAI + Kakao Map API
+        async function extractLocationWithAI() {
+            // Check if location already found or AI extraction already in progress
+            const locationEl = document.getElementById('incidentLocation');
+            if (!locationEl || locationEl.value || aiLocationExtractionInProgress) {
+                return;
+            }
+
+            try {
+                aiLocationExtractionInProgress = true;
+
+                const response = await fetch('/api/auth/extract-location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcript: accumulatedTranscript
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    if (result.success === 'true' && result.location && result.location.trim() !== '') {
+                        // Only update if location field is still empty
+                        if (!locationEl.value) {
+                            locationEl.value = result.location;
+                            console.log('AI extracted location:', result.location);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error calling AI location extraction:', error);
+            } finally {
+                // Allow next extraction after 5 seconds
+                setTimeout(() => {
+                    aiLocationExtractionInProgress = false;
+                }, 5000);
+            }
+        }
+
+        // Normalize location text to fix common speech recognition errors
+        function normalizeLocationText(location) {
+            if (!location) {
+                return location;
+            }
+
+            let normalized = location;
+
+            // Fix common Korean district name recognition errors
+            // "ganggu" -> "Gangseo-gu"
+            normalized = normalized.replace(/\bganggu\b/gi, 'Gangseo-gu');
+
+            // Add more common corrections
+            normalized = normalized.replace(/\bgangnam(?!-gu)\b/gi, 'Gangnam-gu');
+            normalized = normalized.replace(/\bgangdong(?!-gu)\b/gi, 'Gangdong-gu');
+            normalized = normalized.replace(/\bjongno(?!-gu)\b/gi, 'Jongno-gu');
+            normalized = normalized.replace(/\bmapo(?!-gu)\b/gi, 'Mapo-gu');
+
+            return normalized;
+        }
+
+        // Enhanced location extraction with API lookup
+        async function extractLocation(text) {
+            const locationEl = document.getElementById('incidentLocation');
+            if (!locationEl || locationEl.value !== '') {
+                return; // Already has a value
+            }
+
+            let extractedAddress = null;
+
+            // Pattern 1: Full Korean address (서울특별시 강남구 대치동 152)
+            const fullAddressPattern = /([가-힣]+(?:특별시|광역시|시|도)\s*[가-힣]+구\s*[가-힣]+동\s*\d+[-\d]*)/g;
+            let matches = text.match(fullAddressPattern);
+            if (matches && matches.length > 0) {
+                extractedAddress = matches[0].trim();
+            }
+
+            // Pattern 2: District + Neighborhood + Number (강남구 대치동 152번지)
+            if (!extractedAddress) {
+                const districtPattern = /([가-힣]+구\s*[가-힣]+동\s*\d+[-\d]*(?:번지|번)?)/g;
+                matches = text.match(districtPattern);
+                if (matches && matches.length > 0) {
+                    extractedAddress = matches[0].trim();
+                }
+            }
+
+            // Pattern 3: Road address (테헤란로 152, 강남대로 123길)
+            if (!extractedAddress) {
+                const roadAddressPattern = /([가-힣]+(?:로|대로|길)\s*\d+[-\d]*(?:길)?)/g;
+                matches = text.match(roadAddressPattern);
+                if (matches && matches.length > 0) {
+                    const roadMatch = matches[0];
+                    const roadIndex = text.indexOf(roadMatch);
+                    const beforeRoad = text.substring(Math.max(0, roadIndex - 20), roadIndex);
+                    const districtMatch = beforeRoad.match(/([가-힣]+(?:구|시))/);
+
+                    if (districtMatch) {
+                        extractedAddress = districtMatch[0] + ' ' + roadMatch.trim();
+                    } else {
+                        extractedAddress = roadMatch.trim();
+                    }
+                }
+            }
+
+            // Pattern 4: Building name + area (롯데타워 송파구, 코엑스 강남구)
+            if (!extractedAddress) {
+                const buildingPattern = /([가-힣]+(?:타워|빌딩|센터|아파트|빌라)\s*[가-힣]+(?:구|시))/g;
+                matches = text.match(buildingPattern);
+                if (matches && matches.length > 0) {
+                    extractedAddress = matches[0].trim();
+                }
+            }
+
+            // Pattern 5: Simple area mention (강남구 대치동)
+            if (!extractedAddress) {
+                const areaPattern = /([가-힣]+구\s*[가-힣]+동)/g;
+                matches = text.match(areaPattern);
+                if (matches && matches.length > 0) {
+                    extractedAddress = matches[0].trim();
+                }
+            }
+
+            // Pattern 6: City + district (서울 강남구)
+            if (!extractedAddress) {
+                const cityDistrictPattern = /([가-힣]+(?:시|도)\s*[가-힣]+구)/g;
+                matches = text.match(cityDistrictPattern);
+                if (matches && matches.length > 0) {
+                    extractedAddress = matches[0].trim();
+                }
+            }
+
+            // Pattern 7: English address with number (152 Daechi-dong, Gangnam-gu)
+            if (!extractedAddress) {
+                const englishAddressPattern = /(\d+\s+[A-Za-z]+-[A-Za-z]+(?:,\s*[A-Za-z]+-[A-Za-z]+)+)/gi;
+                matches = text.match(englishAddressPattern);
+                if (matches && matches.length > 0) {
+                    extractedAddress = matches[0].trim();
+                }
+            }
+
+            // Pattern 8: English full address with street name (152 Main Street)
+            if (!extractedAddress) {
+                const englishFullPattern = /(\d+\s+[A-Za-z\s]+(?:Street|Road|Avenue|Blvd|Boulevard|Lane|Drive|Way|Court|Plaza)(?:,\s*[A-Za-z\s]+)?)/gi;
+                matches = text.match(englishFullPattern);
+                if (matches && matches.length > 0) {
+                    extractedAddress = matches[0].trim();
+                }
+            }
+
+            // Pattern 9: Location after specific indicators (I'm at Central Park)
+            if (!extractedAddress) {
+                // More specific patterns for location indicators
+                const atPattern = /\b(?:I'm\s+at|at\s+the|near\s+the|near|at)\s+([A-Z][A-Za-z\s]+(?:Park|Station|Mall|Center|Building|Tower|Hospital|School|Airport|Plaza))/gi;
+                matches = text.match(atPattern);
+                if (matches && matches.length > 0) {
+                    // Extract just the location name
+                    const locationName = matches[0].replace(/\b(?:I'm\s+at|at\s+the|near\s+the|near|at)\s+/gi, '').trim();
+                    if (locationName.length > 3) {
+                        extractedAddress = locationName;
+                    }
+                }
+            }
+
+            // Validate extracted address
+            if (extractedAddress) {
+                // Normalize the extracted address (fix common speech recognition errors)
+                extractedAddress = normalizeLocationText(extractedAddress);
+                console.log('Normalized address:', extractedAddress);
+
+                // Remove if too short or looks like regular text
+                if (extractedAddress.length < 5) {
+                    console.log('Address too short, ignoring:', extractedAddress);
+                    return;
+                }
+
+                // Check if it contains common non-address words (filtering out false positives)
+                const nonAddressWords = /\b(chasing|help|please|someone|knife|gun|scared|emergency|hurry|quick|come)\b/gi;
+                if (nonAddressWords.test(extractedAddress)) {
+                    console.log('Extracted text contains non-address words, ignoring:', extractedAddress);
+                    return;
+                }
+
+                // Must contain at least one of: number, Korean address marker, English address marker
+                const hasNumber = /\d/.test(extractedAddress);
+                const hasKoreanMarker = /(?:구|동|로|길|시|도)/.test(extractedAddress);
+                const hasEnglishMarker = /(?:Street|Road|Avenue|Blvd|Lane|Drive|Way|dong|gu|si)/i.test(extractedAddress);
+
+                if (!hasNumber && !hasKoreanMarker && !hasEnglishMarker) {
+                    console.log('No address markers found, ignoring:', extractedAddress);
+                    return;
+                }
+
+                // If we found a valid address, verify it with API
+                try {
+                    const response = await fetch(`/api/auth/search-address?query=${encodeURIComponent(extractedAddress)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.address && data.address !== extractedAddress) {
+                            // Use the formal address from API
+                            locationEl.value = data.address;
+                            console.log('Address verified via API:', data.address);
+                        } else {
+                            // Use extracted address if API didn't return better result
+                            locationEl.value = extractedAddress;
+                            console.log('Address extracted:', extractedAddress);
+                        }
+                    } else {
+                        // If API fails, use extracted address
+                        locationEl.value = extractedAddress;
+                        console.log('Address extracted (API not available):', extractedAddress);
+                    }
+                } catch (error) {
+                    console.error('Error verifying address:', error);
+                    // If API call fails, use extracted address
+                    locationEl.value = extractedAddress;
+                }
+            }
+        }
+
+        function updateAIConfidence(segments) {
+            const avgConfidence = segments.reduce((sum, seg) => sum + seg.confidence, 0) / segments.length;
+            const confidencePercent = Math.round(avgConfidence * 100);
+
+            const confidenceEl = document.getElementById('aiConfidence');
+            if (confidenceEl) {
+                confidenceEl.textContent = `AI Confidence: ${confidencePercent}%`;
+            }
+        }
+
+        function toggleSpeaker() {
+            if (!audioElement) {
+                alert('No audio file loaded. Please upload an audio file first.');
+                return;
+            }
+
+            const speakerBtn = document.getElementById('speakerBtn');
+
+            if (audioElement.paused) {
+                audioElement.play();
+                if (speakerBtn) {
+                    speakerBtn.classList.add('active');
+                }
+            } else {
+                audioElement.pause();
+                if (speakerBtn) {
+                    speakerBtn.classList.remove('active');
+                }
+            }
+        }
+
+        function playAudio() {
+            // Keep for compatibility - just call toggleSpeaker
+            toggleSpeaker();
+        }
+
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Complete emergency call and save to database
+        async function completeEmergency() {
+            if (!transcriptSegments || transcriptSegments.length === 0) {
+                console.warn('No transcript segments available');
+                return;
+            }
+
+            try {
+                // Calculate call statistics
+                const lastSegment = transcriptSegments[transcriptSegments.length - 1];
+                const totalDurationMs = Math.round(lastSegment.endTime * 1000); // Convert to milliseconds
+
+                // Count unique speakers
+                const speakersCount = new Set(transcriptSegments.map(seg => seg.speakerId)).size;
+
+                // Count total utterances
+                const utterancesCount = transcriptSegments.length;
+
+                // Get caller information (hardcoded for now)
+                const callerPhoneNumber = '010-8734-2910';
+                const callerName = 'Minsu Kim';
+
+                // Get operator ID from session
+                const user = JSON.parse(sessionStorage.getItem('user'));
+                const operatorId = user ? user.id : null;
+
+                if (!operatorId) {
+                    console.error('Operator ID not found in session');
+                    alert('Error: Operator not logged in. Cannot save emergency record.');
+                    return;
+                }
+
+                // Get language from detected language or default to Korean
+                const language = detectedLanguage || 'ko';
+
+                // Get incident type from UI
+                const incidentTypeEl = document.getElementById('incidentType');
+                const incidentType = incidentTypeEl ? incidentTypeEl.value : null;
+
+                // Get caller location from UI
+                const callerLocationEl = document.getElementById('incidentLocation');
+                const callerLocation = callerLocationEl ? callerLocationEl.value : null;
+
+                // Get call started time and ended time (from timeline)
+                const callStartedAtMs = callStartTime ? callStartTime.getTime() : null;
+                const callEndedAtMs = callEndTime ? callEndTime.getTime() : null;
+
+                console.log('Completing emergency with data:', {
+                    callerPhoneNumber,
+                    callerName,
+                    operatorId,
+                    language,
+                    totalDurationMs,
+                    speakersCount,
+                    utterancesCount,
+                    incidentType,
+                    callerLocation,
+                    mediaAssetId,
+                    callStartedAtMs,
+                    callEndedAtMs,
+                    transcriptLength: accumulatedTranscript.length
+                });
+
+                // Call complete emergency API
+                const response = await fetch('/api/auth/complete-emergency', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        callerPhoneNumber: callerPhoneNumber,
+                        callerName: callerName,
+                        operatorId: operatorId,
+                        language: language,
+                        transcript: accumulatedTranscript,
+                        totalDurationMs: totalDurationMs,
+                        speakersCount: speakersCount,
+                        utterancesCount: utterancesCount,
+                        incidentType: incidentType,
+                        callerLocation: callerLocation,
+                        mediaAssetId: mediaAssetId,
+                        callStartedAtMs: callStartedAtMs,
+                        callEndedAtMs: callEndedAtMs
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Store emergency ID for checklist saving
+                    currentEmergencyId = result.emergencyId;
+                    console.log('Emergency completed successfully:', result);
+
+                    // Update severity level with AI-assessed risk level
+                    const severityLevelEl = document.getElementById('severityLevel');
+                    if (severityLevelEl && result.riskLevel) {
+                        severityLevelEl.value = String(result.riskLevel);
+                        console.log('Updated severity level to:', result.riskLevel, 'Reason:', result.riskLevelReason);
+                    }
+
+                    // Optionally show a notification
+                    console.log(`Emergency record saved with ID: ${result.emergencyId}`);
+                    console.log(`Risk Level: ${result.riskLevel} - ${result.riskLevelReason}`);
+                } else {
+                    console.error('Failed to complete emergency:', result.message);
+                    alert('Failed to save emergency record: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error completing emergency:', error);
+                alert('Error saving emergency record. Please check the console for details.');
             }
         }
 
@@ -1103,6 +2180,12 @@
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
             }
+        }
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = 'ecall-intro.html';
         }
     </script>
 </body>
