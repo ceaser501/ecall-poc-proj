@@ -33,7 +33,8 @@ public class MediaAssetService {
         // Create RestTemplate with PATCH support
         this.restTemplate = new RestTemplate();
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setBufferRequestBody(false);
+        // Note: setBufferRequestBody is deprecated in newer Spring versions
+        // For small files (photos, audio), buffering is acceptable
 
         // Enable PATCH method via reflection
         try {
