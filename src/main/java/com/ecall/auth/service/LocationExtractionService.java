@@ -12,7 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+@Service("authLocationExtractionService")
 @Slf4j
 @RequiredArgsConstructor
 public class LocationExtractionService {

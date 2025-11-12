@@ -67,7 +67,7 @@ public class MediaAssetService {
             String originalFilename = file.getOriginalFilename();
             String extension = "";
             String fileExtension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
+            if (originalFilename.contains(".")) {
                 extension = originalFilename.substring(originalFilename.lastIndexOf("."));
                 fileExtension = extension.substring(1); // Remove the dot
             } else {

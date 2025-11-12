@@ -31,7 +31,7 @@ AZURE_TEXT_ANALYTICS_KEY=your_key_here
 AZURE_TEXT_ANALYTICS_ENDPOINT=your_endpoint_here
 
 # 위치 추출용 (선택)
-KAKAO_API_KEY=your_kakao_key_here
+KAKAO_MAPS_API_KEY=your_kakao_key_here
 NAVER_CLIENT_ID=your_naver_id_here
 NAVER_CLIENT_SECRET=your_naver_secret_here
 AZURE_MAPS_KEY=your_maps_key_here
