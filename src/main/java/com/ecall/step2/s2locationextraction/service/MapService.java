@@ -18,7 +18,7 @@ public class MapService {
     private final WebClient kakaoLocalWebClient;
     private final String kakaoRestApiKey;
 
-    public MapService(WebClient.Builder webClientBuilder, @Value("${kakao.rest.api.key}") String kakaoRestApiKey) {
+    public MapService(WebClient.Builder webClientBuilder, @Value("${KAKAO_REST_API_KEY}") String kakaoRestApiKey) {
         this.kakaoNaviWebClient = webClientBuilder.baseUrl("https://apis-navi.kakaomobility.com").build();
         this.kakaoLocalWebClient = webClientBuilder.baseUrl("https://dapi.kakao.com").build();
         this.kakaoRestApiKey = kakaoRestApiKey;

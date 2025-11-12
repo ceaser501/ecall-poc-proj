@@ -54,7 +54,10 @@ supabase:
 # Kakao Map API 설정 (Optional)
 kakao:
   api:
-    key: ${KAKAO_API_KEY:}
+    key: ${KAKAO_MAPS_API_KEY:}
+  rest:
+    api:
+      key: ${KAKAO_REST_API_KEY:}
 
 # OpenAI API 설정 (Optional - for AI-powered location extraction)
 openai:

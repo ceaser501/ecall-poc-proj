@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Service
+@Service("azureLocationExtractionService")
 public class LocationExtractionService {
 
     private final TextAnalyticsClient textAnalyticsClient;
