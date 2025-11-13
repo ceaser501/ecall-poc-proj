@@ -1,11 +1,13 @@
 # Step 2: 텍스트 요약
 
 ## 📋 개요
+
 음성에서 변환된 텍스트를 분석하여 감정을 파악하고 위치 정보를 추출하는 단계입니다. 긴급 상황에서 신고자의 감정 상태와 정확한 위치를 빠르게 파악할 수 있도록 지원합니다.
 
 ## 🚀 시작하기
 
 ### 1. 프로젝트 클론
+
 ```bash
 # 프로젝트 저장소 복제
 git clone https://github.com/ceaser501/ecall-poc-proj.git
@@ -24,7 +26,9 @@ git checkout -b feature/step2-text-summary
 - **Gradle** (프로젝트에 포함된 wrapper 사용 가능)
 
 #### API 키 설정
+
 프로젝트 루트에 `.env` 파일 생성 또는 기존 파일에 추가:
+
 ```env
 # 감정 분석용 (Azure 또는 OpenAI)
 AZURE_TEXT_ANALYTICS_KEY=your_key_here
@@ -38,6 +42,7 @@ AZURE_MAPS_KEY=your_maps_key_here
 ```
 
 ### 3. 애플리케이션 실행
+
 ```bash
 # Gradle로 실행
 ./gradlew bootRun
@@ -47,9 +52,11 @@ AZURE_MAPS_KEY=your_maps_key_here
 ```
 
 ### 4. 테스트 페이지 접속
+
 브라우저에서 다음 URL 접속:
-- 감정 분석: http://localhost:8082/pages/emotion/emotion-test.html
-- 위치 추출: http://localhost:8082/pages/location/location-test.html
+
+- 감정 분석: <http://localhost:8082/pages/emotion/emotion-test.html>
+- 위치 추출: <http://localhost:8082/pages/location/location-test.html>
 
 ## 📁 프로젝트 구조
 
