@@ -91,6 +91,8 @@ public class FileUploadController {
             @RequestParam(value = "language", required = false) String language,
             @RequestParam(value = "callerPhoneNumber", required = false) String callerPhoneNumber,
             @RequestParam(value = "callerName", required = false) String callerName,
+            @RequestParam(value = "callerAge", required = false) Integer callerAge,
+            @RequestParam(value = "callerGender", required = false) String callerGender,
             @RequestParam(value = "operatorId", required = false) String operatorId) {
         try {
             log.info("Clova API로 음성 파일 처리 시작 - 파일: {}, 크기: {} bytes, 화자 수: {}~{}",
@@ -169,6 +171,24 @@ public class FileUploadController {
                 } catch (Exception e) {
                     log.error("Failed to save media asset: {}", e.getMessage(), e);
                     // Continue even if media asset save fails
+                }
+
+                // Create caller if phone number is provided
+                String callerId = null;
+                if (callerPhoneNumber != null && !callerPhoneNumber.isEmpty()) {
+                    try {
+                        callerId = callerService.insertCaller(
+                            callerPhoneNumber,
+                            callerName,
+                            callerAge,
+                            callerGender
+                        );
+                        log.info("Caller created with ID: {} (name: {}, age: {}, gender: {})",
+                                callerId, callerName, callerAge, callerGender);
+                    } catch (Exception e) {
+                        log.error("Failed to create caller: {}", e.getMessage(), e);
+                        // Continue even if caller creation fails
+                    }
                 }
 
                 // Build response

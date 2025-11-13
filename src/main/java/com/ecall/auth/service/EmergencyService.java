@@ -8,7 +8,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -40,7 +40,7 @@ public class EmergencyService {
             emergencyData.put("id", emergencyId);
             emergencyData.put("caller_id", callerId);
             emergencyData.put("operator_id", operatorId);
-            emergencyData.put("call_started_at", OffsetDateTime.now().toString());
+            emergencyData.put("call_started_at", LocalDateTime.now().toString());
             emergencyData.put("stt_engine", sttEngine);
             emergencyData.put("language", language);
             emergencyData.put("status", "in_progress"); // Initial status
@@ -74,6 +74,36 @@ public class EmergencyService {
     }
 
     /**
+     * Delete emergency call record
+     * @param emergencyId Emergency ID to delete
+     */
+    public void deleteEmergency(String emergencyId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String url = supabaseConfig.getApiUrl() + "/emergency?id=eq." + emergencyId;
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    entity,
+                    String.class
+            );
+
+            log.info("Emergency call deleted successfully: {}", emergencyId);
+
+        } catch (Exception e) {
+            log.error("Error deleting emergency call: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to delete emergency call: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Update emergency call with transcription results
      * @param emergencyId Emergency ID to update
      * @param updates Map of fields to update
@@ -81,7 +111,7 @@ public class EmergencyService {
     public void updateEmergency(String emergencyId, Map<String, Object> updates) {
         try {
             // Add updated_at timestamp
-            updates.put("updated_at", OffsetDateTime.now().toString());
+            updates.put("updated_at", LocalDateTime.now().toString());
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -153,7 +183,7 @@ public class EmergencyService {
     public void completeEmergency(String emergencyId, Integer totalDurationMs,
                                   Integer speakersCount, Integer utterancesCount) {
         Map<String, Object> updates = new HashMap<>();
-        updates.put("call_ended_at", OffsetDateTime.now().toString());
+        updates.put("call_ended_at", LocalDateTime.now().toString());
         updates.put("status", "completed");
 
         if (totalDurationMs != null) {
@@ -194,8 +224,8 @@ public class EmergencyService {
             emergencyData.put("id", emergencyId);
             emergencyData.put("caller_id", callerId);
             emergencyData.put("operator_id", operatorId);
-            emergencyData.put("call_started_at", OffsetDateTime.now().toString());
-            emergencyData.put("call_ended_at", OffsetDateTime.now().toString());
+            emergencyData.put("call_started_at", LocalDateTime.now().toString());
+            emergencyData.put("call_ended_at", LocalDateTime.now().toString());
             emergencyData.put("stt_engine", sttEngine);
             emergencyData.put("language", language);
             emergencyData.put("status", "completed");
@@ -245,6 +275,22 @@ public class EmergencyService {
     }
 
     /**
+     * Insert emergency call with all details including location and media (with custom ID)
+     */
+    public String insertEmergencyCompleteWithDetailsAndId(
+            String emergencyId, String callerId, String operatorId, String sttEngine, String language,
+            Integer totalDurationMs, Integer speakersCount, Integer utterancesCount,
+            String riskLevel, String riskLevelReason,
+            String incidentType, String callerLocation, Double latitude, Double longitude,
+            String roadAddress, String postalCode, String address1, String address2,
+            String mediaAssetId, LocalDateTime callStartedAt, LocalDateTime callEndedAt) {
+        return insertEmergencyWithId(emergencyId, callerId, operatorId, sttEngine, language,
+                totalDurationMs, speakersCount, utterancesCount, riskLevel, riskLevelReason,
+                incidentType, callerLocation, latitude, longitude, roadAddress, postalCode,
+                address1, address2, mediaAssetId, callStartedAt, callEndedAt);
+    }
+
+    /**
      * Insert emergency call with all details including location and media
      */
     public String insertEmergencyCompleteWithDetails(
@@ -253,10 +299,26 @@ public class EmergencyService {
             String riskLevel, String riskLevelReason,
             String incidentType, String callerLocation, Double latitude, Double longitude,
             String roadAddress, String postalCode, String address1, String address2,
-            String mediaAssetId, OffsetDateTime callStartedAt, OffsetDateTime callEndedAt) {
+            String mediaAssetId, LocalDateTime callStartedAt, LocalDateTime callEndedAt) {
+        // Generate custom ID: em-{uuid}
+        String emergencyId = "em-" + UUID.randomUUID().toString();
+        return insertEmergencyWithId(emergencyId, callerId, operatorId, sttEngine, language,
+                totalDurationMs, speakersCount, utterancesCount, riskLevel, riskLevelReason,
+                incidentType, callerLocation, latitude, longitude, roadAddress, postalCode,
+                address1, address2, mediaAssetId, callStartedAt, callEndedAt);
+    }
+
+    /**
+     * Internal method to insert emergency with specified ID
+     */
+    private String insertEmergencyWithId(
+            String emergencyId, String callerId, String operatorId, String sttEngine, String language,
+            Integer totalDurationMs, Integer speakersCount, Integer utterancesCount,
+            String riskLevel, String riskLevelReason,
+            String incidentType, String callerLocation, Double latitude, Double longitude,
+            String roadAddress, String postalCode, String address1, String address2,
+            String mediaAssetId, LocalDateTime callStartedAt, LocalDateTime callEndedAt) {
         try {
-            // Generate custom ID: em-{uuid}
-            String emergencyId = "em-" + UUID.randomUUID().toString();
 
             // Create emergency data
             Map<String, Object> emergencyData = new HashMap<>();

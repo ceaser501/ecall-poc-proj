@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator Panel - E-Call System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            border-bottom: 1px solid rgb(226, 232, 240);
+        }
+
+        .header-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-icon {
+            background: linear-gradient(135deg, rgb(168, 85, 247) 0%, rgb(147, 51, 234) 100%);
+            padding: 0.625rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: white;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: rgb(15, 23, 42);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgb(226, 232, 240);
+            border-radius: 0.375rem;
+            background: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: rgb(248, 250, 252);
+            border-color: rgb(203, 213, 225);
+        }
+
+        .btn-icon {
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn svg {
+            width: 1rem !important;
+            height: 1rem !important;
+        }
+
+        .header-logout-btn {
+            background: #1e293b;
+            color: white;
+            padding: 0.375rem 0.625rem;
+            border: 1px solid #1e293b;
+            border-radius: 0.375rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 2rem;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .header-logout-btn:hover {
+            background: #0f172a;
+            border-color: #0f172a;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.625rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-primary svg {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        th.text-center {
+            text-align: center;
+        }
+
+        th.text-right {
+            text-align: right;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        td {
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+
+        td.text-center {
+            text-align: center;
+        }
+
+        td.text-right {
+            text-align: right;
+        }
+
+        .text-gray {
+            color: #6b7280;
+        }
+
+        /* Button Styles */
+        .btn-ghost {
+            background: transparent;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #374151;
+            transition: background-color 0.2s;
+        }
+
+        .btn-ghost:hover {
+            background-color: #f3f4f6;
+        }
+
+        .btn-ghost svg {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .text-red {
+            color: #ef4444;
+        }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .action-buttons-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-align: right;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.375rem;
+        }
+
+        .btn-icon:hover {
+            background-color: #f3f4f6;
+            border-color: #9ca3af !important;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.625rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Large Modal for Members */
+        .modal-content-large {
+            max-width: 700px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </div>
+                <h1 class="header-title">Administrator Panel</h1>
+            </div>
+
+            <div class="header-right">
+                <button class="btn btn-icon" onclick="handleHomeClick()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                </button>
+                <button class="btn btn-icon" onclick="handleNotificationClick()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+                <button class="header-logout-btn" onclick="handleLogout()">Log Out</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">출동부대 목록</h2>
+                <button class="btn-primary" onclick="openAddUnitDialog()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    부대 추가
+                </button>
+            </div>
+            <div class="card-content">
+                <div id="tableContainer"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Unit Dialog (Add/Edit) -->
+    <div id="unitDialog" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="unitDialogTitle">출동부대 추가</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="unitName">부대명 *</label>
+                    <input type="text" id="unitName" class="form-input" placeholder="부대명을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="leader1Select">출동대장</label>
+                    <select id="leader1Select" class="form-select">
+                        <option value="">대장을 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="leader2Select">출동부대장</label>
+                    <select id="leader2Select" class="form-select">
+                        <option value="">부대장을 선택하세요</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeUnitDialog()">취소</button>
+                <button class="btn-primary" onclick="saveUnit()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Operator Dialog -->
+    <div id="assignDialog" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="assignDialogTitle">출동대원 배치</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">배치할 대원을 선택하세요 (복수 선택 가능)</label>
+                    <div id="operatorCheckboxList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 1rem;">
+                        <!-- Operators will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeAssignDialog()">취소</button>
+                <button class="btn-primary" onclick="assignOperators()">배치</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Members Dialog -->
+    <div id="membersDialog" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="membersDialogTitle">배치된 대원 목록</h3>
+            </div>
+            <div class="modal-body">
+                <div id="membersTableContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeMembersDialog()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let units = [];
+        let operators = [];
+        let selectedUnit = null;
+        let selectedUnitForAssign = null;
+        let selectedUnitForMembers = null;
+        let loading = true;
+
+        // Supabase Config - Replace with your actual values
+        const SUPABASE_PROJECT_ID = 'oeeffpldhwajfmiidayr';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lZWZmcGxkaHdhamZtaWlkYXlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEyMTc0MzAsImV4cCI6MjA0Njc5MzQzMH0.WUBWvYi7hITe9sPz9SJPpcx0xKX7BZ3tpgvZS1AHI5s';
+
+        // Initialize
+        window.addEventListener('load', () => {
+            fetchUnits();
+            fetchOperators();
+        });
+
+        // Fetch Operators
+        async function fetchOperators() {
+            try {
+                const response = await fetch('/api/units/operators');
+                const result = await response.json();
+
+                if (result.success) {
+                    operators = result.data || [];
+                    console.log('Loaded operators:', operators.length);
+                }
+            } catch (error) {
+                console.error('Error fetching operators:', error);
+            }
+        }
+
+        // Fetch Units
+        async function fetchUnits() {
+            loading = true;
+            renderTable();
+
+            try {
+                const response = await fetch('/api/units');
+                const result = await response.json();
+
+                if (result.success) {
+                    units = result.data || [];
+                    units.forEach(unit => {
+                        if (!unit.member_count) unit.member_count = 0;
+                    });
+                    console.log('Loaded units:', units.length);
+                }
+            } catch (error) {
+                console.error('Error fetching units:', error);
+                alert('부대 목록을 불러오는데 실패했습니다: ' + error.message);
+            } finally {
+                loading = false;
+                renderTable();
+            }
+        }
+
+        // Render Table
+        function renderTable() {
+            const container = document.getElementById('tableContainer');
+
+            if (loading) {
+                container.innerHTML = '<div class="loading">로딩 중...</div>';
+                return;
+            }
+
+            if (units.length === 0) {
+                container.innerHTML = '<div class="empty-state">등록된 출동부대가 없습니다. 새 부대를 추가해주세요.</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>부대명</th>
+                                <th class="text-center">배치 인원</th>
+                                <th class="text-center">등록일</th>
+                                <th class="text-center">배정</th>
+                                <th class="text-center">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${units.map(unit => `
+                                <tr>
+                                    <td>${unit.name}</td>
+                                    <td class="text-center">
+                                        <button class="btn-ghost" onclick="openMembersDialog('${unit.id}')">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                            </svg>
+                                            ${unit.member_count || 0}명
+                                        </button>
+                                    </td>
+                                    <td class="text-center text-gray">
+                                        ${new Date(unit.created_at).toLocaleDateString('ko-KR')}
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn-ghost" onclick="openAssignDialog('${unit.id}')">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                            </svg>
+                                            대원 배치
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons-right">
+                                            <button class="btn-ghost btn-icon" onclick="openEditUnitDialog('${unit.id}')">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button class="btn-ghost btn-icon" onclick="deleteUnit('${unit.id}')">
+                                                <svg class="text-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // Unit Dialog Functions
+        function openAddUnitDialog() {
+            selectedUnit = null;
+            document.getElementById('unitDialogTitle').textContent = '출동부대 추가';
+            document.getElementById('unitName').value = '';
+
+            // Populate leader selects
+            populateLeaderSelects();
+            document.getElementById('leader1Select').value = '';
+            document.getElementById('leader2Select').value = '';
+
+            document.getElementById('unitDialog').classList.add('active');
+        }
+
+        function openEditUnitDialog(unitId) {
+            selectedUnit = units.find(u => u.id === unitId);
+            if (!selectedUnit) return;
+
+            document.getElementById('unitDialogTitle').textContent = '출동부대 수정';
+            document.getElementById('unitName').value = selectedUnit.name;
+
+            // Populate leader selects
+            populateLeaderSelects();
+            document.getElementById('leader1Select').value = selectedUnit.operator_leader1_id || '';
+            document.getElementById('leader2Select').value = selectedUnit.operator_leader2_id || '';
+
+            document.getElementById('unitDialog').classList.add('active');
+        }
+
+        function populateLeaderSelects() {
+            const leader1Select = document.getElementById('leader1Select');
+            const leader2Select = document.getElementById('leader2Select');
+
+            leader1Select.innerHTML = '<option value="">대장을 선택하세요</option>';
+            leader2Select.innerHTML = '<option value="">부대장을 선택하세요</option>';
+
+            console.log('Total operators loaded:', operators.length);
+            console.log('Operators data:', operators);
+
+            // Operator를 제외한 operators만 필터링
+            const nonOperators = operators.filter(op => op.role && op.role !== 'Operator');
+            console.log('Non-operator count:', nonOperators.length);
+            console.log('Non-operators:', nonOperators);
+
+            // Role별로 그룹화
+            const groupedByRole = {};
+            nonOperators.forEach(operator => {
+                const role = operator.role || 'Other';
+                if (!groupedByRole[role]) {
+                    groupedByRole[role] = [];
+                }
+                groupedByRole[role].push(operator);
+            });
+
+            // Role 순서 정의
+            const roleOrder = ['Firefighter', 'Rescue Technician', 'Emergency Medical Technician', 'Police Officer'];
+
+            // 각 select에 role별로 optgroup 추가
+            roleOrder.forEach(role => {
+                if (groupedByRole[role] && groupedByRole[role].length > 0) {
+                    // Role 표시명 (EMT는 줄임말 추가)
+                    const roleLabel = role === 'Emergency Medical Technician' ? 'Emergency Medical Technician' : role;
+
+                    // Leader1 select
+                    const optgroup1 = document.createElement('optgroup');
+                    optgroup1.label = roleLabel;
+                    groupedByRole[role].forEach(operator => {
+                        const option = document.createElement('option');
+                        option.value = operator.id;
+
+                        // 소속 표시
+                        let displayText = `${operator.name} (${operator.operator_id})`;
+                        const hasOrganization = operator.organization_code && operator.organization_name;
+
+                        if (hasOrganization) {
+                            displayText += ` - ${operator.organization_name}`;
+                            option.disabled = true;
+                            option.style.color = '#999';
+                        }
+
+                        option.textContent = displayText;
+                        optgroup1.appendChild(option);
+                    });
+                    leader1Select.appendChild(optgroup1);
+
+                    // Leader2 select
+                    const optgroup2 = document.createElement('optgroup');
+                    optgroup2.label = roleLabel;
+                    groupedByRole[role].forEach(operator => {
+                        const option = document.createElement('option');
+                        option.value = operator.id;
+
+                        // 소속 표시
+                        let displayText = `${operator.name} (${operator.operator_id})`;
+                        const hasOrganization = operator.organization_code && operator.organization_name;
+
+                        if (hasOrganization) {
+                            displayText += ` - ${operator.organization_name}`;
+                            option.disabled = true;
+                            option.style.color = '#999';
+                        }
+
+                        option.textContent = displayText;
+                        optgroup2.appendChild(option);
+                    });
+                    leader2Select.appendChild(optgroup2);
+                }
+            });
+        }
+
+        function closeUnitDialog() {
+            document.getElementById('unitDialog').classList.remove('active');
+            selectedUnit = null;
+        }
+
+        async function saveUnit() {
+            const name = document.getElementById('unitName').value.trim();
+            const leader1Id = document.getElementById('leader1Select').value;
+            const leader2Id = document.getElementById('leader2Select').value;
+
+            if (!name) {
+                alert('부대명을 입력해주세요.');
+                return;
+            }
+
+            try {
+                if (selectedUnit) {
+                    // Update existing unit
+                    const response = await fetch(`/api/units/${selectedUnit.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name,
+                            description: null,
+                            leader1Id,
+                            leader2Id
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        alert('부대 수정에 실패했습니다: ' + result.error);
+                        return;
+                    }
+
+                    alert('부대가 수정되었습니다.');
+                } else {
+                    // Add new unit
+                    const response = await fetch('/api/units', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name,
+                            description: null,
+                            leader1Id,
+                            leader2Id
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (!result.success) {
+                        alert('부대 등록에 실패했습니다: ' + result.error);
+                        return;
+                    }
+
+                    alert('부대가 등록되었습니다.');
+                }
+
+                closeUnitDialog();
+                fetchUnits(); // Reload the list
+            } catch (error) {
+                console.error('Error saving unit:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        async function deleteUnit(unitId) {
+            if (!confirm('이 부대를 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/units/${unitId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    alert('부대 삭제에 실패했습니다: ' + result.error);
+                    return;
+                }
+
+                alert('부대가 삭제되었습니다.');
+                fetchUnits(); // Reload the list
+            } catch (error) {
+                console.error('Error deleting unit:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // Assign Dialog Functions
+        async function openAssignDialog(unitId) {
+            selectedUnitForAssign = units.find(u => u.id === unitId);
+            if (!selectedUnitForAssign) return;
+
+            document.getElementById('assignDialogTitle').textContent = `출동대원 배치 - ${selectedUnitForAssign.name}`;
+
+            const checkboxList = document.getElementById('operatorCheckboxList');
+
+            if (operators.length === 0) {
+                checkboxList.innerHTML = '<p style="text-align: center; color: #9ca3af;">배치 가능한 대원이 없습니다</p>';
+            } else {
+                // Group operators by role
+                const groupedOperators = {};
+                operators.forEach(op => {
+                    const role = op.role || '미분류';
+                    if (!groupedOperators[role]) {
+                        groupedOperators[role] = [];
+                    }
+                    groupedOperators[role].push(op);
+                });
+
+                // Build checkbox list HTML
+                let html = '';
+                Object.keys(groupedOperators).sort().forEach(role => {
+                    html += `<div style="margin-bottom: 1rem;">`;
+                    html += `<div style="font-weight: 600; margin-bottom: 0.5rem; padding: 0.5rem; background-color: #f3f4f6; border-radius: 0.25rem;">${role}</div>`;
+                    groupedOperators[role].forEach(op => {
+                        html += `
+                            <div style="padding: 0.5rem; margin-left: 1rem; display: flex; align-items: center;">
+                                <input type="checkbox" id="op_${op.id}" value="${op.id}" style="margin-right: 0.5rem; width: 16px; height: 16px;">
+                                <label for="op_${op.id}" style="cursor: pointer; flex: 1;">
+                                    ${op.name} (${op.operator_id})
+                                    ${op.organization_name ? `<span style="color: #9ca3af; font-size: 0.875rem;"> - ${op.organization_name}</span>` : ''}
+                                </label>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                });
+                checkboxList.innerHTML = html;
+            }
+
+            document.getElementById('assignDialog').classList.add('active');
+        }
+
+        function closeAssignDialog() {
+            document.getElementById('assignDialog').classList.remove('active');
+            selectedUnitForAssign = null;
+        }
+
+        async function assignOperators() {
+            if (!selectedUnitForAssign) return;
+
+            // Get all checked operator IDs
+            const checkboxes = document.querySelectorAll('#operatorCheckboxList input[type="checkbox"]:checked');
+            const operatorIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (operatorIds.length === 0) {
+                alert('배치할 대원을 선택해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/units/${selectedUnitForAssign.id}/assign-members`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        operatorIds: operatorIds
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    alert('대원 배치에 실패했습니다: ' + result.error);
+                    return;
+                }
+
+                alert(`${operatorIds.length}명의 대원이 배치되었습니다.`);
+                closeAssignDialog();
+                fetchUnits(); // Reload the list
+                fetchOperators(); // Reload operators to update their organization info
+            } catch (error) {
+                console.error('Error assigning operators:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // Members Dialog Functions
+        async function openMembersDialog(unitId) {
+            selectedUnitForMembers = units.find(u => u.id === unitId);
+            if (!selectedUnitForMembers) return;
+
+            document.getElementById('membersDialogTitle').textContent = `배치된 대원 목록 - ${selectedUnitForMembers.name}`;
+
+            const container = document.getElementById('membersTableContainer');
+            container.innerHTML = '<div class="loading">로딩 중...</div>';
+
+            try {
+                // Fetch unit members from API
+                const response = await fetch(`/api/units/${unitId}/members`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    container.innerHTML = '<div class="empty-state">대원 목록을 불러오는데 실패했습니다</div>';
+                    document.getElementById('membersDialog').classList.add('active');
+                    return;
+                }
+
+                const members = result.data;
+
+                if (members.length === 0) {
+                    container.innerHTML = '<div class="empty-state">배치된 대원이 없습니다</div>';
+                } else {
+                    const tableHTML = `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>이름</th>
+                                        <th>대원 ID</th>
+                                        <th>역할</th>
+                                        <th class="text-right">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${members.map(member => `
+                                        <tr>
+                                            <td>${member.name}</td>
+                                            <td class="text-gray">${member.operator_id}</td>
+                                            <td>${member.role || '-'}</td>
+                                            <td class="text-right">
+                                                <button class="btn-ghost btn-icon" onclick="removeMember('${member.id}')">
+                                                    <svg class="text-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    container.innerHTML = tableHTML;
+                }
+
+                document.getElementById('membersDialog').classList.add('active');
+            } catch (error) {
+                console.error('Error fetching unit members:', error);
+                container.innerHTML = '<div class="empty-state">대원 목록을 불러오는데 실패했습니다</div>';
+                document.getElementById('membersDialog').classList.add('active');
+            }
+        }
+
+        function closeMembersDialog() {
+            document.getElementById('membersDialog').classList.remove('active');
+            selectedUnitForMembers = null;
+        }
+
+        async function removeMember(operatorId) {
+            if (!confirm('이 대원을 부대에서 제외하시겠습니까?')) {
+                return;
+            }
+
+            if (!selectedUnitForMembers) return;
+
+            // In production, this would make an API call
+            selectedUnitForMembers.members = selectedUnitForMembers.members.filter(id => id !== operatorId);
+
+            openMembersDialog(selectedUnitForMembers.id);
+            renderTable();
+        }
+
+        // Header Actions
+        function handleHomeClick() {
+            window.location.href = 'ecall-intro.html';
+        }
+
+        function handleNotificationClick() {
+            console.log('Notification clicked');
+            alert('알림 기능은 준비중입니다.');
+        }
+
+        function handleLogout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                sessionStorage.removeItem('user');
+                window.location.href = 'ecall-intro.html';
+            }
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
