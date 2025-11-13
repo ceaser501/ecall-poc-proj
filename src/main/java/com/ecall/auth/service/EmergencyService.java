@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ public class EmergencyService {
 
     private final SupabaseConfig supabaseConfig;
     private final RestTemplate restTemplate;
+    private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -113,22 +115,14 @@ public class EmergencyService {
             // Add updated_at timestamp
             updates.put("updated_at", LocalDateTime.now().toString());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("apikey", supabaseConfig.getSupabaseKey());
-            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
-            headers.set("Prefer", "return=representation");
-
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(updates, headers);
-
-            String url = supabaseConfig.getApiUrl() + "/emergency?id=eq." + emergencyId;
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.PATCH,
-                    entity,
-                    String.class
-            );
+            String result = webClient.patch()
+                    .uri("/emergency?id=eq." + emergencyId)
+                    .header("Prefer", "return=representation")
+                    .header("Content-Type", "application/json")
+                    .bodyValue(updates)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
             log.info("Emergency call updated successfully: {}", emergencyId);
 

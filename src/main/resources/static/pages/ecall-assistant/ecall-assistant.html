@@ -514,7 +514,7 @@
 
         .modal-body {
             padding: 1.5rem;
-            max-height: 500px;
+            max-height: calc(90vh - 200px);
             overflow-y: auto;
         }
 
@@ -1273,12 +1273,27 @@
 
                         <div class="form-group">
                             <label class="form-label">Incident Type</label>
-                            <input type="text" class="form-input" id="incidentType" value="" placeholder="AI analyzing..." readonly>
+                            <select class="form-input" id="incidentType" onchange="updateChecklist(false)">
+                                <option value="">AI analyzing...</option>
+                                <option value="disaster">Disaster</option>
+                                <option value="medical">Medical</option>
+                                <option value="crime">Crime</option>
+                                <option value="traffic">Traffic</option>
+                                <option value="rescue">Rescue</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Severity Level</label>
-                            <input type="text" class="form-input" id="severityLevel" value="" placeholder="AI analyzing..." readonly>
+                            <select class="form-input" id="severityLevel">
+                                <option value="">AI analyzing...</option>
+                                <option value="1">Level 1 - Minimal</option>
+                                <option value="2">Level 2 - Low</option>
+                                <option value="3">Level 3 - Moderate</option>
+                                <option value="4">Level 4 - High</option>
+                                <option value="5">Level 5 - Critical</option>
+                            </select>
                         </div>
 
                         <button class="btn btn-manual-update" onclick="updateIncidentInfo()">
@@ -1620,38 +1635,74 @@
 
         // Checklist data
         const checklistData = {
-            emergency: [
-                'Is the patient conscious?',
-                'Is the patient breathing?',
-                'Is there any bleeding?',
-                'Does the patient complain of chest pain?',
-                'Is there any vomiting?'
+            disaster: [
+                "Are you at the location now?",
+                "Are you in a safe place?",
+                "Is there a fire or building collapse?",
+                "Is the fire or damage spreading?",
+                "Are you injured?",
+                "Is anyone trapped or in immediate danger?",
+                "Do you smell gas or see hazardous materials?"
             ],
-            fire: [
-                'Did the fire occur inside the building?',
-                'Are there any casualties?',
-                'Has evacuation been completed?',
-                'Do you smell gas?'
+            medical: [
+                "Are you with the patient now?",
+                "Is the patient awake?",
+                "Is the patient breathing normally?",
+                "Is the patient bleeding badly?",
+                "Is the patient having chest pain?",
+                "Did the patient collapse suddenly?",
+                "Does the patient have any known medical conditions?",
+                "What is the patient's age and sex?"
             ],
             crime: [
-                'Is the perpetrator at the scene?',
-                'Is the perpetrator armed?',
-                'Are there any injured persons?',
-                'Is the caller in a safe location?'
+                "Are you safe right now?",
+                "Is the crime happening now?",
+                "Does the suspect have a weapon?",
+                "Is the suspect still at the location?",
+                "Is anyone injured?",
+                "Where is the suspect now? Did they flee?",
+                "How many suspects are there?",
+                "Are there other victims? Are they conscious or bleeding?"
             ],
-            accident: [
-                'Are there any injured persons?',
-                'Is the vehicle blocking the road?',
-                'Is there any fuel leakage?',
-                'Is an ambulance needed?'
+            traffic: [
+                "Are you at the accident scene?",
+                "Is anyone injured?",
+                "(If injured) Is the patient awake and breathing?",
+                "Is anyone trapped in a vehicle?",
+                "Is any vehicle on fire?",
+                "Is any vehicle leaking fuel?",
+                "Does this involve more than one vehicle?",
+                "Is the accident blocking traffic?"
+            ],
+            rescue: [
+                "Is someone trapped, isolated, or in the water?",
+                "Is the person conscious?",
+                "Is the person injured?",
+                "Are you able to talk to them?",
+                "Is the situation getting worse?",
+                "Is there only one person needing rescue?",
+                "If no, how many people?",
+                "Are there any obstacles blocking the access route?"
+            ],
+            other: [
+                "Is this a life-threatening or urgent situation?",
+                "Is this related to a crime, fire, or medical emergency?",
+                "Is this a simple noise complaint or civil issue?",
+                "Do you just need advice or information?",
+                "Have you reported this issue before?",
+                "Is an officer (or firefighter) response necessary?",
+                "Is there a risk of re-occurrence or conflict?",
+                "When did this happen?"
             ]
         };
 
         const checklistDescriptions = {
-            emergency: 'Questions to assess the emergency situation.',
-            fire: 'Questions to assess the fire situation.',
-            crime: 'Questions to assess the crime situation.',
-            accident: 'Questions to assess the accident situation.'
+            disaster: "Facility/environment risk: fire, explosion, smoke, natural disaster.",
+            medical: "Immediate medical care required: cardiac arrest, unconscious, severe bleeding.",
+            crime: "Violent offenses threatening life/body.",
+            traffic: "Vehicle-related incidents.",
+            rescue: "Physical rescue required: trapped, buried, water, high-rise isolation.",
+            other: "Non-urgent, misreport, general inquiries."
         };
 
         let currentChecklist = {};
@@ -2343,41 +2394,64 @@
                     incidentTypeEl.value = 'crime';
                     updateChecklist(true);
                 }
-                // Priority 2: Fire (expanded keywords)
+                // Priority 2: Disaster (fire, explosion, building collapse, natural disaster)
                 else if (lowerText.includes('fire') || lowerText.includes('화재') ||
                          lowerText.includes('불이') || lowerText.includes('불나') ||
                          lowerText.includes('smoke') || lowerText.includes('연기') ||
                          lowerText.includes('burning') || lowerText.includes('타고') || lowerText.includes('불타') ||
                          lowerText.includes('flames') || lowerText.includes('화염') ||
-                         lowerText.includes('explosion') || lowerText.includes('폭발')) {
-                    incidentTypeEl.value = 'fire';
+                         lowerText.includes('explosion') || lowerText.includes('폭발') ||
+                         lowerText.includes('collapse') || lowerText.includes('붕괴') ||
+                         lowerText.includes('earthquake') || lowerText.includes('지진')) {
+                    incidentTypeEl.value = 'disaster';
                     updateChecklist(true);
                 }
-                // Priority 3: Accident (expanded keywords)
+                // Priority 3: Medical (medical emergency, cardiac arrest, unconscious, severe bleeding)
+                else if (lowerText.includes('cardiac arrest') || lowerText.includes('심정지') ||
+                         lowerText.includes('unconscious') || lowerText.includes('의식') ||
+                         lowerText.includes('bleeding') || lowerText.includes('피') || lowerText.includes('출혈') ||
+                         lowerText.includes('chest pain') || lowerText.includes('가슴') ||
+                         lowerText.includes('breathing') || lowerText.includes('호흡') ||
+                         lowerText.includes('injured') || lowerText.includes('다쳤') || lowerText.includes('부상') ||
+                         lowerText.includes('hurt') || lowerText.includes('아프') ||
+                         lowerText.includes('fell') || lowerText.includes('떨어') ||
+                         lowerText.includes('broken') || lowerText.includes('골절')) {
+                    incidentTypeEl.value = 'medical';
+                    updateChecklist(true);
+                }
+                // Priority 4: Traffic (vehicle-related incidents)
                 else if (lowerText.includes('accident') || lowerText.includes('사고') ||
                          lowerText.includes('crash') || lowerText.includes('충돌') ||
                          lowerText.includes('car') || lowerText.includes('차량') || lowerText.includes('교통') ||
                          lowerText.includes('hit') || lowerText.includes('부딪') ||
-                         lowerText.includes('injured') || lowerText.includes('다쳤') || lowerText.includes('부상') ||
-                         lowerText.includes('hurt') || lowerText.includes('아프') ||
-                         lowerText.includes('bleeding') || lowerText.includes('피') || lowerText.includes('출혈') ||
-                         lowerText.includes('fell') || lowerText.includes('떨어') ||
-                         lowerText.includes('broken') || lowerText.includes('골절')) {
-                    incidentTypeEl.value = 'accident';
+                         lowerText.includes('vehicle') || lowerText.includes('자동차')) {
+                    incidentTypeEl.value = 'traffic';
                     updateChecklist(true);
                 }
-                // Priority 4: Emergency (only if explicitly stating emergency situation, not asking)
+                // Priority 5: Rescue (trapped, buried, water, high-rise isolation)
+                else if (lowerText.includes('trapped') || lowerText.includes('갇') ||
+                         lowerText.includes('buried') || lowerText.includes('매몰') ||
+                         lowerText.includes('water') || lowerText.includes('물') ||
+                         lowerText.includes('drowning') || lowerText.includes('익수') ||
+                         lowerText.includes('isolated') || lowerText.includes('고립')) {
+                    incidentTypeEl.value = 'rescue';
+                    updateChecklist(true);
+                }
+                // Priority 6: Other (non-urgent, general inquiries)
                 else if ((lowerText.includes('응급') || lowerText.includes('위급') || lowerText.includes('위험') ||
                           lowerText.includes('도와주세요') || lowerText.includes('살려') ||
                           lowerText.includes('help me') || lowerText.includes('save me')) &&
                          !lowerText.includes('무슨') && !lowerText.includes('어떤') && !lowerText.includes('what')) {
-                    incidentTypeEl.value = 'emergency';
+                    incidentTypeEl.value = 'other';
                     updateChecklist(true);
                 }
             }
 
             // Analyze incident location
             extractLocation(text);
+
+            // Analyze severity level based on keywords
+            analyzeSeverityLevel(text, lowerText);
 
             // If incident type still not found by keywords, try AI classification
             if (incidentTypeEl && incidentTypeEl.value === '' && accumulatedTranscript.length > 50) {
@@ -2387,6 +2461,138 @@
             // Try AI-powered location extraction if accumulated transcript is sufficient
             if (accumulatedTranscript.length > 50) {
                 extractLocationWithAI();
+            }
+
+            // Note: AI risk assessment disabled - keyword-based detection provides real-time updates
+            // Periodically assess risk level with AI (every 100 characters of transcript)
+            // if (accumulatedTranscript.length > 0 && accumulatedTranscript.length % 100 < 50) {
+            //     assessRiskLevelWithAI();
+            // }
+        }
+
+        // Analyze severity level based on keywords
+        function analyzeSeverityLevel(text, lowerText) {
+            const severityLevelEl = document.getElementById('severityLevel');
+            if (!severityLevelEl) return;
+
+            const currentLevel = severityLevelEl.value;
+
+            // Level 1 - Critical: Life-threatening situations
+            if (lowerText.includes('dying') || lowerText.includes('죽') ||
+                lowerText.includes('can\'t breathe') || lowerText.includes('숨을') || lowerText.includes('호흡') ||
+                lowerText.includes('cardiac arrest') || lowerText.includes('심정지') ||
+                lowerText.includes('unconscious') || lowerText.includes('의식') ||
+                lowerText.includes('severe bleeding') || lowerText.includes('대량') || lowerText.includes('피가') ||
+                lowerText.includes('not breathing') || lowerText.includes('호흡안') ||
+                lowerText.includes('chest pain') || lowerText.includes('가슴통증') ||
+                lowerText.includes('shooting') || lowerText.includes('총') ||
+                lowerText.includes('stabbing') || lowerText.includes('칼') || lowerText.includes('찌르') ||
+                lowerText.includes('fire spreading') || lowerText.includes('불번') ||
+                lowerText.includes('explosion') || lowerText.includes('폭발')) {
+                // Only upgrade to level 1, never downgrade
+                if (currentLevel === '' || parseInt(currentLevel) > 1) {
+                    severityLevelEl.value = '1';
+                    console.log('Severity upgraded to Level 1 - Critical');
+                }
+            }
+            // Level 2 - High: Serious but not immediately life-threatening
+            else if ((lowerText.includes('injured') || lowerText.includes('다쳤') || lowerText.includes('부상') ||
+                      lowerText.includes('bleeding') || lowerText.includes('피') || lowerText.includes('출혈') ||
+                      lowerText.includes('broken bone') || lowerText.includes('골절') ||
+                      lowerText.includes('severe pain') || lowerText.includes('심한통증') ||
+                      lowerText.includes('trapped') || lowerText.includes('갇') ||
+                      lowerText.includes('multiple victims') || lowerText.includes('여러명') ||
+                      lowerText.includes('weapon') || lowerText.includes('무기') ||
+                      lowerText.includes('assault') || lowerText.includes('폭행')) &&
+                     currentLevel !== '1') {
+                // Upgrade to level 2 if current is lower
+                if (currentLevel === '' || parseInt(currentLevel) > 2) {
+                    severityLevelEl.value = '2';
+                    console.log('Severity upgraded to Level 2 - High');
+                }
+            }
+            // Level 3 - Moderate: Requires attention but not urgent
+            else if ((lowerText.includes('hurt') || lowerText.includes('아프') ||
+                      lowerText.includes('accident') || lowerText.includes('사고') ||
+                      lowerText.includes('minor injury') || lowerText.includes('경상') ||
+                      lowerText.includes('fender bender') || lowerText.includes('접촉사고') ||
+                      lowerText.includes('smoke') || lowerText.includes('연기') ||
+                      lowerText.includes('suspicious') || lowerText.includes('수상')) &&
+                     currentLevel !== '1' && currentLevel !== '2') {
+                // Upgrade to level 3 if current is lower
+                if (currentLevel === '' || parseInt(currentLevel) > 3) {
+                    severityLevelEl.value = '3';
+                    console.log('Severity upgraded to Level 3 - Moderate');
+                }
+            }
+            // Level 4 - Low: Non-urgent situations
+            else if ((lowerText.includes('property damage') || lowerText.includes('재산피해') ||
+                      lowerText.includes('noise complaint') || lowerText.includes('소음') ||
+                      lowerText.includes('parking') || lowerText.includes('주차') ||
+                      lowerText.includes('minor theft') || lowerText.includes('경미')) &&
+                     currentLevel !== '1' && currentLevel !== '2' && currentLevel !== '3') {
+                // Upgrade to level 4 if current is lower
+                if (currentLevel === '' || parseInt(currentLevel) > 4) {
+                    severityLevelEl.value = '4';
+                    console.log('Severity upgraded to Level 4 - Low');
+                }
+            }
+            // Level 5 - Minimal: Information requests
+            else if ((lowerText.includes('question') || lowerText.includes('질문') ||
+                      lowerText.includes('inquiry') || lowerText.includes('문의') ||
+                      lowerText.includes('information') || lowerText.includes('정보')) &&
+                     currentLevel === '') {
+                severityLevelEl.value = '5';
+                console.log('Severity set to Level 5 - Minimal');
+            }
+        }
+
+        // AI-powered risk level assessment (called periodically during conversation)
+        let aiRiskAssessmentInProgress = false;
+        let lastRiskAssessmentTranscriptLength = 0;
+
+        async function assessRiskLevelWithAI() {
+            // Avoid duplicate calls and only call if transcript has grown significantly
+            if (aiRiskAssessmentInProgress ||
+                accumulatedTranscript.length < 50 ||
+                accumulatedTranscript.length - lastRiskAssessmentTranscriptLength < 100) {
+                return;
+            }
+
+            try {
+                aiRiskAssessmentInProgress = true;
+                lastRiskAssessmentTranscriptLength = accumulatedTranscript.length;
+
+                const response = await fetch('/api/openai/assess-risk', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        transcript: accumulatedTranscript
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.level) {
+                        const severityLevelEl = document.getElementById('severityLevel');
+                        if (severityLevelEl) {
+                            const currentLevel = severityLevelEl.value;
+                            const newLevel = result.level.toString();
+
+                            // Always update with AI assessment (AI is more accurate)
+                            if (currentLevel !== newLevel) {
+                                severityLevelEl.value = newLevel;
+                                console.log(`AI Risk Assessment: Level ${newLevel} - ${result.reason}`);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('AI risk assessment failed:', error);
+            } finally {
+                aiRiskAssessmentInProgress = false;
             }
         }
 
