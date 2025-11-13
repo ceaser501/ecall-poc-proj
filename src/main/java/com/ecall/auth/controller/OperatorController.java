@@ -129,15 +129,39 @@ public class OperatorController {
 
     @PostMapping("/save-checklist")
     public ResponseEntity<Map<String, Object>> saveChecklist(@RequestBody Map<String, Object> request) {
-        String emergencyCallId = (String) request.get("emergencyCallId");
+        String emergencyId = (String) request.get("emergencyCallId");
+        String callerId = (String) request.get("callerId");
+        String operatorId = (String) request.get("operatorId");
+        String incidentType = (String) request.get("incidentType");
         List<Map<String, String>> responses = (List<Map<String, String>>) request.get("responses");
 
-        log.info("Checklist save request for emergency: {} with {} responses", emergencyCallId, responses != null ? responses.size() : 0);
+        log.info("Checklist save request for emergency: {} with {} responses", emergencyId, responses != null ? responses.size() : 0);
 
-        if (emergencyCallId == null || emergencyCallId.isEmpty()) {
+        if (emergencyId == null || emergencyId.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Emergency call ID is required"
+            ));
+        }
+
+        if (callerId == null || callerId.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Caller ID is required"
+            ));
+        }
+
+        if (operatorId == null || operatorId.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Operator ID is required"
+            ));
+        }
+
+        if (incidentType == null || incidentType.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Incident type is required"
             ));
         }
 
@@ -157,7 +181,8 @@ public class OperatorController {
         }
 
         // Save to database
-        boolean success = checklistResponseService.saveChecklistResponses(emergencyCallId, checklistResponses);
+        boolean success = checklistResponseService.saveChecklistResponses(
+                emergencyId, callerId, operatorId, incidentType, checklistResponses);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", success);
@@ -168,6 +193,8 @@ public class OperatorController {
 
     @PostMapping("/complete-emergency")
     public ResponseEntity<Map<String, Object>> completeEmergency(@RequestBody Map<String, Object> request) {
+        String existingEmergencyId = (String) request.get("emergencyId");
+        Boolean isUpdate = request.get("isUpdate") != null ? (Boolean) request.get("isUpdate") : false;
         String callerPhoneNumber = (String) request.get("callerPhoneNumber");
         String callerName = (String) request.get("callerName");
         String operatorId = (String) request.get("operatorId");
@@ -189,16 +216,37 @@ public class OperatorController {
                 incidentType, callerLocation, mediaAssetId, transcript != null ? transcript.length() : 0);
 
         try {
-            // Step 1: Assess risk level using AI
-            Map<String, Object> riskAssessment = riskLevelAssessmentService.assessRiskLevel(transcript);
-            int riskLevel = (Integer) riskAssessment.get("level");
-            String riskLevelReason = (String) riskAssessment.get("reason");
+            // If this is an update, delete the existing record first
+            if (isUpdate && existingEmergencyId != null && !existingEmergencyId.isEmpty()) {
+                log.info("Updating existing emergency: {}", existingEmergencyId);
+                emergencyService.deleteEmergency(existingEmergencyId);
+            }
 
-            log.info("Risk assessment - Level: {}, Reason: {}", riskLevel, riskLevelReason);
+            // Step 1: Assess risk level using AI (only if transcript is provided)
+            int riskLevel = 0;
+            String riskLevelReason = "";
 
-            // Step 2: Create/get caller
-            String callerId = callerService.getOrCreateCaller(callerPhoneNumber, callerName);
+            if (transcript != null && !transcript.isEmpty()) {
+                Map<String, Object> riskAssessment = riskLevelAssessmentService.assessRiskLevel(transcript);
+                riskLevel = (Integer) riskAssessment.get("level");
+                riskLevelReason = (String) riskAssessment.get("reason");
+                log.info("Risk assessment - Level: {}, Reason: {}", riskLevel, riskLevelReason);
+            }
+
+            // Step 2: Create/get caller (phone number only, no name initially)
+            String callerId = callerService.getOrCreateCaller(callerPhoneNumber, null);
             log.info("Caller ID: {}", callerId);
+
+            // Step 2.5: Extract name from transcript and update if found
+            if (transcript != null && !transcript.isEmpty()) {
+                String extractedName = callerService.extractNameFromTranscript(transcript);
+                if (extractedName != null) {
+                    log.info("Extracted caller name from transcript: {}", extractedName);
+                    callerService.updateCallerName(callerId, extractedName);
+                } else {
+                    log.info("No caller name found in transcript");
+                }
+            }
 
             // Step 3: Extract location information if caller location provided
             String extractedLocation = null;
@@ -250,35 +298,35 @@ public class OperatorController {
                 }
             }
 
-            // Step 4: Use call times from frontend timeline (using Korea timezone - Asia/Seoul)
+            // Step 4: Use call times from frontend timeline (Korea timezone)
             java.time.ZoneId seoulZone = java.time.ZoneId.of("Asia/Seoul");
-            java.time.OffsetDateTime callStartedAt;
-            java.time.OffsetDateTime callEndedAt;
+            java.time.LocalDateTime callStartedAt;
+            java.time.LocalDateTime callEndedAt;
 
             if (callStartedAtMs != null && callEndedAtMs != null) {
                 // Use times from frontend timeline
-                callStartedAt = java.time.OffsetDateTime.ofInstant(
+                callStartedAt = java.time.LocalDateTime.ofInstant(
                     java.time.Instant.ofEpochMilli(callStartedAtMs),
                     seoulZone
                 );
-                callEndedAt = java.time.OffsetDateTime.ofInstant(
+                callEndedAt = java.time.LocalDateTime.ofInstant(
                     java.time.Instant.ofEpochMilli(callEndedAtMs),
                     seoulZone
                 );
             } else if (callStartedAtMs != null) {
                 // Fallback: use start time + duration
-                callStartedAt = java.time.OffsetDateTime.ofInstant(
+                callStartedAt = java.time.LocalDateTime.ofInstant(
                     java.time.Instant.ofEpochMilli(callStartedAtMs),
                     seoulZone
                 );
                 if (totalDurationMs != null) {
                     callEndedAt = callStartedAt.plusNanos(totalDurationMs * 1_000_000L);
                 } else {
-                    callEndedAt = java.time.OffsetDateTime.now(seoulZone);
+                    callEndedAt = java.time.LocalDateTime.now(seoulZone);
                 }
             } else {
                 // Fallback: use current time
-                callEndedAt = java.time.OffsetDateTime.now(seoulZone);
+                callEndedAt = java.time.LocalDateTime.now(seoulZone);
                 if (totalDurationMs != null) {
                     callStartedAt = callEndedAt.minusNanos(totalDurationMs * 1_000_000L);
                 } else {
@@ -290,15 +338,29 @@ public class OperatorController {
                 callStartedAt, callEndedAt, totalDurationMs);
 
             // Step 5: Create emergency record with all information
-            String emergencyId = emergencyService.insertEmergencyCompleteWithDetails(
-                    callerId, operatorId, "clova", language,
-                    totalDurationMs, speakersCount, utterancesCount,
-                    String.valueOf(riskLevel), riskLevelReason,
-                    incidentType, extractedLocation, latitude, longitude,
-                    roadAddress, postalCode, address1, address2,
-                    mediaAssetId, callStartedAt, callEndedAt
-            );
-            log.info("Emergency call created: {}", emergencyId);
+            // If this is an update, reuse the existing emergency ID
+            String emergencyId;
+            if (isUpdate && existingEmergencyId != null && !existingEmergencyId.isEmpty()) {
+                emergencyId = emergencyService.insertEmergencyCompleteWithDetailsAndId(
+                        existingEmergencyId, callerId, operatorId, "clova", language,
+                        totalDurationMs, speakersCount, utterancesCount,
+                        String.valueOf(riskLevel), riskLevelReason,
+                        incidentType, extractedLocation, latitude, longitude,
+                        roadAddress, postalCode, address1, address2,
+                        mediaAssetId, callStartedAt, callEndedAt
+                );
+                log.info("Emergency call updated: {}", emergencyId);
+            } else {
+                emergencyId = emergencyService.insertEmergencyCompleteWithDetails(
+                        callerId, operatorId, "clova", language,
+                        totalDurationMs, speakersCount, utterancesCount,
+                        String.valueOf(riskLevel), riskLevelReason,
+                        incidentType, extractedLocation, latitude, longitude,
+                        roadAddress, postalCode, address1, address2,
+                        mediaAssetId, callStartedAt, callEndedAt
+                );
+                log.info("Emergency call created: {}", emergencyId);
+            }
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -313,6 +375,42 @@ public class OperatorController {
             return ResponseEntity.internalServerError().body(Map.of(
                     "success", false,
                     "message", "Failed to create emergency record: " + e.getMessage()
+            ));
+        }
+    }
+
+    @PatchMapping("/emergency/{emergencyId}/update")
+    public ResponseEntity<Map<String, Object>> updateEmergency(
+            @PathVariable String emergencyId,
+            @RequestBody Map<String, Object> updates) {
+
+        log.info("Emergency update request for ID: {} with updates: {}", emergencyId, updates);
+
+        try {
+            // Validate emergency ID
+            if (emergencyId == null || emergencyId.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Emergency ID is required"
+                ));
+            }
+
+            // Update emergency record
+            emergencyService.updateEmergency(emergencyId, updates);
+
+            log.info("Emergency {} updated successfully", emergencyId);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Emergency updated successfully",
+                    "emergencyId", emergencyId
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to update emergency: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                    "success", false,
+                    "message", "Failed to update emergency: " + e.getMessage()
             ));
         }
     }

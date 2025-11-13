@@ -8,6 +8,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -21,14 +22,21 @@ public class ChecklistResponseService {
 
     /**
      * Save checklist responses for an emergency call
-     * @param emergencyCallId Emergency call ID (em-{uuid})
+     * @param emergencyId Emergency ID (em-{uuid})
+     * @param callerId Caller ID (cl-{uuid})
+     * @param operatorId Operator ID (op-{uuid})
+     * @param incidentType Incident type (emergency, fire, crime, accident, etc.)
      * @param responses List of checklist responses
      * @return true if successful, false otherwise
      */
-    public boolean saveChecklistResponses(String emergencyCallId, List<ChecklistResponse> responses) {
+    public boolean saveChecklistResponses(String emergencyId, String callerId, String operatorId,
+                                         String incidentType, List<ChecklistResponse> responses) {
         try {
             // Delete existing responses for this emergency call first
-            deleteChecklistResponses(emergencyCallId);
+            deleteChecklistResponses(emergencyId);
+
+            // Get current timestamp for response_time
+            LocalDateTime now = LocalDateTime.now();
 
             // Prepare batch insert data
             List<Map<String, Object>> batchData = new ArrayList<>();
@@ -39,10 +47,19 @@ public class ChecklistResponseService {
 
                 Map<String, Object> data = new HashMap<>();
                 data.put("id", responseId);
-                data.put("emergency_call_id", emergencyCallId);
+                data.put("emergency_id", emergencyId);
+                data.put("caller_id", callerId);
+                data.put("operator_id", operatorId);
+                data.put("incident_type", incidentType);
                 data.put("question", response.getQuestion());
                 data.put("answer", response.getAnswer());
                 data.put("question_order", i + 1);
+                data.put("response_time", now.toString());
+                data.put("is_critical", response.isCritical());
+
+                if (response.getNotes() != null && !response.getNotes().isEmpty()) {
+                    data.put("notes", response.getNotes());
+                }
 
                 batchData.add(data);
             }
@@ -66,7 +83,7 @@ public class ChecklistResponseService {
             );
 
             log.info("Checklist responses saved successfully for emergency: {} ({} responses)",
-                    emergencyCallId, responses.size());
+                    emergencyId, responses.size());
             return true;
 
         } catch (Exception e) {
@@ -77,9 +94,9 @@ public class ChecklistResponseService {
 
     /**
      * Delete existing checklist responses for an emergency call
-     * @param emergencyCallId Emergency call ID
+     * @param emergencyId Emergency ID
      */
-    private void deleteChecklistResponses(String emergencyCallId) {
+    private void deleteChecklistResponses(String emergencyId) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -88,7 +105,7 @@ public class ChecklistResponseService {
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = supabaseConfig.getApiUrl() + "/checklist_response?emergency_call_id=eq." + emergencyCallId;
+            String url = supabaseConfig.getApiUrl() + "/checklist_response?emergency_id=eq." + emergencyId;
 
             restTemplate.exchange(
                     url,
@@ -97,20 +114,20 @@ public class ChecklistResponseService {
                     String.class
             );
 
-            log.info("Deleted existing checklist responses for emergency: {}", emergencyCallId);
+            log.info("Deleted existing checklist responses for emergency: {}", emergencyId);
 
         } catch (Exception e) {
             // Log but don't fail - might be first time saving
-            log.debug("No existing checklist responses to delete for emergency: {}", emergencyCallId);
+            log.debug("No existing checklist responses to delete for emergency: {}", emergencyId);
         }
     }
 
     /**
      * Get checklist responses for an emergency call
-     * @param emergencyCallId Emergency call ID
+     * @param emergencyId Emergency ID
      * @return List of checklist responses
      */
-    public List<ChecklistResponse> getChecklistResponses(String emergencyCallId) {
+    public List<ChecklistResponse> getChecklistResponses(String emergencyId) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -119,7 +136,7 @@ public class ChecklistResponseService {
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = supabaseConfig.getApiUrl() + "/checklist_response?emergency_call_id=eq." + emergencyCallId + "&order=question_order.asc";
+            String url = supabaseConfig.getApiUrl() + "/checklist_response?emergency_id=eq." + emergencyId + "&order=question_order.asc";
 
             ResponseEntity<String> response = restTemplate.exchange(
                     url,
@@ -136,10 +153,12 @@ public class ChecklistResponseService {
                 ChecklistResponse checklistResponse = new ChecklistResponse();
                 checklistResponse.setQuestion((String) item.get("question"));
                 checklistResponse.setAnswer((String) item.get("answer"));
+                checklistResponse.setCritical(item.get("is_critical") != null && (Boolean) item.get("is_critical"));
+                checklistResponse.setNotes((String) item.get("notes"));
                 responses.add(checklistResponse);
             }
 
-            log.info("Retrieved {} checklist responses for emergency: {}", responses.size(), emergencyCallId);
+            log.info("Retrieved {} checklist responses for emergency: {}", responses.size(), emergencyId);
             return responses;
 
         } catch (Exception e) {
@@ -154,12 +173,21 @@ public class ChecklistResponseService {
     public static class ChecklistResponse {
         private String question;
         private String answer;
+        private boolean isCritical;
+        private String notes;
 
         public ChecklistResponse() {}
 
         public ChecklistResponse(String question, String answer) {
             this.question = question;
             this.answer = answer;
+            this.isCritical = false;
+        }
+
+        public ChecklistResponse(String question, String answer, boolean isCritical) {
+            this.question = question;
+            this.answer = answer;
+            this.isCritical = isCritical;
         }
 
         public String getQuestion() {
@@ -176,6 +204,22 @@ public class ChecklistResponseService {
 
         public void setAnswer(String answer) {
             this.answer = answer;
+        }
+
+        public boolean isCritical() {
+            return isCritical;
+        }
+
+        public void setCritical(boolean critical) {
+            isCritical = critical;
+        }
+
+        public String getNotes() {
+            return notes;
+        }
+
+        public void setNotes(String notes) {
+            this.notes = notes;
         }
     }
 }
