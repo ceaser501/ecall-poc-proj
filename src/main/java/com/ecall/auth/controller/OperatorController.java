@@ -216,12 +216,6 @@ public class OperatorController {
                 incidentType, callerLocation, mediaAssetId, transcript != null ? transcript.length() : 0);
 
         try {
-            // If this is an update, delete the existing record first
-            if (isUpdate && existingEmergencyId != null && !existingEmergencyId.isEmpty()) {
-                log.info("Updating existing emergency: {}", existingEmergencyId);
-                emergencyService.deleteEmergency(existingEmergencyId);
-            }
-
             // Step 1: Assess risk level using AI (only if transcript is provided)
             int riskLevel = 0;
             String riskLevelReason = "";
@@ -337,20 +331,69 @@ public class OperatorController {
             log.info("Call times - Started: {}, Ended: {}, Duration: {}ms",
                 callStartedAt, callEndedAt, totalDurationMs);
 
-            // Step 5: Create emergency record with all information
-            // If this is an update, reuse the existing emergency ID
+            // Step 5: Create or update emergency record with all information
             String emergencyId;
             if (isUpdate && existingEmergencyId != null && !existingEmergencyId.isEmpty()) {
-                emergencyId = emergencyService.insertEmergencyCompleteWithDetailsAndId(
-                        existingEmergencyId, callerId, operatorId, "clova", language,
-                        totalDurationMs, speakersCount, utterancesCount,
-                        String.valueOf(riskLevel), riskLevelReason,
-                        incidentType, extractedLocation, latitude, longitude,
-                        roadAddress, postalCode, address1, address2,
-                        mediaAssetId, callStartedAt, callEndedAt
-                );
+                // UPDATE existing emergency record (do not delete)
+                log.info("Updating existing emergency: {}", existingEmergencyId);
+
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("caller_id", callerId);
+                updates.put("operator_id", operatorId);
+                updates.put("call_started_at", callStartedAt.toString());
+                updates.put("call_ended_at", callEndedAt.toString());
+                updates.put("stt_engine", "clova");
+                updates.put("language", language);
+                updates.put("status", "completed");
+
+                if (totalDurationMs != null) {
+                    updates.put("total_duration_ms", totalDurationMs);
+                }
+                if (speakersCount != null) {
+                    updates.put("speakers_count", speakersCount);
+                }
+                if (utterancesCount != null) {
+                    updates.put("utterances_count", utterancesCount);
+                }
+                if (riskLevel > 0) {
+                    updates.put("risk_level", riskLevel);
+                }
+                if (riskLevelReason != null && !riskLevelReason.isEmpty()) {
+                    updates.put("risk_level_reason", riskLevelReason);
+                }
+                if (incidentType != null && !incidentType.isEmpty()) {
+                    updates.put("type", incidentType);
+                }
+                if (extractedLocation != null && !extractedLocation.isEmpty()) {
+                    updates.put("caller_location", extractedLocation);
+                }
+                if (latitude != null) {
+                    updates.put("latitude", latitude);
+                }
+                if (longitude != null) {
+                    updates.put("longitude", longitude);
+                }
+                if (roadAddress != null && !roadAddress.isEmpty()) {
+                    updates.put("road_address", roadAddress);
+                }
+                if (postalCode != null && !postalCode.isEmpty()) {
+                    updates.put("postal_code", postalCode);
+                }
+                if (address1 != null && !address1.isEmpty()) {
+                    updates.put("address1", address1);
+                }
+                if (address2 != null && !address2.isEmpty()) {
+                    updates.put("address2", address2);
+                }
+                if (mediaAssetId != null && !mediaAssetId.isEmpty()) {
+                    updates.put("audio_id", mediaAssetId);
+                }
+
+                emergencyService.updateEmergency(existingEmergencyId, updates);
+                emergencyId = existingEmergencyId;
                 log.info("Emergency call updated: {}", emergencyId);
             } else {
+                // CREATE new emergency record
                 emergencyId = emergencyService.insertEmergencyCompleteWithDetails(
                         callerId, operatorId, "clova", language,
                         totalDurationMs, speakersCount, utterancesCount,
