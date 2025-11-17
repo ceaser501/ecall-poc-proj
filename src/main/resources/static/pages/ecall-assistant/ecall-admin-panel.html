@@ -407,6 +407,26 @@
             padding: 3rem 1rem;
             color: #6b7280;
         }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .badge-leader {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-deputy {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
     </style>
 </head>
 <body>
@@ -445,7 +465,8 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <div class="card">
+        <!-- Dispatch Force Section -->
+        <div class="card" style="margin-bottom: 1.5rem;">
             <div class="card-header">
                 <h2 class="card-title">출동부대 목록</h2>
                 <button class="btn-primary" onclick="openAddUnitDialog()">
@@ -457,6 +478,22 @@
             </div>
             <div class="card-content">
                 <div id="tableContainer"></div>
+            </div>
+        </div>
+
+        <!-- Intake Desk Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">신고접수 조직 목록</h2>
+                <button class="btn-primary" onclick="openAddIntakeDialog()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    조직 추가
+                </button>
+            </div>
+            <div class="card-content">
+                <div id="intakeTableContainer"></div>
             </div>
         </div>
     </main>
@@ -473,16 +510,28 @@
                     <input type="text" id="unitName" class="form-input" placeholder="부대명을 입력하세요">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="leader1Select">출동대장</label>
-                    <select id="leader1Select" class="form-select">
-                        <option value="">대장을 선택하세요</option>
-                    </select>
+                    <label class="form-label">출동팀장</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="leader1Display" class="form-input" readonly placeholder="팀장을 선택하세요" style="flex: 1; background-color: #f9fafb; cursor: pointer;" onclick="openLeaderSelectDialog('leader1')">
+                        <button type="button" class="btn-secondary" onclick="clearLeader('leader1')" style="padding: 0.625rem 0.75rem;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1rem; height: 1rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="hidden" id="leader1Id">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="leader2Select">출동부대장</label>
-                    <select id="leader2Select" class="form-select">
-                        <option value="">부대장을 선택하세요</option>
-                    </select>
+                    <label class="form-label">출동부팀장</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="leader2Display" class="form-input" readonly placeholder="부팀장을 선택하세요" style="flex: 1; background-color: #f9fafb; cursor: pointer;" onclick="openLeaderSelectDialog('leader2')">
+                        <button type="button" class="btn-secondary" onclick="clearLeader('leader2')" style="padding: 0.625rem 0.75rem;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1rem; height: 1rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="hidden" id="leader2Id">
                 </div>
             </div>
             <div class="modal-footer">
@@ -528,6 +577,139 @@
         </div>
     </div>
 
+    <!-- Leader Select Dialog -->
+    <div id="leaderSelectDialog" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="leaderSelectDialogTitle">팀장 선택</h3>
+            </div>
+            <div class="modal-body">
+                <div id="leaderSelectList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 1rem;">
+                    <!-- Leaders will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeLeaderSelectDialog()">취소</button>
+                <button class="btn-primary" onclick="confirmLeaderSelection()">선택</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intake Desk Dialog (Add/Edit) -->
+    <div id="intakeDialog" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="intakeDialogTitle">신고접수 조직 추가</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="intakeName">조직명 *</label>
+                    <input type="text" id="intakeName" class="form-input" placeholder="조직명을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">조직장</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="intakeLeader1Display" class="form-input" readonly placeholder="조직장을 선택하세요" style="flex: 1; background-color: #f9fafb; cursor: pointer;" onclick="openIntakeLeaderSelectDialog('leader1')">
+                        <button type="button" class="btn-secondary" onclick="clearIntakeLeader('leader1')" style="padding: 0.625rem 0.75rem;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1rem; height: 1rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="hidden" id="intakeLeader1Id">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">부조직장</label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="intakeLeader2Display" class="form-input" readonly placeholder="부조직장을 선택하세요" style="flex: 1; background-color: #f9fafb; cursor: pointer;" onclick="openIntakeLeaderSelectDialog('leader2')">
+                        <button type="button" class="btn-secondary" onclick="clearIntakeLeader('leader2')" style="padding: 0.625rem 0.75rem;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1rem; height: 1rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="hidden" id="intakeLeader2Id">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeIntakeDialog()">취소</button>
+                <button class="btn-primary" onclick="saveIntake()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intake Leader Select Dialog -->
+    <div id="intakeLeaderSelectDialog" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="intakeLeaderSelectDialogTitle">조직장 선택</h3>
+            </div>
+            <div class="modal-body">
+                <div id="intakeLeaderSelectList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 1rem;">
+                    <!-- Leaders will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeIntakeLeaderSelectDialog()">취소</button>
+                <button class="btn-primary" onclick="confirmIntakeLeaderSelection()">선택</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intake Assign Operator Dialog -->
+    <div id="intakeAssignDialog" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="intakeAssignDialogTitle">접수 대원 배치</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">배치할 대원을 선택하세요 (복수 선택 가능)</label>
+                    <div id="intakeOperatorCheckboxList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 1rem;">
+                        <!-- Operators will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeIntakeAssignDialog()">취소</button>
+                <button class="btn-primary" onclick="assignIntakeOperators()">배치</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intake Members Dialog -->
+    <div id="intakeMembersDialog" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="intakeMembersDialogTitle">배치된 대원 목록</h3>
+            </div>
+            <div class="modal-body">
+                <div id="intakeMembersTableContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeIntakeMembersDialog()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intake Leader Select Dialog -->
+    <div id="intakeLeaderSelectDialog" class="modal-overlay">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="intakeLeaderSelectDialogTitle">조직장 선택</h3>
+            </div>
+            <div class="modal-body">
+                <div id="intakeLeaderSelectList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 1rem;">
+                    <!-- Operators will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeIntakeLeaderSelectDialog()">취소</button>
+                <button class="btn-primary" onclick="confirmIntakeLeaderSelection()">선택</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // State
         let units = [];
@@ -535,7 +717,18 @@
         let selectedUnit = null;
         let selectedUnitForAssign = null;
         let selectedUnitForMembers = null;
+        let currentLeaderType = null; // 'leader1' or 'leader2'
+        let selectedLeaderId = null;
         let loading = true;
+
+        // Intake Desk State
+        let intakeDesks = [];
+        let intakeOperators = [];
+        let selectedIntake = null;
+        let selectedIntakeForAssign = null;
+        let selectedIntakeForMembers = null;
+        let currentIntakeLeaderType = null; // 'leader1' or 'leader2'
+        let selectedIntakeLeaderId = null;
 
         // Supabase Config - Replace with your actual values
         const SUPABASE_PROJECT_ID = 'oeeffpldhwajfmiidayr';
@@ -545,6 +738,8 @@
         window.addEventListener('load', () => {
             fetchUnits();
             fetchOperators();
+            fetchIntakeDesks();
+            fetchIntakeOperators();
         });
 
         // Fetch Operators
@@ -556,6 +751,8 @@
                 if (result.success) {
                     operators = result.data || [];
                     console.log('Loaded operators:', operators.length);
+                    console.log('Operators with organization_code:', operators.filter(op => op.organization_code));
+                    console.log('All operators data:', operators);
                 }
             } catch (error) {
                 console.error('Error fetching operators:', error);
@@ -607,6 +804,8 @@
                         <thead>
                             <tr>
                                 <th>부대명</th>
+                                <th class="text-center">팀장</th>
+                                <th class="text-center">부팀장</th>
                                 <th class="text-center">배치 인원</th>
                                 <th class="text-center">등록일</th>
                                 <th class="text-center">배정</th>
@@ -617,6 +816,8 @@
                             ${units.map(unit => `
                                 <tr>
                                     <td>${unit.name}</td>
+                                    <td class="text-center">${unit.leader1_name || '-'}</td>
+                                    <td class="text-center">${unit.leader2_name || '-'}</td>
                                     <td class="text-center">
                                         <button class="btn-ghost" onclick="openMembersDialog('${unit.id}')">
                                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -666,10 +867,11 @@
             document.getElementById('unitDialogTitle').textContent = '출동부대 추가';
             document.getElementById('unitName').value = '';
 
-            // Populate leader selects
-            populateLeaderSelects();
-            document.getElementById('leader1Select').value = '';
-            document.getElementById('leader2Select').value = '';
+            // Clear leader selections
+            document.getElementById('leader1Id').value = '';
+            document.getElementById('leader1Display').value = '';
+            document.getElementById('leader2Id').value = '';
+            document.getElementById('leader2Display').value = '';
 
             document.getElementById('unitDialog').classList.add('active');
         }
@@ -681,94 +883,111 @@
             document.getElementById('unitDialogTitle').textContent = '출동부대 수정';
             document.getElementById('unitName').value = selectedUnit.name;
 
-            // Populate leader selects
-            populateLeaderSelects();
-            document.getElementById('leader1Select').value = selectedUnit.operator_leader1_id || '';
-            document.getElementById('leader2Select').value = selectedUnit.operator_leader2_id || '';
+            // Set leader selections
+            document.getElementById('leader1Id').value = selectedUnit.operator_leader1_id || '';
+            document.getElementById('leader1Display').value = selectedUnit.leader1_name || '';
+            document.getElementById('leader2Id').value = selectedUnit.operator_leader2_id || '';
+            document.getElementById('leader2Display').value = selectedUnit.leader2_name || '';
 
             document.getElementById('unitDialog').classList.add('active');
         }
 
-        function populateLeaderSelects() {
-            const leader1Select = document.getElementById('leader1Select');
-            const leader2Select = document.getElementById('leader2Select');
-
-            leader1Select.innerHTML = '<option value="">대장을 선택하세요</option>';
-            leader2Select.innerHTML = '<option value="">부대장을 선택하세요</option>';
-
-            console.log('Total operators loaded:', operators.length);
-            console.log('Operators data:', operators);
-
-            // Operator를 제외한 operators만 필터링
-            const nonOperators = operators.filter(op => op.role && op.role !== 'Operator');
-            console.log('Non-operator count:', nonOperators.length);
-            console.log('Non-operators:', nonOperators);
-
-            // Role별로 그룹화
-            const groupedByRole = {};
-            nonOperators.forEach(operator => {
-                const role = operator.role || 'Other';
-                if (!groupedByRole[role]) {
-                    groupedByRole[role] = [];
-                }
-                groupedByRole[role].push(operator);
-            });
-
-            // Role 순서 정의
-            const roleOrder = ['Firefighter', 'Rescue Technician', 'Emergency Medical Technician', 'Police Officer'];
-
-            // 각 select에 role별로 optgroup 추가
-            roleOrder.forEach(role => {
-                if (groupedByRole[role] && groupedByRole[role].length > 0) {
-                    // Role 표시명 (EMT는 줄임말 추가)
-                    const roleLabel = role === 'Emergency Medical Technician' ? 'Emergency Medical Technician' : role;
-
-                    // Leader1 select
-                    const optgroup1 = document.createElement('optgroup');
-                    optgroup1.label = roleLabel;
-                    groupedByRole[role].forEach(operator => {
-                        const option = document.createElement('option');
-                        option.value = operator.id;
-
-                        // 소속 표시
-                        let displayText = `${operator.name} (${operator.operator_id})`;
-                        const hasOrganization = operator.organization_code && operator.organization_name;
-
-                        if (hasOrganization) {
-                            displayText += ` - ${operator.organization_name}`;
-                            option.disabled = true;
-                            option.style.color = '#999';
-                        }
-
-                        option.textContent = displayText;
-                        optgroup1.appendChild(option);
-                    });
-                    leader1Select.appendChild(optgroup1);
-
-                    // Leader2 select
-                    const optgroup2 = document.createElement('optgroup');
-                    optgroup2.label = roleLabel;
-                    groupedByRole[role].forEach(operator => {
-                        const option = document.createElement('option');
-                        option.value = operator.id;
-
-                        // 소속 표시
-                        let displayText = `${operator.name} (${operator.operator_id})`;
-                        const hasOrganization = operator.organization_code && operator.organization_name;
-
-                        if (hasOrganization) {
-                            displayText += ` - ${operator.organization_name}`;
-                            option.disabled = true;
-                            option.style.color = '#999';
-                        }
-
-                        option.textContent = displayText;
-                        optgroup2.appendChild(option);
-                    });
-                    leader2Select.appendChild(optgroup2);
-                }
-            });
+        function clearLeader(leaderType) {
+            document.getElementById(leaderType + 'Id').value = '';
+            document.getElementById(leaderType + 'Display').value = '';
         }
+
+        function openLeaderSelectDialog(leaderType) {
+            currentLeaderType = leaderType;
+            selectedLeaderId = null;
+
+            const title = leaderType === 'leader1' ? '팀장 선택' : '부팀장 선택';
+            document.getElementById('leaderSelectDialogTitle').textContent = title;
+
+            const list = document.getElementById('leaderSelectList');
+
+            // Filter operators (exclude Operator role)
+            const nonOperators = operators.filter(op => op.role && op.role !== 'Operator');
+
+            if (nonOperators.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #9ca3af;">선택 가능한 대원이 없습니다</p>';
+            } else {
+                // Group operators by role
+                const groupedOperators = {};
+                nonOperators.forEach(op => {
+                    const role = op.role || '미분류';
+                    if (!groupedOperators[role]) {
+                        groupedOperators[role] = [];
+                    }
+                    groupedOperators[role].push(op);
+                });
+
+                // Build radio button list HTML
+                let html = '';
+                const roleOrder = ['Firefighter', 'Rescue Technician', 'Emergency Medical Technician', 'Police Officer'];
+
+                roleOrder.forEach(role => {
+                    if (groupedOperators[role] && groupedOperators[role].length > 0) {
+                        html += `<div style="margin-bottom: 1rem;">`;
+                        html += `<div style="font-weight: 600; margin-bottom: 0.5rem; padding: 0.5rem; background-color: #f3f4f6; border-radius: 0.25rem;">${role}</div>`;
+                        groupedOperators[role].forEach(op => {
+                            // Check if operator is assigned as a member
+                            const isAssignedAsMember = op.organization_code && op.organization_code !== '';
+
+                            // Check if operator is assigned as a leader in any unit
+                            const isAssignedAsLeader = units.some(u =>
+                                u.operator_leader1_id === op.id || u.operator_leader2_id === op.id
+                            );
+
+                            const isAssigned = isAssignedAsMember || isAssignedAsLeader;
+                            const disabled = isAssigned ? 'disabled' : '';
+                            const style = isAssigned ? 'opacity: 0.5; cursor: not-allowed;' : 'cursor: pointer;';
+
+                            html += `
+                                <div style="padding: 0.5rem; margin-left: 1rem; display: flex; align-items: center; ${style}">
+                                    <input type="radio" name="leaderSelection" id="leader_${op.id}" value="${op.id}" ${disabled} style="margin-right: 0.5rem; width: 16px; height: 16px;" onchange="selectedLeaderId='${op.id}'">
+                                    <label for="leader_${op.id}" style="cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; flex: 1;">
+                                        ${op.name} (${op.operator_id})
+                                        ${op.organization_name ? `<span style="color: #9ca3af; font-size: 0.875rem;"> - ${op.organization_name}</span>` : ''}
+                                        ${isAssigned ? '<span style="color: #ef4444; font-size: 0.875rem;"> (배치됨)</span>' : ''}
+                                    </label>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+                });
+                list.innerHTML = html;
+            }
+
+            document.getElementById('leaderSelectDialog').classList.add('active');
+        }
+
+        function closeLeaderSelectDialog() {
+            document.getElementById('leaderSelectDialog').classList.remove('active');
+            currentLeaderType = null;
+            selectedLeaderId = null;
+        }
+
+        function confirmLeaderSelection() {
+            if (!selectedLeaderId || !currentLeaderType) {
+                alert('대원을 선택해주세요.');
+                return;
+            }
+
+            const selectedOperator = operators.find(op => op.id === selectedLeaderId);
+            if (!selectedOperator) {
+                alert('선택한 대원을 찾을 수 없습니다.');
+                return;
+            }
+
+            // Set the selected leader
+            document.getElementById(currentLeaderType + 'Id').value = selectedOperator.id;
+            document.getElementById(currentLeaderType + 'Display').value = selectedOperator.name;
+
+            closeLeaderSelectDialog();
+        }
+
 
         function closeUnitDialog() {
             document.getElementById('unitDialog').classList.remove('active');
@@ -777,8 +996,8 @@
 
         async function saveUnit() {
             const name = document.getElementById('unitName').value.trim();
-            const leader1Id = document.getElementById('leader1Select').value;
-            const leader2Id = document.getElementById('leader2Select').value;
+            const leader1Id = document.getElementById('leader1Id').value;
+            const leader2Id = document.getElementById('leader2Id').value;
 
             if (!name) {
                 alert('부대명을 입력해주세요.');
@@ -895,12 +1114,25 @@
                     html += `<div style="margin-bottom: 1rem;">`;
                     html += `<div style="font-weight: 600; margin-bottom: 0.5rem; padding: 0.5rem; background-color: #f3f4f6; border-radius: 0.25rem;">${role}</div>`;
                     groupedOperators[role].forEach(op => {
+                        // Check if operator is assigned as a member
+                        const isAssignedAsMember = op.organization_code && op.organization_code !== '';
+
+                        // Check if operator is assigned as a leader in any unit
+                        const isAssignedAsLeader = units.some(u =>
+                            u.operator_leader1_id === op.id || u.operator_leader2_id === op.id
+                        );
+
+                        const isAssigned = isAssignedAsMember || isAssignedAsLeader;
+                        const disabled = isAssigned ? 'disabled' : '';
+                        const style = isAssigned ? 'opacity: 0.5; cursor: not-allowed;' : 'cursor: pointer;';
+
                         html += `
-                            <div style="padding: 0.5rem; margin-left: 1rem; display: flex; align-items: center;">
-                                <input type="checkbox" id="op_${op.id}" value="${op.id}" style="margin-right: 0.5rem; width: 16px; height: 16px;">
-                                <label for="op_${op.id}" style="cursor: pointer; flex: 1;">
+                            <div style="padding: 0.5rem; margin-left: 1rem; display: flex; align-items: center; ${style}">
+                                <input type="checkbox" id="op_${op.id}" value="${op.id}" ${disabled} style="margin-right: 0.5rem; width: 16px; height: 16px;">
+                                <label for="op_${op.id}" style="cursor: ${isAssigned ? 'not-allowed' : 'pointer'}; flex: 1;">
                                     ${op.name} (${op.operator_id})
                                     ${op.organization_name ? `<span style="color: #9ca3af; font-size: 0.875rem;"> - ${op.organization_name}</span>` : ''}
+                                    ${isAssigned ? '<span style="color: #ef4444; font-size: 0.875rem;"> (배치됨)</span>' : ''}
                                 </label>
                             </div>
                         `;
@@ -992,15 +1224,21 @@
                                         <th>이름</th>
                                         <th>대원 ID</th>
                                         <th>역할</th>
+                                        <th>직책</th>
                                         <th class="text-right">작업</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${members.map(member => `
                                         <tr>
-                                            <td>${member.name}</td>
+                                            <td>
+                                                ${member.name}
+                                                ${member.position === '팀장' ? '<span class="badge badge-leader">팀장</span>' : ''}
+                                                ${member.position === '부팀장' ? '<span class="badge badge-deputy">부팀장</span>' : ''}
+                                            </td>
                                             <td class="text-gray">${member.operator_id}</td>
                                             <td>${member.role || '-'}</td>
+                                            <td>${member.position || '-'}</td>
                                             <td class="text-right">
                                                 <button class="btn-ghost btn-icon" onclick="removeMember('${member.id}')">
                                                     <svg class="text-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1037,12 +1275,568 @@
 
             if (!selectedUnitForMembers) return;
 
-            // In production, this would make an API call
-            selectedUnitForMembers.members = selectedUnitForMembers.members.filter(id => id !== operatorId);
+            try {
+                const response = await fetch(`/api/units/${selectedUnitForMembers.id}/members/${operatorId}`, {
+                    method: 'DELETE'
+                });
 
-            openMembersDialog(selectedUnitForMembers.id);
-            renderTable();
+                const result = await response.json();
+
+                if (!result.success) {
+                    alert('대원 제외에 실패했습니다: ' + result.error);
+                    return;
+                }
+
+                alert('대원이 제외되었습니다.');
+
+                // Refresh the members list
+                await openMembersDialog(selectedUnitForMembers.id);
+
+                // Refresh the units list to update member count
+                await fetchUnits();
+            } catch (error) {
+                console.error('Error removing member:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
         }
+
+        // ============================================
+        // INTAKE DESK MANAGEMENT FUNCTIONS
+        // ============================================
+
+        // Fetch Intake Desks
+        async function fetchIntakeDesks() {
+            try {
+                const response = await fetch('/api/intake-desks');
+                const result = await response.json();
+
+                if (result.success) {
+                    intakeDesks = result.data || [];
+                    renderIntakeDesksTable();
+                    console.log('Loaded intake desks:', intakeDesks.length);
+                } else {
+                    console.error('Failed to fetch intake desks:', result.error);
+                }
+            } catch (error) {
+                console.error('Error fetching intake desks:', error);
+            }
+        }
+
+        // Fetch Intake Operators (role = "Operator")
+        async function fetchIntakeOperators() {
+            try {
+                const response = await fetch('/api/intake-desks/operators');
+                const result = await response.json();
+
+                if (result.success) {
+                    intakeOperators = result.data || [];
+                    console.log('Loaded intake operators:', intakeOperators.length);
+                } else {
+                    console.error('Failed to fetch intake operators:', result.error);
+                }
+            } catch (error) {
+                console.error('Error fetching intake operators:', error);
+            }
+        }
+
+        // Render Intake Desks Table
+        function renderIntakeDesksTable() {
+            const container = document.getElementById('intakeTableContainer');
+
+            if (intakeDesks.length === 0) {
+                container.innerHTML = '<div class="empty-state">등록된 신고접수 조직이 없습니다. 새 조직을 추가해주세요.</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>조직명</th>
+                                <th class="text-center">조직장</th>
+                                <th class="text-center">부조직장</th>
+                                <th class="text-center">배치 인원</th>
+                                <th class="text-center">등록일</th>
+                                <th class="text-center">배정</th>
+                                <th class="text-center">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${intakeDesks.map(desk => `
+                                <tr>
+                                    <td>${desk.name}</td>
+                                    <td class="text-center">${desk.leader1_name || '-'}</td>
+                                    <td class="text-center">${desk.leader2_name || '-'}</td>
+                                    <td class="text-center">
+                                        <button class="btn-ghost" onclick="openIntakeMembersDialog('${desk.id}')">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                            </svg>
+                                            ${desk.member_count || 0}명
+                                        </button>
+                                    </td>
+                                    <td class="text-center text-gray">
+                                        ${desk.created_at ? new Date(desk.created_at).toLocaleDateString('ko-KR') : '-'}
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="btn-ghost" onclick="openIntakeAssignDialog('${desk.id}')">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                            </svg>
+                                            대원 배치
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons-right">
+                                            <button class="btn-ghost btn-icon" onclick="openEditIntakeDialog('${desk.id}')">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button class="btn-ghost btn-icon" onclick="deleteIntakeDesk('${desk.id}')">
+                                                <svg class="text-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // Open Add Intake Dialog
+        function openAddIntakeDialog() {
+            selectedIntake = null;
+            document.getElementById('intakeDialogTitle').textContent = '신고접수 조직 추가';
+            document.getElementById('intakeName').value = '';
+
+            // Clear leader selections
+            document.getElementById('intakeLeader1Id').value = '';
+            document.getElementById('intakeLeader1Display').value = '';
+            document.getElementById('intakeLeader2Id').value = '';
+            document.getElementById('intakeLeader2Display').value = '';
+
+            document.getElementById('intakeDialog').classList.add('active');
+        }
+
+        // Open Edit Intake Dialog
+        function openEditIntakeDialog(intakeDeskId) {
+            selectedIntake = intakeDesks.find(d => d.id === intakeDeskId);
+            if (!selectedIntake) return;
+
+            document.getElementById('intakeDialogTitle').textContent = '신고접수 조직 수정';
+            document.getElementById('intakeName').value = selectedIntake.name;
+
+            // Set leader selections
+            document.getElementById('intakeLeader1Id').value = selectedIntake.leader1_id || '';
+            document.getElementById('intakeLeader1Display').value = selectedIntake.leader1_name || '';
+            document.getElementById('intakeLeader2Id').value = selectedIntake.leader2_id || '';
+            document.getElementById('intakeLeader2Display').value = selectedIntake.leader2_name || '';
+
+            document.getElementById('intakeDialog').classList.add('active');
+        }
+
+        // Clear Intake Leader
+        function clearIntakeLeader(leaderType) {
+            document.getElementById('intakeLeader' + leaderType.replace('leader', '') + 'Id').value = '';
+            document.getElementById('intakeLeader' + leaderType.replace('leader', '') + 'Display').value = '';
+        }
+
+        // Open Intake Leader Select Dialog
+        function openIntakeLeaderSelectDialog(leaderType) {
+            currentIntakeLeaderType = leaderType;
+            selectedIntakeLeaderId = null;
+
+            const title = leaderType === 'leader1' ? '조직장 선택' : '부조직장 선택';
+            document.getElementById('intakeLeaderSelectDialogTitle').textContent = title;
+
+            const list = document.getElementById('intakeLeaderSelectList');
+
+            // Filter operators (ONLY Operator role for intake desk leaders)
+            const operatorRoleOnly = operators.filter(op => op.role && op.role === 'Operator');
+
+            if (operatorRoleOnly.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #9ca3af;">선택 가능한 조직장이 없습니다</p>';
+            } else {
+                let html = '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+
+                operatorRoleOnly.forEach(op => {
+                    const isAssignedAsLeader = intakeDesks.some(d =>
+                        d.leader1_id === op.id || d.leader2_id === op.id
+                    );
+
+                    html += `
+                        <div style="padding: 0.5rem; display: flex; align-items: center;">
+                            <input type="radio" name="intakeLeaderSelection" id="intake_leader_${op.id}" value="${op.id}" style="margin-right: 0.5rem; width: 16px; height: 16px;" onchange="selectedIntakeLeaderId='${op.id}'">
+                            <label for="intake_leader_${op.id}" style="cursor: pointer; flex: 1;">
+                                ${op.name} (${op.operator_id})
+                                ${isAssignedAsLeader ? '<span style="color: #ef4444; font-size: 0.875rem;"> (배치됨)</span>' : ''}
+                            </label>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                list.innerHTML = html;
+            }
+
+            document.getElementById('intakeLeaderSelectDialog').classList.add('active');
+        }
+
+        // Close Intake Leader Select Dialog
+        function closeIntakeLeaderSelectDialog() {
+            document.getElementById('intakeLeaderSelectDialog').classList.remove('active');
+            currentIntakeLeaderType = null;
+            selectedIntakeLeaderId = null;
+        }
+
+        // Confirm Intake Leader Selection
+        function confirmIntakeLeaderSelection() {
+            if (!selectedIntakeLeaderId) {
+                alert('조직장을 선택해주세요.');
+                return;
+            }
+
+            const selectedOperator = operators.find(op => op.id === selectedIntakeLeaderId);
+            if (selectedOperator) {
+                const leaderNum = currentIntakeLeaderType.replace('leader', '');
+                document.getElementById('intakeLeader' + leaderNum + 'Id').value = selectedOperator.id;
+                document.getElementById('intakeLeader' + leaderNum + 'Display').value = `${selectedOperator.name} (${selectedOperator.operator_id})`;
+            }
+
+            closeIntakeLeaderSelectDialog();
+        }
+
+        // Close Intake Dialog
+        function closeIntakeDialog() {
+            document.getElementById('intakeDialog').classList.remove('active');
+        }
+
+        // Save Intake Desk
+        async function saveIntake() {
+            try {
+                const name = document.getElementById('intakeName').value.trim();
+                const leader1Id = document.getElementById('intakeLeader1Id').value;
+                const leader2Id = document.getElementById('intakeLeader2Id').value;
+
+                if (!name) {
+                    alert('조직명을 입력해주세요.');
+                    return;
+                }
+
+                const data = {
+                    name: name,
+                    description: ''
+                };
+
+                let response;
+                let intakeDeskId;
+
+                if (selectedIntake) {
+                    // Update existing intake desk
+                    response = await fetch(`/api/intake-desks/${selectedIntake.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    intakeDeskId = selectedIntake.id;
+                } else {
+                    // Create new intake desk
+                    response = await fetch('/api/intake-desks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    if (!selectedIntake && result.data) {
+                        intakeDeskId = result.data.id;
+                    }
+
+                    // Assign leaders if specified
+                    if (leader1Id) {
+                        await fetch(`/api/intake-desks/${intakeDeskId}/assign-leader`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                operatorId: leader1Id,
+                                leaderType: 'leader1'
+                            })
+                        });
+                    }
+
+                    if (leader2Id) {
+                        await fetch(`/api/intake-desks/${intakeDeskId}/assign-leader`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                operatorId: leader2Id,
+                                leaderType: 'leader2'
+                            })
+                        });
+                    }
+
+                    alert(selectedIntake ? '조직이 수정되었습니다.' : '조직이 추가되었습니다.');
+                    closeIntakeDialog();
+                    await fetchIntakeDesks();
+                } else {
+                    alert('오류가 발생했습니다: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error saving intake desk:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // Delete Intake Desk
+        async function deleteIntakeDesk(intakeDeskId) {
+            if (!confirm('정말 이 조직을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/intake-desks/${intakeDeskId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('조직이 삭제되었습니다.');
+                    await fetchIntakeDesks();
+                } else {
+                    alert('오류가 발생했습니다: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error deleting intake desk:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // Open Intake Assign Dialog
+        async function openIntakeAssignDialog(intakeDeskId) {
+            selectedIntakeForAssign = intakeDesks.find(d => d.id === intakeDeskId);
+            if (!selectedIntakeForAssign) return;
+
+            document.getElementById('intakeAssignDialogTitle').textContent = `접수대원 배치 - ${selectedIntakeForAssign.name}`;
+
+            const checkboxList = document.getElementById('intakeOperatorCheckboxList');
+
+            if (operators.length === 0) {
+                checkboxList.innerHTML = '<p style="text-align: center; color: #9ca3af;">배치 가능한 대원이 없습니다</p>';
+            } else {
+                // Filter only Operator role
+                const operatorRoleOnly = operators.filter(op => op.role && op.role === 'Operator');
+
+                if (operatorRoleOnly.length === 0) {
+                    checkboxList.innerHTML = '<p style="text-align: center; color: #9ca3af;">배치 가능한 대원이 없습니다</p>';
+                } else {
+                    let html = '';
+                    operatorRoleOnly.forEach(op => {
+                        // Check if already assigned as a member to ANY organization
+                        const isAssignedAsMember = op.organization_name && op.organization_name !== '';
+
+                        // Check if assigned as a leader in any intake desk
+                        const isAssignedAsLeader = intakeDesks.some(d =>
+                            d.leader1_id === op.id || d.leader2_id === op.id
+                        );
+
+                        const isAssigned = isAssignedAsMember || isAssignedAsLeader;
+
+                        html += `
+                            <div style="padding: 0.5rem; display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="intake_op_${op.id}" value="${op.id}" style="margin-right: 0.5rem; width: 16px; height: 16px;" ${isAssigned ? 'disabled' : ''}>
+                                <label for="intake_op_${op.id}" style="cursor: pointer; flex: 1; ${isAssigned ? 'color: #9ca3af;' : ''}">
+                                    ${op.name} (${op.operator_id})
+                                    ${isAssigned ? '<span style="color: #ef4444; font-size: 0.875rem;"> (배치됨)</span>' : ''}
+                                </label>
+                            </div>
+                        `;
+                    });
+                    checkboxList.innerHTML = html;
+                }
+            }
+
+            document.getElementById('intakeAssignDialog').classList.add('active');
+        }
+
+        // Close Intake Assign Dialog
+        function closeIntakeAssignDialog() {
+            document.getElementById('intakeAssignDialog').classList.remove('active');
+        }
+
+        // Assign Intake Operators
+        async function assignIntakeOperators() {
+            try {
+                const selectedOperators = [];
+                document.querySelectorAll('#intakeOperatorCheckboxList input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedOperators.push(checkbox.value);
+                });
+
+                if (selectedOperators.length === 0) {
+                    alert('배치할 대원을 선택해주세요.');
+                    return;
+                }
+
+                const response = await fetch(`/api/intake-desks/${selectedIntakeForAssign.id}/assign-members`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ operatorIds: selectedOperators })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`${selectedOperators.length}명의 대원이 배치되었습니다.`);
+                    closeIntakeAssignDialog();
+                    await fetchIntakeDesks();
+                    await fetchIntakeOperators();
+                } else {
+                    alert('오류가 발생했습니다: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error assigning operators:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // Open Intake Members Dialog
+        async function openIntakeMembersDialog(intakeDeskId) {
+            selectedIntakeForMembers = intakeDesks.find(d => d.id === intakeDeskId);
+            if (!selectedIntakeForMembers) return;
+
+            document.getElementById('intakeMembersDialogTitle').textContent = `배치된 대원 목록 - ${selectedIntakeForMembers.name}`;
+
+            const container = document.getElementById('intakeMembersTableContainer');
+            container.innerHTML = '<div class="loading">로딩 중...</div>';
+
+            try {
+                const response = await fetch(`/api/intake-desks/${intakeDeskId}/members`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    container.innerHTML = '<div class="empty-state">대원 목록을 불러오는데 실패했습니다</div>';
+                    document.getElementById('intakeMembersDialog').classList.add('active');
+                    return;
+                }
+
+                const members = result.data || [];
+
+                if (members.length === 0) {
+                    container.innerHTML = '<div class="empty-state">배치된 대원이 없습니다</div>';
+                } else {
+                    const tableHTML = `
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>이름</th>
+                                        <th>대원 ID</th>
+                                        <th>역할</th>
+                                        <th>직책</th>
+                                        <th class="text-right">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${members.map(member => {
+                                        // Check if this member is leader1 or leader2
+                                        const isLeader1 = selectedIntakeForMembers.leader1_id === member.id;
+                                        const isLeader2 = selectedIntakeForMembers.leader2_id === member.id;
+                                        const position = isLeader1 ? '조직장' : isLeader2 ? '부조직장' : '-';
+
+                                        return `
+                                            <tr>
+                                                <td>
+                                                    ${member.name}
+                                                    ${isLeader1 ? '<span class="badge badge-leader">조직장</span>' : ''}
+                                                    ${isLeader2 ? '<span class="badge badge-deputy">부조직장</span>' : ''}
+                                                </td>
+                                                <td class="text-gray">${member.operator_id}</td>
+                                                <td>${member.role || '-'}</td>
+                                                <td>${position}</td>
+                                                <td class="text-right">
+                                                    <button class="btn-ghost btn-icon" onclick="removeIntakeMember('${member.id}')">
+                                                        <svg class="text-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    container.innerHTML = tableHTML;
+                }
+
+                document.getElementById('intakeMembersDialog').classList.add('active');
+            } catch (error) {
+                console.error('Error fetching intake desk members:', error);
+                container.innerHTML = '<div class="empty-state">대원 목록을 불러오는데 실패했습니다</div>';
+                document.getElementById('intakeMembersDialog').classList.add('active');
+            }
+        }
+
+        // Close Intake Members Dialog
+        function closeIntakeMembersDialog() {
+            document.getElementById('intakeMembersDialog').classList.remove('active');
+        }
+
+        // Remove Intake Member
+        async function removeIntakeMember(operatorId) {
+            if (!confirm('이 대원을 제외하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/intake-desks/${selectedIntakeForMembers.id}/members/${operatorId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('대원이 제외되었습니다.');
+
+                    // Refresh the members list
+                    await openIntakeMembersDialog(selectedIntakeForMembers.id);
+
+                    // Refresh the intake desks list to update member count
+                    await fetchIntakeDesks();
+                    await fetchIntakeOperators();
+                } else {
+                    alert('오류가 발생했습니다: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error removing member:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // HEADER ACTIONS
+        // ============================================
 
         // Header Actions
         function handleHomeClick() {

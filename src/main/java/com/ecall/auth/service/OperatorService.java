@@ -156,6 +156,8 @@ public class OperatorService {
             String id = operatorData.get("id").asText();
             String role = operatorData.has("role") && !operatorData.get("role").isNull()
                     ? operatorData.get("role").asText() : null;
+            String organizationCode = operatorData.has("organization_code") && !operatorData.get("organization_code").isNull()
+                    ? operatorData.get("organization_code").asText() : null;
             String organizationName = operatorData.has("organization_name") && !operatorData.get("organization_name").isNull()
                     ? operatorData.get("organization_name").asText() : null;
             String joinDate = operatorData.has("join_date") && !operatorData.get("join_date").isNull()
@@ -175,6 +177,7 @@ public class OperatorService {
                     .name(name)
                     .id(id)
                     .role(role)
+                    .organizationCode(organizationCode)
                     .organizationName(organizationName)
                     .joinDate(joinDate)
                     .photoUrl(photoUrl)

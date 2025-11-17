@@ -23,7 +23,12 @@ public class UnitService {
 
     private final SupabaseConfig supabaseConfig;
     private RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    {
+        objectMapper = new ObjectMapper();
+        objectMapper.setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS);
+    }
 
     public UnitService(SupabaseConfig supabaseConfig) {
         this.supabaseConfig = supabaseConfig;
@@ -51,14 +56,24 @@ public class UnitService {
 
             // Set request body
             String jsonData = objectMapper.writeValueAsString(data);
-            StringEntity entity = new StringEntity(jsonData, "UTF-8");
-            entity.setContentType("application/json");
-            httpPatch.setEntity(entity);
+            log.debug("PATCH request to {}: {}", url, jsonData);
+
+            if (jsonData != null && !jsonData.isEmpty()) {
+                StringEntity entity = new StringEntity(jsonData, "UTF-8");
+                entity.setContentType("application/json");
+                httpPatch.setEntity(entity);
+            }
 
             // Execute request
             try (CloseableHttpResponse response = httpClient.execute(httpPatch)) {
                 int statusCode = response.getStatusLine().getStatusCode();
-                String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+
+                String responseBody = "";
+                if (response.getEntity() != null) {
+                    responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+                }
+
+                log.debug("PATCH response from {}: status={}, body={}", url, statusCode, responseBody);
 
                 if (statusCode >= 200 && statusCode < 300) {
                     return responseBody;
@@ -81,9 +96,9 @@ public class UnitService {
 
             String url = supabaseConfig.getApiUrl() + "/operator";
             if (role != null && !role.isEmpty()) {
-                url += "?role=eq." + role + "&select=id,name,operator_id,role,organization_name";
+                url += "?role=eq." + role + "&select=id,name,operator_id,role,organization_name,organization_code";
             } else {
-                url += "?select=id,name,operator_id,role,organization_name";
+                url += "?select=id,name,operator_id,role,organization_name,organization_code";
             }
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
@@ -106,6 +121,8 @@ public class UnitService {
                 operator.put("role", node.has("role") && !node.get("role").isNull() ? node.get("role").asText() : null);
                 operator.put("organization_name", node.has("organization_name") && !node.get("organization_name").isNull()
                     ? node.get("organization_name").asText() : null);
+                operator.put("organization_code", node.has("organization_code") && !node.get("organization_code").isNull()
+                    ? node.get("organization_code").asText() : null);
                 operators.add(operator);
             }
 
@@ -185,7 +202,7 @@ public class UnitService {
             headers.set("apikey", supabaseConfig.getSupabaseKey());
             headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
 
-            String url = supabaseConfig.getApiUrl() + "/dispatch_force?select=*&order=created_at.desc";
+            String url = supabaseConfig.getApiUrl() + "/dispatch_force?type=eq.dispatch&select=*&order=created_at.desc";
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -201,20 +218,52 @@ public class UnitService {
 
             for (JsonNode node : jsonArray) {
                 Map<String, Object> unit = new HashMap<>();
-                unit.put("id", node.get("id").asText());
-                unit.put("name", node.get("name").asText());
-                unit.put("operator_leader1_id", node.has("operator_leader1_id") && !node.get("operator_leader1_id").isNull()
-                    ? node.get("operator_leader1_id").asText() : null);
-                unit.put("operator_leader2_id", node.has("operator_leader2_id") && !node.get("operator_leader2_id").isNull()
-                    ? node.get("operator_leader2_id").asText() : null);
+                String unitId = node.get("id").asText();
 
-                // Handle member_count - check if field exists and is not null
-                int memberCount = 0;
-                if (node.has("member_count") && !node.get("member_count").isNull()) {
-                    memberCount = node.get("member_count").asInt();
+                unit.put("id", unitId);
+                unit.put("name", node.get("name").asText());
+                unit.put("type", node.has("type") && !node.get("type").isNull()
+                    ? node.get("type").asText() : "dispatch");
+
+                String leader1Id = node.has("operator_leader1_id") && !node.get("operator_leader1_id").isNull()
+                    ? node.get("operator_leader1_id").asText() : null;
+                String leader2Id = node.has("operator_leader2_id") && !node.get("operator_leader2_id").isNull()
+                    ? node.get("operator_leader2_id").asText() : null;
+
+                unit.put("operator_leader1_id", leader1Id);
+                unit.put("operator_leader2_id", leader2Id);
+
+                // Get leader details (name, role, join_date, phone_number)
+                if (leader1Id != null) {
+                    Map<String, Object> leader1 = getOperatorDetailsById(leader1Id);
+                    unit.put("leader1_name", leader1 != null ? leader1.get("name") : null);
+                    unit.put("leader1_role", leader1 != null ? leader1.get("role") : null);
+                    unit.put("leader1_join_date", leader1 != null ? leader1.get("join_date") : null);
+                    unit.put("leader1_phone", leader1 != null ? leader1.get("phone_number") : null);
+                } else {
+                    unit.put("leader1_name", null);
+                    unit.put("leader1_role", null);
+                    unit.put("leader1_join_date", null);
+                    unit.put("leader1_phone", null);
                 }
-                unit.put("member_count", memberCount);
-                log.debug("Unit {} has member_count: {}", node.get("name").asText(), memberCount);
+
+                if (leader2Id != null) {
+                    Map<String, Object> leader2 = getOperatorDetailsById(leader2Id);
+                    unit.put("leader2_name", leader2 != null ? leader2.get("name") : null);
+                    unit.put("leader2_role", leader2 != null ? leader2.get("role") : null);
+                    unit.put("leader2_join_date", leader2 != null ? leader2.get("join_date") : null);
+                    unit.put("leader2_phone", leader2 != null ? leader2.get("phone_number") : null);
+                } else {
+                    unit.put("leader2_name", null);
+                    unit.put("leader2_role", null);
+                    unit.put("leader2_join_date", null);
+                    unit.put("leader2_phone", null);
+                }
+
+                // Calculate actual member count by querying operators
+                int actualMemberCount = countUnitMembers(unitId);
+                unit.put("member_count", actualMemberCount);
+                log.debug("Unit {} has actual member_count: {}", node.get("name").asText(), actualMemberCount);
 
                 unit.put("created_at", node.get("created_at").asText());
                 units.add(unit);
@@ -341,12 +390,17 @@ public class UnitService {
      */
     public void removeMember(String unitId, String operatorId) {
         try {
-            // First, remove organization_code and organization_name from operator
+            // Get unit details to check if this operator is a leader
+            Map<String, Object> unit = getUnitById(unitId);
+            String leader1Id = (String) unit.get("operator_leader1_id");
+            String leader2Id = (String) unit.get("operator_leader2_id");
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("apikey", supabaseConfig.getSupabaseKey());
             headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
 
+            // Remove organization_code and organization_name from operator
             Map<String, Object> operatorUpdate = new HashMap<>();
             operatorUpdate.put("organization_code", null);
             operatorUpdate.put("organization_name", null);
@@ -354,14 +408,28 @@ public class UnitService {
             String operatorUrl = supabaseConfig.getApiUrl() + "/operator?id=eq." + operatorId;
             executePatchRequest(operatorUrl, operatorUpdate, headers);
 
+            // If removing a leader, also remove from unit's leader fields
+            Map<String, Object> unitUpdate = new HashMap<>();
+            boolean needsUnitUpdate = false;
+
+            if (operatorId.equals(leader1Id)) {
+                unitUpdate.put("operator_leader1_id", null);
+                needsUnitUpdate = true;
+                log.info("Removing leader1 from unit {}", unitId);
+            }
+
+            if (operatorId.equals(leader2Id)) {
+                unitUpdate.put("operator_leader2_id", null);
+                needsUnitUpdate = true;
+                log.info("Removing leader2 from unit {}", unitId);
+            }
+
             // Update unit's member_count by counting actual members
             int actualMemberCount = countUnitMembers(unitId);
-
-            Map<String, Object> updateData = new HashMap<>();
-            updateData.put("member_count", actualMemberCount);
+            unitUpdate.put("member_count", actualMemberCount);
 
             String url = supabaseConfig.getApiUrl() + "/dispatch_force?id=eq." + unitId;
-            executePatchRequest(url, updateData, headers);
+            executePatchRequest(url, unitUpdate, headers);
 
             log.info("Member removed from unit {}: operator {}. New member count: {}",
                      unitId, operatorId, actualMemberCount);
@@ -440,9 +508,15 @@ public class UnitService {
 
     /**
      * Get unit members (operators assigned to this unit)
+     * Includes both regular members and leaders
      */
     public List<Map<String, Object>> getUnitMembers(String unitId) {
         try {
+            // First get unit details to get leader IDs
+            Map<String, Object> unit = getUnitById(unitId);
+            String leader1Id = (String) unit.get("operator_leader1_id");
+            String leader2Id = (String) unit.get("operator_leader2_id");
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("apikey", supabaseConfig.getSupabaseKey());
@@ -450,7 +524,9 @@ public class UnitService {
 
             // Query operators where organization_code matches unitId
             String url = supabaseConfig.getApiUrl() + "/operator?organization_code=eq." + unitId +
-                         "&select=id,name,operator_id,role,organization_name";
+                         "&select=id,name,operator_id,role,organization_name,organization_code,phone_number,join_date";
+
+            log.info("Querying unit members with URL: {}", url);
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -461,21 +537,58 @@ public class UnitService {
                     String.class
             );
 
+            log.info("Response from getUnitMembers for unit {}: {}", unitId, response.getBody());
+
             JsonNode jsonArray = objectMapper.readTree(response.getBody());
             List<Map<String, Object>> members = new ArrayList<>();
+            Set<String> addedMemberIds = new HashSet<>();
 
+            // Add regular members
             for (JsonNode node : jsonArray) {
                 Map<String, Object> member = new HashMap<>();
-                member.put("id", node.get("id").asText());
+                String memberId = node.get("id").asText();
+                member.put("id", memberId);
                 member.put("name", node.get("name").asText());
                 member.put("operator_id", node.get("operator_id").asText());
                 member.put("role", node.has("role") && !node.get("role").isNull() ? node.get("role").asText() : null);
                 member.put("organization_name", node.has("organization_name") && !node.get("organization_name").isNull()
                     ? node.get("organization_name").asText() : null);
+                member.put("phone_number", node.has("phone_number") && !node.get("phone_number").isNull()
+                    ? node.get("phone_number").asText() : null);
+                member.put("join_date", node.has("join_date") && !node.get("join_date").isNull()
+                    ? node.get("join_date").asText() : null);
+
+                // Mark if this member is a leader
+                if (memberId.equals(leader1Id)) {
+                    member.put("position", "팀장");
+                } else if (memberId.equals(leader2Id)) {
+                    member.put("position", "부팀장");
+                } else {
+                    member.put("position", null);
+                }
+
                 members.add(member);
+                addedMemberIds.add(memberId);
             }
 
-            log.info("Found {} members for unit {}", members.size(), unitId);
+            // Add leaders if they are not already in the member list
+            if (leader1Id != null && !addedMemberIds.contains(leader1Id)) {
+                Map<String, Object> leader = getOperatorById(leader1Id);
+                if (leader != null) {
+                    leader.put("position", "팀장");
+                    members.add(0, leader); // Add at the beginning
+                }
+            }
+
+            if (leader2Id != null && !addedMemberIds.contains(leader2Id)) {
+                Map<String, Object> deputy = getOperatorById(leader2Id);
+                if (deputy != null) {
+                    deputy.put("position", "부팀장");
+                    members.add(leader1Id != null && !addedMemberIds.contains(leader1Id) ? 1 : 0, deputy);
+                }
+            }
+
+            log.info("Found {} total members (including leaders) for unit {}", members.size(), unitId);
             return members;
 
         } catch (Exception e) {
@@ -515,12 +628,108 @@ public class UnitService {
             unit.put("id", unitNode.get("id").asText());
             unit.put("name", unitNode.get("name").asText());
             unit.put("member_count", unitNode.get("member_count").asInt());
+            unit.put("operator_leader1_id", unitNode.has("operator_leader1_id") && !unitNode.get("operator_leader1_id").isNull()
+                ? unitNode.get("operator_leader1_id").asText() : null);
+            unit.put("operator_leader2_id", unitNode.has("operator_leader2_id") && !unitNode.get("operator_leader2_id").isNull()
+                ? unitNode.get("operator_leader2_id").asText() : null);
 
             return unit;
 
         } catch (Exception e) {
             log.error("Error fetching unit by ID", e);
             throw new RuntimeException("Failed to fetch unit: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get operator by ID
+     */
+    private Map<String, Object> getOperatorById(String operatorId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            String url = supabaseConfig.getApiUrl() + "/operator?id=eq." + operatorId +
+                         "&select=id,name,operator_id,role,organization_name,organization_code";
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            JsonNode jsonArray = objectMapper.readTree(response.getBody());
+            if (jsonArray.isEmpty()) {
+                return null;
+            }
+
+            JsonNode node = jsonArray.get(0);
+            Map<String, Object> operator = new HashMap<>();
+            operator.put("id", node.get("id").asText());
+            operator.put("name", node.get("name").asText());
+            operator.put("operator_id", node.get("operator_id").asText());
+            operator.put("role", node.has("role") && !node.get("role").isNull() ? node.get("role").asText() : null);
+            operator.put("organization_name", node.has("organization_name") && !node.get("organization_name").isNull()
+                ? node.get("organization_name").asText() : null);
+
+            return operator;
+
+        } catch (Exception e) {
+            log.error("Error fetching operator by ID: {}", operatorId, e);
+            return null;
+        }
+    }
+
+    /**
+     * Get operator details by ID (including role, join_date, and phone_number)
+     */
+    private Map<String, Object> getOperatorDetailsById(String operatorId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            String url = supabaseConfig.getApiUrl() + "/operator?id=eq." + operatorId +
+                         "&select=id,name,operator_id,role,organization_name,organization_code,join_date,phone_number";
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            JsonNode jsonArray = objectMapper.readTree(response.getBody());
+            if (jsonArray.isEmpty()) {
+                return null;
+            }
+
+            JsonNode node = jsonArray.get(0);
+            Map<String, Object> operator = new HashMap<>();
+            operator.put("id", node.get("id").asText());
+            operator.put("name", node.get("name").asText());
+            operator.put("operator_id", node.get("operator_id").asText());
+            operator.put("role", node.has("role") && !node.get("role").isNull() ? node.get("role").asText() : null);
+            operator.put("organization_name", node.has("organization_name") && !node.get("organization_name").isNull()
+                ? node.get("organization_name").asText() : null);
+            operator.put("join_date", node.has("join_date") && !node.get("join_date").isNull()
+                ? node.get("join_date").asText() : null);
+            operator.put("phone_number", node.has("phone_number") && !node.get("phone_number").isNull()
+                ? node.get("phone_number").asText() : null);
+
+            return operator;
+
+        } catch (Exception e) {
+            log.error("Error fetching operator details by ID: {}", operatorId, e);
+            return null;
         }
     }
 }

@@ -53,8 +53,12 @@ supabase:
 
 # Kakao Map API 설정 (Optional)
 kakao:
-  api:
-    key: ${KAKAO_MAPS_API_KEY:}
+  maps:
+    api:
+      key: ${KAKAO_MAPS_API_KEY:}
+    javascript:
+      api:
+        key: ${KAKAO_MAPS_JAVASCRIPT_API_KEY:}
   rest:
     api:
       key: ${KAKAO_REST_API_KEY:}

@@ -1263,6 +1263,7 @@ Preferences</p>
                         name: result.name,
                         id: result.id,
                         role: result.role,
+                        organizationCode: result.organizationCode,
                         organizationName: result.organizationName,
                         joinDate: result.joinDate,
                         photoUrl: result.photoUrl
@@ -1308,7 +1309,7 @@ Preferences</p>
 
                 // Format: 이름 역할(소속)
                 const role = user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Operator';
-                const organization = user.organizationName || '접수1팀';
+                const organization = user.organizationName || 'Unknown Organization';
                 userInfoText.textContent = `${user.name} ${role}(${organization})`;
             } else {
                 // User is not logged in

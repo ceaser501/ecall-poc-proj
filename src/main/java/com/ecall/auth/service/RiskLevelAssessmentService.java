@@ -86,13 +86,21 @@ public class RiskLevelAssessmentService {
 
     private String buildRiskAssessmentPrompt(String transcript) {
         return """
-            Analyze the following emergency call transcript and assess the risk level on a scale of 1-5:
+            Analyze the following emergency call transcript and assess the risk level on a scale of 1-5.
+            Pay careful attention to immediate threats and dangerous situations.
 
-            - Level 1: Very Low Risk (minor inquiry, non-urgent)
-            - Level 2: Low Risk (requires attention but not urgent)
-            - Level 3: Moderate Risk (potentially dangerous situation)
-            - Level 4: High Risk (serious danger, immediate response needed)
-            - Level 5: Critical Risk (life-threatening, multiple casualties)
+            - Level 1: Very Low Risk (minor inquiry, information request, non-urgent issues)
+            - Level 2: Low Risk (property damage, noise complaints, parking issues, minor disputes)
+            - Level 3: Moderate Risk (minor injuries, non-violent theft, minor accidents)
+            - Level 4: High Risk (serious injuries, assault, weapons involved, fire, threats of violence, someone being chased)
+            - Level 5: Critical Risk (life-threatening emergencies: not breathing, cardiac arrest, severe bleeding, active violence with weapons, imminent danger to life)
+
+            Important criteria for high risk assessment:
+            - Weapons (knives, guns, etc.) mentioned = Level 4-5
+            - Active chase or pursuit = Level 4-5
+            - Threats of violence or assault = Level 4-5
+            - Blood, severe injury = Level 4-5
+            - Fire or explosion = Level 4-5
 
             Transcript:
             """ + transcript + """
