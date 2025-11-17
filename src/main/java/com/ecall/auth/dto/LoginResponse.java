@@ -16,6 +16,7 @@ public class LoginResponse {
     private String name;
     private String id;
     private String role;
+    private String organizationCode;
     private String organizationName;
     private String joinDate;
     private String photoUrl;
