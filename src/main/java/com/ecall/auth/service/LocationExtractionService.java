@@ -66,7 +66,7 @@ public class LocationExtractionService {
             String userPrompt = "Extract the location from this emergency call transcript:\n\n" + transcript;
 
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "gpt-3.5-turbo");
+            requestBody.put("model", "gpt-4o-mini");
             requestBody.put("messages", new Object[]{
                     Map.of("role", "system", "content", systemPrompt),
                     Map.of("role", "user", "content", userPrompt)
