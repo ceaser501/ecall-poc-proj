@@ -61,7 +61,6 @@ public class RiskAssessmentController {
             log.info("Risk assessment complete: level={}, reason={}", severityLevel, reason);
 
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             log.error("Error in risk assessment endpoint: {}", e.getMessage(), e);
             return ResponseEntity.ok(Map.of(

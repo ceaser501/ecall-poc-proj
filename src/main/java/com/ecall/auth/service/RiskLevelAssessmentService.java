@@ -187,7 +187,6 @@ public class RiskLevelAssessmentService {
             this.level = level;
             this.reason = reason;
         }
-
         public int getLevel() {
             return level;
         }
