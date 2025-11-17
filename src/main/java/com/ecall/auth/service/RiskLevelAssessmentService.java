@@ -45,7 +45,7 @@ public class RiskLevelAssessmentService {
             String prompt = buildRiskAssessmentPrompt(transcript);
 
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "gpt-3.5-turbo");
+            requestBody.put("model", "gpt-4o-mini");
             requestBody.put("messages", List.of(
                 Map.of("role", "system", "content", "You are an emergency call risk assessment expert. Analyze the transcript and provide a risk level (1-5) and reason."),
                 Map.of("role", "user", "content", prompt)
@@ -86,8 +86,8 @@ public class RiskLevelAssessmentService {
 
     private String buildRiskAssessmentPrompt(String transcript) {
         return """
-            Analyze the following emergency call transcript and assess the risk level on a scale of 1-5.
-            Pay careful attention to immediate threats and dangerous situations.
+            You are an emergency risk assessment expert. Analyze this emergency call transcript and assess the risk level on a scale of 1-5.
+            BE AGGRESSIVE in identifying threats - err on the side of higher risk levels when weapons, violence, or danger are mentioned.
 
             - Level 1: Very Low Risk (minor inquiry, information request, non-urgent issues)
             - Level 2: Low Risk (property damage, noise complaints, parking issues, minor disputes)
@@ -95,12 +95,18 @@ public class RiskLevelAssessmentService {
             - Level 4: High Risk (serious injuries, assault, weapons involved, fire, threats of violence, someone being chased)
             - Level 5: Critical Risk (life-threatening emergencies: not breathing, cardiac arrest, severe bleeding, active violence with weapons, imminent danger to life)
 
-            Important criteria for high risk assessment:
-            - Weapons (knives, guns, etc.) mentioned = Level 4-5
-            - Active chase or pursuit = Level 4-5
-            - Threats of violence or assault = Level 4-5
-            - Blood, severe injury = Level 4-5
-            - Fire or explosion = Level 4-5
+            CRITICAL ESCALATION CRITERIA (automatically Level 4-5):
+            - ANY weapon mentioned (knife, gun, blade, stick, bat, etc.) = Minimum Level 4
+            - Active chase or pursuit = Minimum Level 4
+            - Someone running away from attacker = Minimum Level 4
+            - Threats of violence or assault = Minimum Level 4
+            - Blood or severe injury = Minimum Level 4
+            - Fire, smoke, or explosion = Minimum Level 4
+            - Multiple attackers or victims = Minimum Level 4
+            - If weapon is ACTIVELY being used to threaten or harm = Level 5
+            - If someone is in immediate mortal danger = Level 5
+
+            IMPORTANT: If you see words like "knife", "칼", "weapon", "무기", "chase", "쫓", "following", "뒤에서", "running away", "도망", "gun", "총" - this is AUTOMATICALLY Level 4 or 5.
 
             Transcript:
             """ + transcript + """

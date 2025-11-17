@@ -508,6 +508,93 @@
             margin-bottom: 0.375rem;
         }
 
+        /* Tooltip styles */
+        .severity-label-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .severity-info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgb(226, 232, 240);
+            color: rgb(71, 85, 105);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: help;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .severity-info-icon:hover {
+            background: rgb(59, 130, 246);
+            color: white;
+        }
+
+        .severity-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 320px;
+            background: rgb(30, 41, 59);
+            color: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.5;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            transition: all 0.2s;
+            pointer-events: none;
+        }
+
+        .severity-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgb(30, 41, 59);
+        }
+
+        .severity-info-icon:hover .severity-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .severity-tooltip-section {
+            margin-bottom: 8px;
+        }
+
+        .severity-tooltip-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .severity-tooltip-title {
+            font-weight: 600;
+            color: rgb(96, 165, 250);
+            margin-bottom: 4px;
+        }
+
+        .severity-tooltip-list {
+            margin: 4px 0 0 0;
+            padding-left: 16px;
+        }
+
+        .severity-tooltip-list li {
+            margin-bottom: 2px;
+        }
+
         .form-input, .form-select {
             width: 100%;
             padding: 0.5rem 0.75rem;
@@ -1663,7 +1750,31 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Severity Level</label>
+                            <label class="form-label">
+                                <span class="severity-label-wrapper">
+                                    Severity Level
+                                    <span class="severity-info-icon">
+                                        ?
+                                        <div class="severity-tooltip">
+                                            <div class="severity-tooltip-section">
+                                                <div class="severity-tooltip-title">AI Risk Assessment System</div>
+                                                Severity levels are automatically assessed using GPT-4o mini through real-time transcript analysis.
+                                            </div>
+                                            <div class="severity-tooltip-section">
+                                                <div class="severity-tooltip-title">Detection Methods</div>
+                                                <ul class="severity-tooltip-list">
+                                                    <li><strong>Keyword Patterns:</strong> Instant detection of critical terms (weapons, violence, injuries)</li>
+                                                    <li><strong>AI Analysis:</strong> Contextual understanding every 60-80 characters of conversation</li>
+                                                </ul>
+                                            </div>
+                                            <div class="severity-tooltip-section">
+                                                <div class="severity-tooltip-title">Critical Triggers (Level 4-5)</div>
+                                                Weapons, active threats, pursuit/chase scenarios, severe injuries, fire/explosions
+                                            </div>
+                                        </div>
+                                    </span>
+                                </span>
+                            </label>
                             <select class="form-input" id="severityLevel">
                                 <option value="">AI analyzing...</option>
                                 <option value="1">Level 1 - Minimal</option>
@@ -3192,9 +3303,10 @@
                 extractLocationWithAI();
             }
 
-            // Periodically assess risk level with AI (every 200 characters of transcript)
+            // Periodically assess risk level with AI during the call
             // This works in combination with keyword-based detection for comprehensive risk assessment
-            if (accumulatedTranscript.length > 100 && accumulatedTranscript.length % 200 < 50) {
+            // Call AI assessment when we have sufficient new content (every ~80 characters)
+            if (accumulatedTranscript.length > 80) {
                 assessRiskLevelWithAI();
             }
         }
@@ -3224,9 +3336,16 @@
                     console.log(`🚨 Severity UPGRADED: ${previousLevel || 'none'} → Level 5 - CRITICAL (키워드 감지: "${text.substring(0, 50)}...")`);
                 }
             }
-            // Level 4 - High: Serious injury or violence
-            else if ((lowerText.includes('stabbing') || lowerText.includes('찌르') ||
-                      lowerText.includes('shooting') || lowerText.includes('총') || lowerText.includes('shot') ||
+            // Level 4 - High: Serious injury or violence (INCLUDES WEAPONS)
+            else if ((lowerText.includes('knife') || lowerText.includes('칼') ||
+                      lowerText.includes('weapon') || lowerText.includes('무기') ||
+                      lowerText.includes('chase') || lowerText.includes('chasing') || lowerText.includes('쫓') ||
+                      lowerText.includes('following') || lowerText.includes('뒤에서') || lowerText.includes('따라') ||
+                      lowerText.includes('running away') || lowerText.includes('도망') || lowerText.includes('run away') ||
+                      lowerText.includes('stabbing') || lowerText.includes('찌르') || lowerText.includes('stab') ||
+                      lowerText.includes('shooting') || lowerText.includes('총') || lowerText.includes('shot') || lowerText.includes('gun') ||
+                      lowerText.includes('bat') || lowerText.includes('stick') || lowerText.includes('blade') || lowerText.includes('칼날') ||
+                      lowerText.includes('attacking') || lowerText.includes('attack') || lowerText.includes('공격') ||
                       lowerText.includes('heart attack') || lowerText.includes('심장') ||
                       lowerText.includes('chest pain') || lowerText.includes('가슴통증') ||
                       lowerText.includes('severe pain') || lowerText.includes('심한통증') ||
@@ -3294,9 +3413,10 @@
 
         async function assessRiskLevelWithAI() {
             // Avoid duplicate calls and only call if transcript has grown significantly
+            // Reduced threshold to 60 characters for more frequent real-time updates
             if (aiRiskAssessmentInProgress ||
                 accumulatedTranscript.length < 50 ||
-                accumulatedTranscript.length - lastRiskAssessmentTranscriptLength < 100) {
+                accumulatedTranscript.length - lastRiskAssessmentTranscriptLength < 60) {
                 return;
             }
 

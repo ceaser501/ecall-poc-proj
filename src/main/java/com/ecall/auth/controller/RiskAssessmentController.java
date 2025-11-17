@@ -39,7 +39,7 @@ public class RiskAssessmentController {
             if (transcript == null || transcript.trim().isEmpty()) {
                 log.warn("Empty transcript received for risk assessment");
                 return ResponseEntity.ok(Map.of(
-                    "severityLevel", 3,
+                    "level", 3,
                     "reason", "No transcript provided"
                 ));
             }
@@ -55,17 +55,17 @@ public class RiskAssessmentController {
             String reason = (String) assessment.get("reason");
 
             Map<String, Object> response = new HashMap<>();
-            response.put("severityLevel", severityLevel);
+            response.put("level", severityLevel);  // Changed from "severityLevel" to match frontend expectation
             response.put("reason", reason);
 
-            log.info("Risk assessment complete: severityLevel={}, reason={}", severityLevel, reason);
+            log.info("Risk assessment complete: level={}, reason={}", severityLevel, reason);
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             log.error("Error in risk assessment endpoint: {}", e.getMessage(), e);
             return ResponseEntity.ok(Map.of(
-                "severityLevel", 3,
+                "level", 3,
                 "reason", "Error during assessment: " + e.getMessage()
             ));
         }
