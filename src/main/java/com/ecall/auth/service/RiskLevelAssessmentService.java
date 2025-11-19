@@ -86,27 +86,43 @@ public class RiskLevelAssessmentService {
 
     private String buildRiskAssessmentPrompt(String transcript) {
         return """
-            You are an emergency risk assessment expert. Analyze this emergency call transcript and assess the risk level on a scale of 1-5.
-            BE AGGRESSIVE in identifying threats - err on the side of higher risk levels when weapons, violence, or danger are mentioned.
+            You are an emergency risk assessment expert. Analyze this emergency call transcript and assess the risk level (위험도) on a scale of 1-5.
 
-            - Level 1: Very Low Risk (minor inquiry, information request, non-urgent issues)
-            - Level 2: Low Risk (property damage, noise complaints, parking issues, minor disputes)
-            - Level 3: Moderate Risk (minor injuries, non-violent theft, minor accidents)
-            - Level 4: High Risk (serious injuries, assault, weapons involved, fire, threats of violence, someone being chased)
-            - Level 5: Critical Risk (life-threatening emergencies: not breathing, cardiac arrest, severe bleeding, active violence with weapons, imminent danger to life)
+            **Severity Level Guidelines (위험도 5단계 기준):**
 
-            CRITICAL ESCALATION CRITERIA (automatically Level 4-5):
-            - ANY weapon mentioned (knife, gun, blade, stick, bat, etc.) = Minimum Level 4
-            - Active chase or pursuit = Minimum Level 4
-            - Someone running away from attacker = Minimum Level 4
-            - Threats of violence or assault = Minimum Level 4
-            - Blood or severe injury = Minimum Level 4
-            - Fire, smoke, or explosion = Minimum Level 4
-            - Multiple attackers or victims = Minimum Level 4
-            - If weapon is ACTIVELY being used to threaten or harm = Level 5
-            - If someone is in immediate mortal danger = Level 5
+            **Level 5 (최고): Immediate Life Threat (즉시 생명 위협)**
+            - Examples: Cardiac arrest (심정지), Active stabbing/shooting (칼부림/총격 현행범), Severe building fire (건물 전소)
+            - Keywords: not breathing(호흡없음), cardiac arrest(심정지), unconscious(의식없음), severe bleeding(대량출혈),
+                        active weapon use(무기 사용 중), building on fire(건물 화재), explosion(폭발)
 
-            IMPORTANT: If you see words like "knife", "칼", "weapon", "무기", "chase", "쫓", "following", "뒤에서", "running away", "도망", "gun", "총" - this is AUTOMATICALLY Level 4 or 5.
+            **Level 4 (높음): Severe/Urgent - Can worsen if delayed (중증/긴급 - 지체 시 악화 가능)**
+            - Examples: Serious injuries(중상), assault in progress(폭행 진행 중), weapon threats(무기 위협),
+                        someone being chased(추격당함), fire with smoke(연기가 있는 화재)
+            - Keywords: weapon(무기), knife(칼), gun(총), chase(쫓음), following(뒤따름), serious injury(중상),
+                        fire(불), smoke(연기), assault(폭행), threat(위협)
+            - Context: Danger is present and active
+
+            **Level 3 (보통): Moderate Accident/Patient (보통 사고/환자 - 급격 악화 징후 적음)**
+            - Examples: Minor injuries(경상), minor car accident(경미한 교통사고), mild pain(가벼운 통증)
+            - Keywords: minor injury(경미한 부상), small accident(작은 사고), fell down(넘어짐), minor bleeding(가벼운 출혈)
+            - Context: Stable situation, no immediate threat
+
+            **Level 2 (낮음): Minor/Confirmation Request (경미/확인 요청 - 현재 위험 거의 없음)**
+            - Examples: Property damage(재산 피해), noise complaint(소음 민원), minor dispute(사소한 분쟁)
+            - Keywords: noise(소음), parking(주차), complaint(민원), check(확인), information(정보)
+
+            **Level 1 (최저): No Dispatch Needed (출동 불필요 - 기록/이관할 민원성 신고)**
+            - Examples: General inquiry(일반 문의), information request(정보 요청), wrong number(오인 신고)
+            - Keywords: inquiry(문의), question(질문), information(정보), wrong call(잘못 건 전화)
+
+            **Assessment Rules:**
+            1. Look for ACTUAL danger indicators, not just keywords
+            2. Consider CONTEXT - Is the threat active or past?
+            3. Assess SEVERITY - How immediate is the danger?
+            4. If weapon is mentioned + someone is in danger NOW → Level 4-5
+            5. If fire/explosion is ACTIVE → Level 4-5
+            6. If it's just an inquiry or past event → Level 1-2
+            7. BE AGGRESSIVE with weapon/violence/fire scenarios - err on the side of HIGHER levels
 
             Transcript:
             """ + transcript + """

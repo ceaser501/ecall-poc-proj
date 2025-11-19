@@ -3309,16 +3309,8 @@
                     incidentTypeEl.value = 'medical';
                     updateChecklist(true);
                 }
-                // Priority 4: Traffic (vehicle-related incidents)
-                else if (lowerText.includes('accident') || lowerText.includes('사고') ||
-                         lowerText.includes('crash') || lowerText.includes('충돌') ||
-                         lowerText.includes('car') || lowerText.includes('차량') || lowerText.includes('교통') ||
-                         lowerText.includes('hit') || lowerText.includes('부딪') ||
-                         lowerText.includes('vehicle') || lowerText.includes('자동차')) {
-                    incidentTypeEl.value = 'traffic';
-                    updateChecklist(true);
-                }
-                // Priority 5: Rescue (trapped, buried, water, high-rise isolation, elevator)
+                // Priority 4: Rescue (trapped, buried, water, high-rise isolation, elevator)
+                // IMPORTANT: Check rescue BEFORE traffic to avoid "car" (elevator car) being misclassified as traffic
                 else if (lowerText.includes('trapped') || lowerText.includes('갇') ||
                          lowerText.includes('stuck') || lowerText.includes('끼') ||
                          lowerText.includes('elevator') || lowerText.includes('엘리베이터') || lowerText.includes('승강기') ||
@@ -3327,6 +3319,15 @@
                          lowerText.includes('drowning') || lowerText.includes('익수') ||
                          lowerText.includes('isolated') || lowerText.includes('고립')) {
                     incidentTypeEl.value = 'rescue';
+                    updateChecklist(true);
+                }
+                // Priority 5: Traffic (vehicle-related incidents)
+                else if (lowerText.includes('accident') || lowerText.includes('사고') ||
+                         lowerText.includes('crash') || lowerText.includes('충돌') ||
+                         lowerText.includes('car') || lowerText.includes('차량') || lowerText.includes('교통') ||
+                         lowerText.includes('hit') || lowerText.includes('부딪') ||
+                         lowerText.includes('vehicle') || lowerText.includes('자동차')) {
+                    incidentTypeEl.value = 'traffic';
                     updateChecklist(true);
                 }
                 // Priority 6: Other (non-urgent, general inquiries)
@@ -4444,90 +4445,98 @@
             const hasRescue = (team.leader1_role && team.leader1_role.toLowerCase().includes('rescue')) ||
                             (team.leader2_role && team.leader2_role.toLowerCase().includes('rescue'));
 
-            // === INCIDENT TYPE MATCHING (HIGHEST PRIORITY) ===
-            // Crime situations
+            // === INCIDENT TYPE MATCHING WITH STRICT TEAM TYPE FILTERING ===
+            // IMPORTANT: Only teams with appropriate specialization should score high
+
+            // Crime situations - ONLY Police teams
             if (incidentType === 'crime' || transcriptAnalysis.crimeInProgress) {
                 if (hasPolice) {
-                    score += 80;
+                    score += 100;  // Strong match
                     reasons.push('Specialized crime response team');
-                    // Medical only if actual injury
                     if (transcriptAnalysis.actualInjury && hasMedical) {
                         score += 30;
-                        reasons.push('Capable of treating injured (medical staff present)');
-                    } else if (!transcriptAnalysis.actualInjury && !hasMedical) {
-                        // Bonus for NOT having medical staff when no injury
-                        score += 15;
+                        reasons.push('Medical staff available for injured victims');
                     }
                 } else {
-                    score -= 40; // Heavy penalty for non-police team in crime situation
+                    score -= 1000; // Effectively eliminate non-police teams
                 }
             }
 
-            // Fire emergencies
-            else if (incidentType === 'fire' || transcriptAnalysis.fireEmergency) {
+            // Disaster situations (fire/explosion/natural disaster) - ONLY Firefighter teams
+            else if (incidentType === 'disaster' || transcriptAnalysis.fireEmergency || transcriptAnalysis.naturalDisaster) {
                 if (hasFirefighter) {
-                    score += 80;
-                    reasons.push('Specialized fire suppression team');
+                    score += 100;  // Strong match
+                    reasons.push('Specialized fire/disaster response team');
                     if (memberCount >= 4) {
                         score += 20;
-                        reasons.push(`${memberCount}-member large team - Suitable for fire response`);
+                        reasons.push(`${memberCount}-member team - Suitable for large-scale disaster`);
                     }
                 } else {
-                    score -= 40;
+                    score -= 1000; // Effectively eliminate non-firefighter teams
                 }
             }
 
-            // Rescue operations
+            // Rescue operations - BOTH Rescue teams AND Firefighter teams
             else if (incidentType === 'rescue' || transcriptAnalysis.rescueNeeded) {
                 if (hasRescue) {
-                    score += 100;  // Increased from 80 to ensure rescue teams win
+                    score += 120;  // Strongest preference
                     reasons.push('Specialized rescue operations team');
                     if (avgExperience >= 5) {
-                        score += 30;  // Increased from 25
-                        reasons.push(`${avgExperience.toFixed(1)} years experience - Capable of complex rescue`);
+                        score += 30;
+                        reasons.push(`${avgExperience.toFixed(1)} years rescue experience`);
                     }
                 } else if (hasFirefighter) {
-                    // Fire teams can also handle some rescues (elevator, etc.)
-                    score += 50;
-                    reasons.push('Fire team - Capable of rescue operations');
-                } else if (avgExperience >= 5) {
-                    score += 30; // Experienced team can handle rescue
-                    reasons.push(`${avgExperience.toFixed(1)} years experience - Rescue experience`);
-                } else {
-                    score -= 30;  // Increased penalty from -20 to discourage non-rescue teams
-                }
-            }
-
-            // Medical emergencies
-            else if (incidentType === 'emergency' || transcriptAnalysis.medicalEmergency) {
-                if (hasMedical) {
-                    score += 70;
-                    if (transcriptAnalysis.actualInjury) {
-                        reasons.push('Actual injury - Medical staff required');
-                    } else if (transcriptAnalysis.criticalCondition) {
-                        reasons.push('Critical condition - Medical staff on standby');
-                    } else if (transcriptAnalysis.elderlyOrChild) {
-                        reasons.push('Vulnerable population report - Medical staff present');
-                    } else {
-                        reasons.push('Capable of emergency response');
+                    // Firefighters commonly handle rescue situations in real-world scenarios
+                    score += 110;
+                    reasons.push('Fire team - Equipped for rescue operations');
+                    if (memberCount >= 4) {
+                        score += 20;
+                        reasons.push(`${memberCount}-member team - Suitable for complex rescue`);
                     }
-                } else if (transcriptAnalysis.actualInjury) {
-                    score -= 50; // Heavy penalty for no medical staff when injured
                 } else {
-                    score += 10; // Slight preference for medical, but not critical
+                    score -= 1000; // Eliminate teams without rescue capability
                 }
             }
 
-            // Traffic accidents
+            // Medical emergencies - ONLY Medical teams
+            else if (incidentType === 'medical' || transcriptAnalysis.medicalEmergency) {
+                if (hasMedical) {
+                    score += 100;  // Strong match
+                    if (transcriptAnalysis.actualInjury) {
+                        reasons.push('Medical emergency - EMT team required');
+                        score += 20;
+                    } else if (transcriptAnalysis.criticalCondition) {
+                        reasons.push('Critical condition - EMT standby');
+                        score += 15;
+                    } else {
+                        reasons.push('Medical emergency response team');
+                    }
+                } else {
+                    score -= 1000; // Eliminate non-medical teams
+                }
+            }
+
+            // Traffic accidents - Medical OR Police teams
             else if (incidentType === 'traffic' || transcriptAnalysis.traumaEmergency) {
                 if (hasMedical) {
-                    score += 50;
-                    reasons.push('Traffic accident - Medical response');
+                    score += 80;
+                    reasons.push('Traffic accident - Medical response for injuries');
+                    if (memberCount >= 3) {
+                        score += 15;
+                        reasons.push('Sufficient personnel for accident scene');
+                    }
+                } else if (hasPolice) {
+                    score += 70;
+                    reasons.push('Traffic accident - Scene control and investigation');
+                } else {
+                    score -= 1000; // Eliminate other teams
                 }
-                if (memberCount >= 3) {
-                    score += 20;
-                    reasons.push('Personnel capable of accident scene control');
-                }
+            }
+
+            // Other (non-emergency/inquiry) - Allow all teams but with lower priority
+            else if (incidentType === 'other') {
+                score += 20;  // Low base score for all teams
+                reasons.push('General response team');
             }
 
             // === TEAM SIZE MATCHING ===
