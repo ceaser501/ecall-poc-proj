@@ -881,8 +881,7 @@ Department Management</p>
 Keyword Search</p>
                     <div class="card-footer">
                         <span>Get Started</span>
-                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </div>
+                        <svg class="card-arrow" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>                    </div>
                 </div>
             </div>
 
@@ -929,7 +928,7 @@ Preferences</p>
     <!-- Footer -->
     <div class="footer">
         <p>&copy; 2025 E-Call Assistant. All rights reserved.</p>
-        <p>Emergency Call Analysis System POC</p>
+        p>Emergency Call Analysis System POC</p>
     </div>
 
     <!-- Login Modal -->
@@ -1036,11 +1035,11 @@ Preferences</p>
 
     <script>
         function navigateTo(url) {
-            // ecall-assistant.html로 이동 시 로그인 체크
-            if (url === 'ecall-assistant.html') {
+            // ecall-assistant.html 또는 ecall-dashboard.html로 이동 시 로그인 체크
+            if (url === 'ecall-assistant.html' || url === 'ecall-dashboard.html') {
                 const user = JSON.parse(sessionStorage.getItem('user'));
                 if (!user) {
-                    showToast('error', 'Login Required', 'Please login to access Report Reception');
+                    showToast('error', 'Login Required', 'Please login to access this page');
                     return;
                 }
             }
