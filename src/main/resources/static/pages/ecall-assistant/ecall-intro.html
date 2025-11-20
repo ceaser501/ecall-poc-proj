@@ -1035,8 +1035,8 @@ Preferences</p>
 
     <script>
         function navigateTo(url) {
-            // ecall-assistant.html 또는 ecall-dashboard.html로 이동 시 로그인 체크
-            if (url === 'ecall-assistant.html' || url === 'ecall-dashboard.html') {
+            // ecall-assistant.html, ecall-dashboard.html, dispatch-console.html로 이동 시 로그인 체크
+            if (url === 'ecall-assistant.html' || url === 'ecall-dashboard.html' || url === 'dispatch-console.html') {
                 const user = JSON.parse(sessionStorage.getItem('user'));
                 if (!user) {
                     showToast('error', 'Login Required', 'Please login to access this page');

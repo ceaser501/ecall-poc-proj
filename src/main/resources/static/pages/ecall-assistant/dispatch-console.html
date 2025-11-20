@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dispatch Console - E-Call Assistant</title>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3d8af1dddd94ffe1e0d8465532d945f2&libraries=services,drawing"></script>
     <style>
         * {
             margin: 0;
@@ -329,102 +330,9 @@
             position: relative;
             width: 100%;
             height: 310px;
-            background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
             border-radius: 12px;
             overflow: hidden;
             border: 1px solid #e5e7eb;
-        }
-
-        .map-grid {
-            position: absolute;
-            inset: 0;
-            background-image: linear-gradient(#e5e7eb 1px, transparent 1px),
-                            linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
-            background-size: 40px 40px;
-        }
-
-        .map-road-h {
-            position: absolute;
-            top: 33.333%;
-            left: 0;
-            right: 0;
-            height: 64px;
-            background: #e5e7eb;
-            opacity: 0.4;
-        }
-
-        .map-road-v {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 64px;
-            background: #e5e7eb;
-            opacity: 0.4;
-        }
-
-        .map-unit {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-
-        .map-unit:hover {
-            transform: scale(1.1);
-        }
-
-        .map-unit.available { background: #10B981; }
-        .map-unit.dispatched { background: #38BDF8; }
-        .map-unit.en-route { background: #F59E0B; }
-        .map-unit.on-scene { background: #1D4ED8; }
-
-        .map-unit svg {
-            width: 20px;
-            height: 20px;
-            color: white;
-        }
-
-        .incident-marker {
-            position: absolute;
-            width: 48px;
-            height: 48px;
-            margin-left: -24px;
-            margin-top: -24px;
-        }
-
-        .incident-pulse {
-            position: absolute;
-            inset: 0;
-            background: #EF4444;
-            border-radius: 50%;
-            opacity: 0.2;
-            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-
-        @keyframes ping {
-            75%, 100% {
-                opacity: 0;
-                transform: scale(2);
-            }
-        }
-
-        .unit-tooltip {
-            position: absolute;
-            z-index: 10;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            padding: 16px;
-            border: 1px solid #e5e7eb;
-            min-width: 200px;
-            transform: translateX(-50%);
         }
 
         /* Comms */
@@ -760,10 +668,10 @@
             <div class="context-top-row">
                 <div class="context-left">
                     <span class="incident-badge">INC A25-031</span>
-                    <span class="priority-badge">P4(높음)</span>
+                    <span class="priority-badge">P4 (High)</span>
                     <span>medical</span>
                     <span class="text-gray-500">•</span>
-                    <span>서울 강남구 테헤란로 152</span>
+                    <span>Seoul Gangnam-gu Teheran-ro 152</span>
                     <span class="text-gray-500">•</span>
                     <div class="footer-item">
                         <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
@@ -848,14 +756,11 @@
 
         <!-- Center Panel -->
         <div class="center-panel">
-            <!-- Live Map -->
+            <!-- Live Map with Kakao Map -->
             <div class="card live-map">
                 <h2>Live Map</h2>
                 <div class="map-container" id="mapContainer">
-                    <div class="map-grid"></div>
-                    <div class="map-road-h"></div>
-                    <div class="map-road-v"></div>
-                    <!-- Units and incidents will be inserted here -->
+                    <!-- Kakao Map will be rendered here -->
                 </div>
             </div>
 
@@ -966,6 +871,8 @@
         let activeTab = 'units';
         let rightDockTab = 'roster';
         let searchQuery = '';
+        let map = null;
+        let markers = [];
 
         // Data
         const assignments = [
@@ -975,19 +882,19 @@
         ];
 
         const timelineEvents = [
-            { time: '10:12', event: '지시' },
-            { time: '10:22', event: '출동' },
-            { time: '10:29', event: '도착' },
-            { time: '10:31', event: 'EMS-1 현장 도착' },
-            { time: '10:34', event: 'Fire-3 출동' }
+            { time: '10:12', event: 'Dispatch' },
+            { time: '10:22', event: 'En-route' },
+            { time: '10:29', event: 'Arrived' },
+            { time: '10:31', event: 'EMS-1 On Scene' },
+            { time: '10:34', event: 'Fire-3 Dispatched' }
         ];
 
         const units = [
-            { id: 'EMS-1', type: 'EMS', status: 'en-route', position: { x: 35, y: 45 }, incident: 'A25', priority: 'P4', eta: 6 },
-            { id: 'Fire-3', type: 'Fire', status: 'dispatched', position: { x: 25, y: 60 }, incident: 'A25', priority: 'P4', eta: 8 },
-            { id: 'Police-2', type: 'Police', status: 'on-scene', position: { x: 55, y: 35 }, incident: 'A25', priority: 'P4' },
-            { id: 'EMS-5', type: 'EMS', status: 'available', position: { x: 70, y: 50 } },
-            { id: 'Fire-1', type: 'Fire', status: 'on-scene', position: { x: 80, y: 70 }, incident: 'B07', priority: 'P3' }
+            { id: 'EMS-1', type: 'EMS', status: 'en-route', lat: 37.5050, lng: 127.0490, incident: 'A25', priority: 'P4', eta: 6 },
+            { id: 'Fire-3', type: 'Fire', status: 'dispatched', lat: 37.4950, lng: 127.0390, incident: 'A25', priority: 'P4', eta: 8 },
+            { id: 'Police-2', type: 'Police', status: 'on-scene', lat: 37.5059, lng: 127.0530, incident: 'A25', priority: 'P4' },
+            { id: 'EMS-5', type: 'EMS', status: 'available', lat: 37.5159, lng: 127.0630 },
+            { id: 'Fire-1', type: 'Fire', status: 'on-scene', lat: 37.5259, lng: 127.0730, incident: 'B07', priority: 'P3' }
         ];
 
         const messages = [
@@ -998,16 +905,16 @@
         ];
 
         const allUnits = [
-            { id: 'EMS-1', status: 'En-route', eta: 6, incident: 'A25', location: '테헤란로 152' },
-            { id: 'Fire-3', status: 'Dispatched', eta: 8, incident: 'A25', location: '테헤란로 152' },
-            { id: 'Police-2', status: 'On-scene', incident: 'A25', location: '테헤란로 152' },
+            { id: 'EMS-1', status: 'En-route', eta: 6, incident: 'A25', location: 'Teheran-ro 152' },
+            { id: 'Fire-3', status: 'Dispatched', eta: 8, incident: 'A25', location: 'Teheran-ro 152' },
+            { id: 'Police-2', status: 'On-scene', incident: 'A25', location: 'Teheran-ro 152' },
             { id: 'EMS-5', status: 'Available' },
-            { id: 'Fire-1', status: 'On-scene', incident: 'B07', location: '올림픽대로' }
+            { id: 'Fire-1', status: 'On-scene', incident: 'B07', location: 'Olympic-daero' }
         ];
 
         const allIncidents = [
-            { id: 'A25', priority: 'P4', type: 'medical', location: '테헤란로 152', status: 'Active' },
-            { id: 'B07', priority: 'P3', type: 'traffic', location: '올림픽대로', status: 'Transport' }
+            { id: 'A25', priority: 'P4', type: 'medical', location: 'Teheran-ro 152', status: 'Active', lat: 37.5059, lng: 127.0530 },
+            { id: 'B07', priority: 'P3', type: 'traffic', location: 'Olympic-daero', status: 'Transport', lat: 37.5259, lng: 127.0730 }
         ];
 
         const statusConfig = {
@@ -1019,11 +926,66 @@
             clear: { label: 'Clear', color: '#6B7280', bgColor: '#F3F4F6' }
         };
 
-        const typeIcons = {
-            EMS: 'ambulance',
-            Fire: 'flame',
-            Police: 'shield'
-        };
+        // Initialize Kakao Map
+        function initializeMap() {
+            if (typeof kakao === 'undefined' || typeof kakao.maps === 'undefined') {
+                console.error("Kakao Maps API not loaded.");
+                document.getElementById('mapContainer').innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Kakao Maps API could not be loaded.</div>';
+                return;
+            }
+
+            const mapContainer = document.getElementById('mapContainer');
+            const mapOption = {
+                center: new kakao.maps.LatLng(37.5059, 127.0530), // Seoul Gangnam
+                level: 5
+            };
+
+            map = new kakao.maps.Map(mapContainer, mapOption);
+            renderMapMarkers();
+        }
+
+        function renderMapMarkers() {
+            if (!map) return;
+
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+
+            const visibleUnits = focusMode === 'incident' 
+                ? units.filter(u => u.incident === 'A25')
+                : units;
+
+            // Add incident marker
+            if (activeLayers.incidents) {
+                allIncidents.forEach(incident => {
+                    const position = new kakao.maps.LatLng(incident.lat, incident.lng);
+                    const content = `<div style="padding:5px;background:#EF4444;color:white;border-radius:4px;font-size:12px;font-weight:bold;">${incident.id}</div>`;
+                    const customOverlay = new kakao.maps.CustomOverlay({
+                        position: position,
+                        content: content,
+                        yAnchor: 1
+                    });
+                    customOverlay.setMap(map);
+                });
+            }
+
+            // Add unit markers
+            if (activeLayers.units) {
+                visibleUnits.forEach(unit => {
+                    const position = new kakao.maps.LatLng(unit.lat, unit.lng);
+                    const statusColor = statusConfig[unit.status]?.color || '#6B7280';
+                    const content = `<div style="padding:5px 10px;background:${statusColor};color:white;border-radius:6px;font-size:12px;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,0.2);">${unit.id}</div>`;
+                    
+                    const customOverlay = new kakao.maps.CustomOverlay({
+                        position: position,
+                        content: content,
+                        yAnchor: 1
+                    });
+                    customOverlay.setMap(map);
+                    markers.push(customOverlay);
+                });
+            }
+        }
 
         // Render functions
         function renderAssignments() {
@@ -1043,7 +1005,7 @@
                             </span>
                             ${assignment.eta ? `
                                 <span class="text-gray-500">•</span>
-                                <span class="text-sm text-gray-600">ETA ${assignment.eta.toString().padStart(2, '0')}:</span>
+                                <span class="text-sm text-gray-600">ETA ${assignment.eta.toString().padStart(2, '0')} min</span>
                             ` : ''}
                         </div>
                         <div class="assignment-actions-row">
@@ -1088,107 +1050,6 @@
                 </div>
             `).join('');
             lucide.createIcons();
-        }
-
-        function renderMap() {
-            const container = document.getElementById('mapContainer');
-            const visibleUnits = focusMode === 'incident' 
-                ? units.filter(u => u.incident === 'A25')
-                : units;
-
-            // Clear existing units
-            const existingUnits = container.querySelectorAll('.map-unit, .incident-marker, .unit-tooltip, .map-route');
-            existingUnits.forEach(el => el.remove());
-
-            // Render incident marker
-            if (activeLayers.incidents) {
-                const marker = document.createElement('div');
-                marker.className = 'incident-marker';
-                marker.style.left = '55%';
-                marker.style.top = '35%';
-                marker.innerHTML = `
-                    <div class="incident-pulse"></div>
-                    <i data-lucide="map-pin" style="width: 48px; height: 48px; color: #EF4444; fill: #EF4444;"></i>
-                `;
-                container.appendChild(marker);
-            }
-
-            // Render units
-            if (activeLayers.units) {
-                visibleUnits.forEach(unit => {
-                    const unitEl = document.createElement('div');
-                    unitEl.className = `map-unit ${unit.status}`;
-                    unitEl.style.left = `${unit.position.x}%`;
-                    unitEl.style.top = `${unit.position.y}%`;
-                    unitEl.style.marginLeft = '-20px';
-                    unitEl.style.marginTop = '-20px';
-                    unitEl.innerHTML = `<i data-lucide="${typeIcons[unit.type]}" style="width: 20px; height: 20px;"></i>`;
-                    unitEl.onclick = () => handleUnitClick(unit.id);
-                    container.appendChild(unitEl);
-                });
-            }
-
-            // Render routes
-            if (activeLayers.routes) {
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.setAttribute('class', 'map-route');
-                svg.style.position = 'absolute';
-                svg.style.inset = '0';
-                svg.style.width = '100%';
-                svg.style.height = '100%';
-                svg.style.pointerEvents = 'none';
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', 'M 35% 45% Q 45% 40%, 55% 35%');
-                path.setAttribute('stroke', '#F59E0B');
-                path.setAttribute('stroke-width', '3');
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke-dasharray', '8,4');
-                svg.appendChild(path);
-                container.appendChild(svg);
-            }
-
-            lucide.createIcons();
-        }
-
-        function handleUnitClick(unitId) {
-            if (selectedUnit === unitId) {
-                selectedUnit = null;
-                const tooltip = document.querySelector('.unit-tooltip');
-                if (tooltip) tooltip.remove();
-            } else {
-                selectedUnit = unitId;
-                const unit = units.find(u => u.id === unitId);
-                if (unit) {
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'unit-tooltip';
-                    tooltip.style.left = `${unit.position.x}%`;
-                    tooltip.style.top = `${unit.position.y - 15}%`;
-                    const config = statusConfig[unit.status];
-                    tooltip.innerHTML = `
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                <span>${unit.id}</span>
-                                <span class="status-badge" style="color: ${config.color}; background: ${config.bgColor};">
-                                    ${config.label}
-                                </span>
-                            </div>
-                            ${unit.eta ? `<div class="text-sm text-gray-600">ETA: ${unit.eta.toString().padStart(2, '0')} min</div>` : ''}
-                            <button class="btn-primary" style="width: 100%;" onclick="focusOnUnit('${unit.id}')">
-                                <i data-lucide="navigation" style="width: 16px; height: 16px;"></i>
-                                사건 포커스
-                            </button>
-                        </div>
-                    `;
-                    document.getElementById('mapContainer').appendChild(tooltip);
-                    lucide.createIcons();
-                }
-            }
-        }
-
-        function focusOnUnit(unitId) {
-            focusMode = 'incident';
-            updateFocusMode();
-            console.log('Focus on unit:', unitId);
         }
 
         function renderMessages() {
@@ -1368,7 +1229,7 @@
                 quickView.style.display = 'block';
             }
 
-            renderMap();
+            renderMapMarkers();
         }
 
         function setFocusMode(mode) {
@@ -1393,7 +1254,7 @@
                     }
                 }
             });
-            renderMap();
+            renderMapMarkers();
         }
 
         function toggleRightDock() {
@@ -1456,6 +1317,15 @@
             lucide.createIcons();
         }
 
+        function focusOnUnit(unitId) {
+            const unit = units.find(u => u.id === unitId);
+            if (unit && map) {
+                const position = new kakao.maps.LatLng(unit.lat, unit.lng);
+                map.setCenter(position);
+                map.setLevel(3);
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             // Focus toggle
@@ -1483,7 +1353,7 @@
                 const input = document.getElementById('messageInput');
                 if (input.value.trim()) {
                     messages.push({
-                        time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+                        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
                         from: 'Dispatch',
                         message: input.value,
                         type: 'dispatch'
@@ -1496,11 +1366,11 @@
             // Initial render
             renderAssignments();
             renderTimeline();
-            renderMap();
             renderMessages();
             renderQuickView();
             renderRightDock();
             updateFocusMode();
+            initializeMap();
 
             // Update last update time
             setInterval(() => {
@@ -1513,4 +1383,3 @@
     </script>
 </body>
 </html>
-
