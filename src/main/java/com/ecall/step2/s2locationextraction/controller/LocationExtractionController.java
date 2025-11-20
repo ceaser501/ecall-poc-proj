@@ -1,7 +1,9 @@
 package com.ecall.step2.s2locationextraction.controller;
 
+import com.azure.ai.textanalytics.TextAnalyticsClient;
 import com.ecall.step2.s2locationextraction.dto.LocationExtractionResponse;
 import com.ecall.step2.s2locationextraction.service.LocationExtractionService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/step2/location-extraction")
+@ConditionalOnBean(TextAnalyticsClient.class)
 public class LocationExtractionController {
 
     private final LocationExtractionService locationExtractionService;

@@ -7,6 +7,7 @@ import com.ecall.step1.s1speechrecognition.service.AudioConversionService;
 import com.ecall.step1.s1speechrecognition.service.AudioFileRecognitionService;
 import com.ecall.step2.s2locationextraction.dto.AddressInfo;
 import com.ecall.step2.s2locationextraction.dto.LocationExtractionResponse;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service("azureLocationExtractionService")
+@ConditionalOnBean(TextAnalyticsClient.class)
 public class LocationExtractionService {
 
     private final TextAnalyticsClient textAnalyticsClient;

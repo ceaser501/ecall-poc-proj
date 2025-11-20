@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Console - E-Call Assistant</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #F5F7FA;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Context Bar */
+        .context-bar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .context-bar-content {
+            padding: 12px 24px;
+        }
+
+        .context-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .context-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .incident-badge {
+            padding: 4px 12px;
+            background: #1D4ED8;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .priority-badge {
+            padding: 4px 8px;
+            background: #F59E0B;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .context-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .context-bottom-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Focus Toggle */
+        .focus-toggle {
+            display: inline-flex;
+            border-radius: 12px;
+            background: #F5F7FA;
+            padding: 4px;
+        }
+
+        .focus-toggle button {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .focus-toggle button.active {
+            background: white;
+            color: #0F172A;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Layer Chips */
+        .layer-chips {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .layer-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .layer-chip.active {
+            background: #1D4ED8;
+            color: white;
+            border-color: #1D4ED8;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 104px);
+        }
+
+        .left-panel {
+            width: calc(33.333% - 8px);
+            min-width: 380px;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .center-panel {
+            flex: 1;
+            padding: 16px;
+            min-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .right-dock {
+            width: 280px;
+            background: white;
+            border-left: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-dock.collapsed {
+            width: 64px;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #0F172A;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        /* Incident Panel */
+        .incident-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .assignment-card {
+            margin-bottom: 16px;
+        }
+
+        .assignment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .assignment-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            padding: 6px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #1D4ED8;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-icon:hover {
+            background: #F5F7FA;
+        }
+
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: #1D4ED8;
+            color: white;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
+        }
+
+        .assignment-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 12px;
+            background: #F5F7FA;
+            margin-bottom: 8px;
+            transition: all 0.15s;
+        }
+
+        .assignment-row:hover {
+            background: #e5e7eb;
+        }
+
+        .assignment-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .assignment-actions-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-text {
+            padding: 4px 12px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-text:hover {
+            background: white;
+        }
+
+        /* Timeline */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .timeline-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #DBEAFE;
+            color: #1D4ED8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            flex: 1;
+            padding-top: 4px;
+        }
+
+        .timeline-time {
+            font-size: 14px;
+            color: #6b7280;
+            margin-right: 8px;
+        }
+
+        .timeline-event {
+            color: #0F172A;
+        }
+
+        /* Live Map */
+        .live-map {
+            height: 380px;
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 310px;
+            background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .map-grid {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(#e5e7eb 1px, transparent 1px),
+                            linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .map-road-h {
+            position: absolute;
+            top: 33.333%;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: #e5e7eb;
+            opacity: 0.4;
+        }
+
+        .map-road-v {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 64px;
+            background: #e5e7eb;
+            opacity: 0.4;
+        }
+
+        .map-unit {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .map-unit:hover {
+            transform: scale(1.1);
+        }
+
+        .map-unit.available { background: #10B981; }
+        .map-unit.dispatched { background: #38BDF8; }
+        .map-unit.en-route { background: #F59E0B; }
+        .map-unit.on-scene { background: #1D4ED8; }
+
+        .map-unit svg {
+            width: 20px;
+            height: 20px;
+            color: white;
+        }
+
+        .incident-marker {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            margin-left: -24px;
+            margin-top: -24px;
+        }
+
+        .incident-pulse {
+            position: absolute;
+            inset: 0;
+            background: #EF4444;
+            border-radius: 50%;
+            opacity: 0.2;
+            animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ping {
+            75%, 100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+
+        .unit-tooltip {
+            position: absolute;
+            z-index: 10;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            min-width: 200px;
+            transform: translateX(-50%);
+        }
+
+        /* Comms */
+        .comms {
+            height: 180px;
+        }
+
+        .messages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+            height: 80px;
+            overflow-y: auto;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 14px;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .message.dispatch {
+            background: #DBEAFE;
+        }
+
+        .message.unit {
+            background: #F5F7FA;
+        }
+
+        .message-time {
+            color: #6b7280;
+            flex-shrink: 0;
+        }
+
+        .message-from {
+            flex-shrink: 0;
+        }
+
+        .message.dispatch .message-from {
+            color: #1D4ED8;
+        }
+
+        .message.unit .message-from {
+            color: #0F172A;
+        }
+
+        .message-text {
+            color: #374151;
+        }
+
+        .comms-input {
+            display: flex;
+            gap: 8px;
+        }
+
+        .comms-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .comms-input input:focus {
+            outline: none;
+            border-color: #1D4ED8;
+            box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.1);
+        }
+
+        .comms-input button {
+            padding: 8px 16px;
+            background: #1D4ED8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .comms-input button:hover {
+            background: #1e40af;
+        }
+
+        /* Global Quick View */
+        .global-quick-view {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .quick-view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .quick-view-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            background: #F5F7FA;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .quick-view-tab {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .quick-view-tab.active {
+            background: white;
+            color: #0F172A;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-view-content {
+            max-height: 120px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .quick-view-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.15s;
+        }
+
+        .quick-view-item:hover {
+            background: #F5F7FA;
+        }
+
+        /* Right Dock */
+        .right-dock-header {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .right-dock-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .right-dock-tabs {
+            display: flex;
+            gap: 4px;
+            background: #F5F7FA;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .right-dock-tab {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .right-dock-tab.active {
+            background: white;
+            color: #0F172A;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .right-dock-search {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input-wrapper svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: #9ca3af;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1D4ED8;
+            box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.1);
+        }
+
+        .right-dock-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .right-dock-item {
+            padding: 12px;
+            border-radius: 12px;
+            background: #F5F7FA;
+            margin-bottom: 8px;
+            transition: all 0.15s;
+        }
+
+        .right-dock-item:hover {
+            background: #e5e7eb;
+        }
+
+        .right-dock-collapsed {
+            width: 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            gap: 12px;
+        }
+
+        .right-dock-collapsed button {
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .right-dock-collapsed button:hover {
+            background: #F5F7FA;
+        }
+
+        .right-dock-collapsed button.active {
+            background: #1D4ED8;
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 10px 24px;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-item svg {
+            width: 16px;
+            height: 16px;
+            color: #10B981;
+        }
+
+        .footer-status {
+            color: #10B981;
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280;
+        }
+
+        .footer-right svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Utility Classes */
+        .text-gray-500 { color: #6b7280; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        .opacity-60 { opacity: 0.6; }
+        .opacity-100 { opacity: 1; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Context Bar -->
+    <div class="context-bar">
+        <div class="context-bar-content">
+            <div class="context-top-row">
+                <div class="context-left">
+                    <span class="incident-badge">INC A25-031</span>
+                    <span class="priority-badge">P4(높음)</span>
+                    <span>medical</span>
+                    <span class="text-gray-500">•</span>
+                    <span>서울 강남구 테헤란로 152</span>
+                    <span class="text-gray-500">•</span>
+                    <div class="footer-item">
+                        <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                        <span>Elapsed 04:12</span>
+                    </div>
+                </div>
+                <div class="context-right">
+                    <i data-lucide="users" style="width: 16px; height: 16px;" class="text-gray-600"></i>
+                    <span>Units:</span>
+                    <span style="color: #EF4444;">Fire 2</span>
+                    <span class="text-gray-500">•</span>
+                    <span style="color: #10B981;">EMS 3</span>
+                    <span class="text-gray-500">•</span>
+                    <span style="color: #1D4ED8;">Police 1</span>
+                </div>
+            </div>
+            <div class="context-bottom-row">
+                <div class="focus-toggle" id="focusToggle">
+                    <button class="active" data-mode="incident">Incident Only</button>
+                    <button data-mode="global">Global</button>
+                    <button data-mode="both">Both</button>
+                </div>
+                <div class="layer-chips" id="layerChips">
+                    <button class="layer-chip active" data-layer="units">
+                        <i data-lucide="users" style="width: 16px; height: 16px;"></i>
+                        <span>Units</span>
+                    </button>
+                    <button class="layer-chip active" data-layer="incidents">
+                        <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
+                        <span>Incidents</span>
+                    </button>
+                    <button class="layer-chip active" data-layer="routes">
+                        <i data-lucide="route" style="width: 16px; height: 16px;"></i>
+                        <span>Routes</span>
+                    </button>
+                    <button class="layer-chip" data-layer="traffic">
+                        <i data-lucide="car" style="width: 16px; height: 16px;"></i>
+                        <span>Traffic</span>
+                    </button>
+                    <button class="layer-chip" data-layer="geofence">
+                        <i data-lucide="hexagon" style="width: 16px; height: 16px;"></i>
+                        <span>Geofence</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Left Panel -->
+        <div class="left-panel" id="leftPanel">
+            <div class="incident-panel">
+                <!-- Assignment Card -->
+                <div class="card assignment-card">
+                    <div class="assignment-header">
+                        <h2>Assignment — This Incident</h2>
+                        <div class="assignment-actions">
+                            <button class="btn-icon">
+                                <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                            </button>
+                            <button class="btn-primary">
+                                <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i>
+                                Request
+                            </button>
+                        </div>
+                    </div>
+                    <div id="assignmentsList">
+                        <!-- Assignment rows will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Timeline Card -->
+                <div class="card">
+                    <h2>Incident Timeline</h2>
+                    <div class="timeline" id="timelineList">
+                        <!-- Timeline items will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Panel -->
+        <div class="center-panel">
+            <!-- Live Map -->
+            <div class="card live-map">
+                <h2>Live Map</h2>
+                <div class="map-container" id="mapContainer">
+                    <div class="map-grid"></div>
+                    <div class="map-road-h"></div>
+                    <div class="map-road-v"></div>
+                    <!-- Units and incidents will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Comms -->
+            <div class="card comms">
+                <h2>Communications</h2>
+                <div class="messages-container" id="messagesContainer">
+                    <!-- Messages will be inserted here -->
+                </div>
+                <div class="comms-input">
+                    <input type="text" placeholder="Message…" id="messageInput">
+                    <button id="sendButton">
+                        <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+                    </button>
+                    <button>
+                        <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Global Quick View -->
+            <div class="card global-quick-view" id="globalQuickView">
+                <div class="quick-view-header">
+                    <h2>Global Quick View</h2>
+                    <button class="btn-icon" id="collapseQuickView">
+                        <i data-lucide="chevron-up" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+                <div class="quick-view-tabs">
+                    <button class="quick-view-tab active" data-tab="units">All Units</button>
+                    <button class="quick-view-tab" data-tab="incidents">Incidents</button>
+                </div>
+                <div class="quick-view-content" id="quickViewContent">
+                    <!-- Quick view items will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Dock -->
+        <div class="right-dock" id="rightDock">
+            <div class="right-dock-header">
+                <div class="right-dock-header-top">
+                    <h2>Global View</h2>
+                    <button class="btn-icon" id="collapseRightDock">
+                        <i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i>
+                    </button>
+                </div>
+                <div class="right-dock-tabs">
+                    <button class="right-dock-tab active" data-tab="roster">Roster</button>
+                    <button class="right-dock-tab" data-tab="incidents">Incidents</button>
+                </div>
+            </div>
+            <div class="right-dock-search">
+                <div class="search-input-wrapper">
+                    <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+                    <input type="text" class="search-input" placeholder="Search..." id="searchInput">
+                </div>
+            </div>
+            <div class="right-dock-content" id="rightDockContent">
+                <!-- Right dock items will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-item">
+                    <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+                    <span class="text-gray-600">CAD:</span>
+                    <span class="footer-status">OK</span>
+                </div>
+                <div class="footer-item">
+                    <i data-lucide="radio" style="width: 16px; height: 16px;"></i>
+                    <span class="text-gray-600">Radio:</span>
+                    <span class="footer-status">OK</span>
+                </div>
+                <div class="footer-item">
+                    <i data-lucide="map" style="width: 16px; height: 16px;"></i>
+                    <span class="text-gray-600">Map:</span>
+                    <span class="footer-status">OK</span>
+                </div>
+            </div>
+            <div class="footer-right">
+                <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                <span>Last update 2s ago</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // State
+        let focusMode = 'both';
+        let activeLayers = {
+            units: true,
+            incidents: true,
+            routes: true,
+            traffic: false,
+            geofence: false
+        };
+        let rightDockExpanded = true;
+        let quickViewCollapsed = false;
+        let selectedUnit = null;
+        let activeTab = 'units';
+        let rightDockTab = 'roster';
+        let searchQuery = '';
+
+        // Data
+        const assignments = [
+            { id: 'EMS-1', type: 'EMS', status: 'en-route', eta: 6 },
+            { id: 'Fire-3', type: 'Fire', status: 'dispatched', eta: 8 },
+            { id: 'Police-2', type: 'Police', status: 'on-scene' }
+        ];
+
+        const timelineEvents = [
+            { time: '10:12', event: '지시' },
+            { time: '10:22', event: '출동' },
+            { time: '10:29', event: '도착' },
+            { time: '10:31', event: 'EMS-1 현장 도착' },
+            { time: '10:34', event: 'Fire-3 출동' }
+        ];
+
+        const units = [
+            { id: 'EMS-1', type: 'EMS', status: 'en-route', position: { x: 35, y: 45 }, incident: 'A25', priority: 'P4', eta: 6 },
+            { id: 'Fire-3', type: 'Fire', status: 'dispatched', position: { x: 25, y: 60 }, incident: 'A25', priority: 'P4', eta: 8 },
+            { id: 'Police-2', type: 'Police', status: 'on-scene', position: { x: 55, y: 35 }, incident: 'A25', priority: 'P4' },
+            { id: 'EMS-5', type: 'EMS', status: 'available', position: { x: 70, y: 50 } },
+            { id: 'Fire-1', type: 'Fire', status: 'on-scene', position: { x: 80, y: 70 }, incident: 'B07', priority: 'P3' }
+        ];
+
+        const messages = [
+            { time: '10:31', from: 'EMS-1', message: 'Arriving via Gate 3', type: 'unit' },
+            { time: '10:32', from: 'Dispatch', message: 'Use south access', type: 'dispatch' },
+            { time: '10:33', from: 'Fire-3', message: 'En route, ETA 8 minutes', type: 'unit' },
+            { time: '10:34', from: 'Dispatch', message: 'Traffic clear on Teheran-ro', type: 'dispatch' }
+        ];
+
+        const allUnits = [
+            { id: 'EMS-1', status: 'En-route', eta: 6, incident: 'A25', location: '테헤란로 152' },
+            { id: 'Fire-3', status: 'Dispatched', eta: 8, incident: 'A25', location: '테헤란로 152' },
+            { id: 'Police-2', status: 'On-scene', incident: 'A25', location: '테헤란로 152' },
+            { id: 'EMS-5', status: 'Available' },
+            { id: 'Fire-1', status: 'On-scene', incident: 'B07', location: '올림픽대로' }
+        ];
+
+        const allIncidents = [
+            { id: 'A25', priority: 'P4', type: 'medical', location: '테헤란로 152', status: 'Active' },
+            { id: 'B07', priority: 'P3', type: 'traffic', location: '올림픽대로', status: 'Transport' }
+        ];
+
+        const statusConfig = {
+            available: { label: 'Available', color: '#10B981', bgColor: '#D1FAE5' },
+            dispatched: { label: 'Dispatched', color: '#38BDF8', bgColor: '#E0F2FE' },
+            'en-route': { label: 'En-route', color: '#F59E0B', bgColor: '#FEF3C7' },
+            'on-scene': { label: 'On-scene', color: '#1D4ED8', bgColor: '#DBEAFE' },
+            transport: { label: 'Transport', color: '#8B5CF6', bgColor: '#EDE9FE' },
+            clear: { label: 'Clear', color: '#6B7280', bgColor: '#F3F4F6' }
+        };
+
+        const typeIcons = {
+            EMS: 'ambulance',
+            Fire: 'flame',
+            Police: 'shield'
+        };
+
+        // Render functions
+        function renderAssignments() {
+            const container = document.getElementById('assignmentsList');
+            container.innerHTML = assignments.map(assignment => {
+                const config = statusConfig[assignment.status];
+                const showRecallReassign = assignment.status === 'dispatched' || assignment.status === 'en-route';
+                const showClear = assignment.status === 'on-scene';
+                
+                return `
+                    <div class="assignment-row">
+                        <div class="assignment-info">
+                            <span>${assignment.id}</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="status-badge" style="color: ${config.color}; background: ${config.bgColor};">
+                                ${config.label}
+                            </span>
+                            ${assignment.eta ? `
+                                <span class="text-gray-500">•</span>
+                                <span class="text-sm text-gray-600">ETA ${assignment.eta.toString().padStart(2, '0')}:</span>
+                            ` : ''}
+                        </div>
+                        <div class="assignment-actions-row">
+                            ${showRecallReassign ? `
+                                <button class="btn-text">
+                                    <i data-lucide="arrow-left" style="width: 12px; height: 12px;"></i>
+                                    Reassign
+                                </button>
+                                <button class="btn-text">
+                                    <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                                    Recall
+                                </button>
+                            ` : ''}
+                            ${showClear ? `
+                                <button class="btn-text">
+                                    <i data-lucide="arrow-left" style="width: 12px; height: 12px;"></i>
+                                    Reassign
+                                </button>
+                                <button class="btn-text">
+                                    <i data-lucide="check-circle" style="width: 12px; height: 12px;"></i>
+                                    Clear
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timelineList');
+            container.innerHTML = timelineEvents.map(event => `
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <span class="timeline-time">${event.time}</span>
+                        <span class="timeline-event">${event.event}</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderMap() {
+            const container = document.getElementById('mapContainer');
+            const visibleUnits = focusMode === 'incident' 
+                ? units.filter(u => u.incident === 'A25')
+                : units;
+
+            // Clear existing units
+            const existingUnits = container.querySelectorAll('.map-unit, .incident-marker, .unit-tooltip, .map-route');
+            existingUnits.forEach(el => el.remove());
+
+            // Render incident marker
+            if (activeLayers.incidents) {
+                const marker = document.createElement('div');
+                marker.className = 'incident-marker';
+                marker.style.left = '55%';
+                marker.style.top = '35%';
+                marker.innerHTML = `
+                    <div class="incident-pulse"></div>
+                    <i data-lucide="map-pin" style="width: 48px; height: 48px; color: #EF4444; fill: #EF4444;"></i>
+                `;
+                container.appendChild(marker);
+            }
+
+            // Render units
+            if (activeLayers.units) {
+                visibleUnits.forEach(unit => {
+                    const unitEl = document.createElement('div');
+                    unitEl.className = `map-unit ${unit.status}`;
+                    unitEl.style.left = `${unit.position.x}%`;
+                    unitEl.style.top = `${unit.position.y}%`;
+                    unitEl.style.marginLeft = '-20px';
+                    unitEl.style.marginTop = '-20px';
+                    unitEl.innerHTML = `<i data-lucide="${typeIcons[unit.type]}" style="width: 20px; height: 20px;"></i>`;
+                    unitEl.onclick = () => handleUnitClick(unit.id);
+                    container.appendChild(unitEl);
+                });
+            }
+
+            // Render routes
+            if (activeLayers.routes) {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('class', 'map-route');
+                svg.style.position = 'absolute';
+                svg.style.inset = '0';
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                svg.style.pointerEvents = 'none';
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M 35% 45% Q 45% 40%, 55% 35%');
+                path.setAttribute('stroke', '#F59E0B');
+                path.setAttribute('stroke-width', '3');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-dasharray', '8,4');
+                svg.appendChild(path);
+                container.appendChild(svg);
+            }
+
+            lucide.createIcons();
+        }
+
+        function handleUnitClick(unitId) {
+            if (selectedUnit === unitId) {
+                selectedUnit = null;
+                const tooltip = document.querySelector('.unit-tooltip');
+                if (tooltip) tooltip.remove();
+            } else {
+                selectedUnit = unitId;
+                const unit = units.find(u => u.id === unitId);
+                if (unit) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'unit-tooltip';
+                    tooltip.style.left = `${unit.position.x}%`;
+                    tooltip.style.top = `${unit.position.y - 15}%`;
+                    const config = statusConfig[unit.status];
+                    tooltip.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <span>${unit.id}</span>
+                                <span class="status-badge" style="color: ${config.color}; background: ${config.bgColor};">
+                                    ${config.label}
+                                </span>
+                            </div>
+                            ${unit.eta ? `<div class="text-sm text-gray-600">ETA: ${unit.eta.toString().padStart(2, '0')} min</div>` : ''}
+                            <button class="btn-primary" style="width: 100%;" onclick="focusOnUnit('${unit.id}')">
+                                <i data-lucide="navigation" style="width: 16px; height: 16px;"></i>
+                                사건 포커스
+                            </button>
+                        </div>
+                    `;
+                    document.getElementById('mapContainer').appendChild(tooltip);
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function focusOnUnit(unitId) {
+            focusMode = 'incident';
+            updateFocusMode();
+            console.log('Focus on unit:', unitId);
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = messages.map(msg => `
+                <div class="message ${msg.type}">
+                    <span class="message-time">[${msg.time}</span>
+                    <span class="message-from">${msg.from}]</span>
+                    <span class="message-text">${msg.message}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderQuickView() {
+            if (quickViewCollapsed) return;
+            
+            const container = document.getElementById('quickViewContent');
+            if (activeTab === 'units') {
+                container.innerHTML = allUnits.map(unit => `
+                    <div class="quick-view-item">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <span>${unit.id}</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-600">${unit.status}</span>
+                            ${unit.eta ? `
+                                <span class="text-gray-500">•</span>
+                                <span class="text-gray-600">ETA ${unit.eta}</span>
+                            ` : ''}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            ${unit.incident ? `
+                                <span class="text-sm text-gray-600">INC ${unit.incident} (${unit.location})</span>
+                            ` : '<span class="text-sm text-gray-500">—</span>'}
+                            <button class="btn-icon" onclick="focusOnUnit('${unit.id}')">
+                                <i data-lucide="play" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = allIncidents.map(incident => `
+                    <div class="quick-view-item">
+                        <span>${incident.id}</span>
+                        <span class="text-gray-500">|</span>
+                        <span class="status-badge" style="background: #FEF3C7; color: #F59E0B;">${incident.priority}</span>
+                        <span class="text-gray-600">${incident.type}</span>
+                        <span class="text-gray-500">|</span>
+                        <span class="text-gray-600">${incident.location}</span>
+                        <span class="text-gray-500">|</span>
+                        <span style="color: #10B981;">${incident.status}</span>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons();
+        }
+
+        function renderRightDock() {
+            if (!rightDockExpanded) {
+                const dock = document.getElementById('rightDock');
+                dock.className = 'right-dock collapsed';
+                dock.innerHTML = `
+                    <button onclick="toggleRightDock()">
+                        <i data-lucide="chevron-left" style="width: 20px; height: 20px;"></i>
+                    </button>
+                    <button class="${rightDockTab === 'roster' ? 'active' : ''}" onclick="setRightDockTab('roster'); toggleRightDock();">
+                        <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+                    </button>
+                    <button class="${rightDockTab === 'incidents' ? 'active' : ''}" onclick="setRightDockTab('incidents'); toggleRightDock();">
+                        <i data-lucide="alert-circle" style="width: 20px; height: 20px;"></i>
+                    </button>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const dock = document.getElementById('rightDock');
+            dock.className = 'right-dock';
+            dock.innerHTML = `
+                <div class="right-dock-header">
+                    <div class="right-dock-header-top">
+                        <h2>Global View</h2>
+                        <button class="btn-icon" onclick="toggleRightDock()">
+                            <i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i>
+                        </button>
+                    </div>
+                    <div class="right-dock-tabs">
+                        <button class="right-dock-tab ${rightDockTab === 'roster' ? 'active' : ''}" onclick="setRightDockTab('roster')">Roster</button>
+                        <button class="right-dock-tab ${rightDockTab === 'incidents' ? 'active' : ''}" onclick="setRightDockTab('incidents')">Incidents</button>
+                    </div>
+                </div>
+                <div class="right-dock-search">
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+                        <input type="text" class="search-input" placeholder="Search..." id="searchInput" oninput="handleSearch(event)">
+                    </div>
+                </div>
+                <div class="right-dock-content" id="rightDockContent">
+                    ${renderRightDockContent()}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function renderRightDockContent() {
+            if (rightDockTab === 'roster') {
+                const filtered = allUnits.filter(u => 
+                    u.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    u.status.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+                return filtered.map(unit => `
+                    <div class="right-dock-item">
+                        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px;">
+                            <div>
+                                <div style="color: #0F172A; margin-bottom: 4px;">${unit.id}</div>
+                                <div class="text-sm text-gray-600">${unit.status}</div>
+                                ${unit.eta ? `<div class="text-sm text-gray-600">ETA: ${unit.eta} min</div>` : ''}
+                            </div>
+                            <button class="btn-icon" onclick="focusOnUnit('${unit.id}')">
+                                <i data-lucide="play" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                        ${unit.incident ? `
+                            <div class="text-sm text-gray-600" style="padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                                INC ${unit.incident} • ${unit.location}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            } else {
+                return allIncidents.map(incident => `
+                    <div class="right-dock-item">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="color: #0F172A;">${incident.id}</span>
+                            <span class="status-badge" style="background: #FEF3C7; color: #F59E0B;">${incident.priority}</span>
+                        </div>
+                        <div class="text-sm text-gray-600" style="margin-bottom: 4px;">${incident.type}</div>
+                        <div class="text-sm text-gray-600" style="margin-bottom: 8px;">${incident.location}</div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                            <span class="text-sm" style="color: #10B981;">${incident.status}</span>
+                            <button class="btn-icon">
+                                <i data-lucide="play" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Event handlers
+        function updateFocusMode() {
+            document.querySelectorAll('#focusToggle button').forEach(btn => {
+                if (btn.dataset.mode === focusMode) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            const leftPanel = document.getElementById('leftPanel');
+            if (focusMode === 'global') {
+                leftPanel.style.opacity = '0.6';
+            } else {
+                leftPanel.style.opacity = '1';
+            }
+
+            const rightDock = document.getElementById('rightDock');
+            if (focusMode === 'incident') {
+                rightDock.style.display = 'none';
+            } else {
+                rightDock.style.display = 'flex';
+            }
+
+            const quickView = document.getElementById('globalQuickView');
+            if (focusMode === 'incident') {
+                quickView.style.display = 'none';
+            } else {
+                quickView.style.display = 'block';
+            }
+
+            renderMap();
+        }
+
+        function setFocusMode(mode) {
+            focusMode = mode;
+            if (mode === 'incident') {
+                rightDockExpanded = false;
+            } else if (mode === 'both') {
+                rightDockExpanded = true;
+            }
+            updateFocusMode();
+            renderRightDock();
+        }
+
+        function toggleLayer(layer) {
+            activeLayers[layer] = !activeLayers[layer];
+            document.querySelectorAll('#layerChips .layer-chip').forEach(chip => {
+                if (chip.dataset.layer === layer) {
+                    if (activeLayers[layer]) {
+                        chip.classList.add('active');
+                    } else {
+                        chip.classList.remove('active');
+                    }
+                }
+            });
+            renderMap();
+        }
+
+        function toggleRightDock() {
+            rightDockExpanded = !rightDockExpanded;
+            renderRightDock();
+        }
+
+        function setRightDockTab(tab) {
+            rightDockTab = tab;
+            renderRightDock();
+        }
+
+        function handleSearch(e) {
+            searchQuery = e.target.value;
+            const content = document.getElementById('rightDockContent');
+            if (content) {
+                content.innerHTML = renderRightDockContent();
+                lucide.createIcons();
+            }
+        }
+
+        function setQuickViewTab(tab) {
+            activeTab = tab;
+            document.querySelectorAll('.quick-view-tab').forEach(btn => {
+                if (btn.dataset.tab === tab) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            renderQuickView();
+        }
+
+        function toggleQuickView() {
+            quickViewCollapsed = !quickViewCollapsed;
+            const quickView = document.getElementById('globalQuickView');
+            if (quickViewCollapsed) {
+                quickView.innerHTML = `
+                    <button style="width: 100%; background: white; border-radius: 16px; padding: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleQuickView()">
+                        <span style="color: #0F172A;">Global Quick View</span>
+                        <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #6b7280;"></i>
+                    </button>
+                `;
+            } else {
+                quickView.innerHTML = `
+                    <div class="quick-view-header">
+                        <h2>Global Quick View</h2>
+                        <button class="btn-icon" onclick="toggleQuickView()">
+                            <i data-lucide="chevron-up" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                    <div class="quick-view-tabs">
+                        <button class="quick-view-tab ${activeTab === 'units' ? 'active' : ''}" data-tab="units" onclick="setQuickViewTab('units')">All Units</button>
+                        <button class="quick-view-tab ${activeTab === 'incidents' ? 'active' : ''}" data-tab="incidents" onclick="setQuickViewTab('incidents')">Incidents</button>
+                    </div>
+                    <div class="quick-view-content" id="quickViewContent"></div>
+                `;
+                renderQuickView();
+            }
+            lucide.createIcons();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus toggle
+            document.querySelectorAll('#focusToggle button').forEach(btn => {
+                btn.onclick = () => setFocusMode(btn.dataset.mode);
+            });
+
+            // Layer chips
+            document.querySelectorAll('#layerChips .layer-chip').forEach(chip => {
+                chip.onclick = () => toggleLayer(chip.dataset.layer);
+            });
+
+            // Quick view tabs
+            document.querySelectorAll('.quick-view-tab').forEach(btn => {
+                btn.onclick = () => setQuickViewTab(btn.dataset.tab);
+            });
+
+            // Right dock tabs
+            document.querySelectorAll('.right-dock-tab').forEach(btn => {
+                btn.onclick = () => setRightDockTab(btn.dataset.tab);
+            });
+
+            // Send message
+            document.getElementById('sendButton').onclick = () => {
+                const input = document.getElementById('messageInput');
+                if (input.value.trim()) {
+                    messages.push({
+                        time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+                        from: 'Dispatch',
+                        message: input.value,
+                        type: 'dispatch'
+                    });
+                    input.value = '';
+                    renderMessages();
+                }
+            };
+
+            // Initial render
+            renderAssignments();
+            renderTimeline();
+            renderMap();
+            renderMessages();
+            renderQuickView();
+            renderRightDock();
+            updateFocusMode();
+
+            // Update last update time
+            setInterval(() => {
+                const footerRight = document.querySelector('.footer-right span');
+                if (footerRight) {
+                    footerRight.textContent = 'Last update ' + Math.floor(Math.random() * 5 + 1) + 's ago';
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
+

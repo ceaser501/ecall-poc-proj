@@ -1,11 +1,13 @@
 package com.ecall.step2.s1emotionanalysis.controller;
 
+import com.azure.ai.textanalytics.TextAnalyticsClient;
 import com.ecall.step2.s1emotionanalysis.dto.ConversationEmotionRequest;
 import com.ecall.step2.s1emotionanalysis.dto.ConversationEmotionResponse;
 import com.ecall.step2.s1emotionanalysis.dto.EmotionAnalysisRequest;
 import com.ecall.step2.s1emotionanalysis.dto.EmotionAnalysisResponse;
 import com.ecall.step2.s1emotionanalysis.service.EmotionAnalysisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +22,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/step2/emotion-analysis")
 @RequiredArgsConstructor
+@ConditionalOnBean(TextAnalyticsClient.class)
 public class EmotionAnalysisController {
 
     private final EmotionAnalysisService emotionAnalysisService;

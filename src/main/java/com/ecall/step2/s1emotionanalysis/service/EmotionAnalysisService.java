@@ -5,6 +5,7 @@ import com.azure.ai.textanalytics.models.DocumentSentiment;
 import com.azure.ai.textanalytics.models.SentimentConfidenceScores;
 import com.ecall.step2.s1emotionanalysis.dto.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +19,7 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnBean(TextAnalyticsClient.class)
 public class EmotionAnalysisService {
 
     private final TextAnalyticsClient textAnalyticsClient;
