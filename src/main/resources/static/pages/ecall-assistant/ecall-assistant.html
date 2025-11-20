@@ -24,7 +24,7 @@
         }
 
         .header-container {
-            max-width: 1600px;
+            max-width: 2400px;
             margin: 0 auto;
             padding: 1rem 1.5rem;
             display: flex;
@@ -445,7 +445,7 @@
 
         /* Main Content */
         .main-content {
-            max-width: 1600px;
+            max-width: 2400px;
             margin: 0 auto;
             padding: 1.5rem;
         }
@@ -1386,14 +1386,19 @@
             animation: slideInUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* Second incoming call - positioned at bottom (first position) */
-        #incomingCallNotification2 {
+        /* First incoming call - positioned at bottom */
+        #incomingCallNotification {
             bottom: 2rem;
+        }
+
+        /* Second incoming call - positioned above first call */
+        #incomingCallNotification2 {
+            bottom: calc(2rem + 310px);
         }
 
         /* Third incoming call - positioned above second call */
         #incomingCallNotification3 {
-            bottom: calc(2rem + 300px);
+            bottom: calc(2rem + 620px);
         }
 
         @keyframes slideInUp {
@@ -1564,7 +1569,7 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- Incoming Call Notification -->
-<div class="incoming-call-notification" id="incomingCallNotification" style="display: none;">
+<div class="incoming-call-notification" id="incomingCallNotification">
     <div class="incoming-call-glow"></div>
     <div class="incoming-call-card">
         <div class="incoming-call-header">

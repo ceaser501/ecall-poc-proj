@@ -21,6 +21,251 @@
             flex-direction: column;
         }
 
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid rgb(226, 232, 240);
+        }
+
+        .header-container {
+            max-width: 2400px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-icon {
+            background: linear-gradient(135deg, rgb(249, 115, 22) 0%, rgb(234, 88, 12) 100%);
+            padding: 0.625rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: white;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: rgb(15, 23, 42);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-user-info {
+            position: relative;
+            display: inline-block;
+            margin-right: 1rem;
+            cursor: pointer;
+        }
+
+        .header-user-name {
+            font-size: 0.875rem;
+            color: rgb(15, 23, 42);
+            font-weight: 500;
+        }
+
+        .operator-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .operator-status-dot.on-call { background-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+        .operator-status-dot.available { background-color: #22c55e; box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2); }
+        .operator-status-dot.away { background-color: #eab308; box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2); }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            background: rgb(248, 250, 252);
+            color: rgb(71, 85, 105);
+            border: 1px solid rgb(226, 232, 240);
+        }
+
+        .btn-icon:hover {
+            background: rgb(241, 245, 249);
+        }
+
+        .btn-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .header-logout-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            color: rgb(71, 85, 105);
+            border: 1px solid rgb(226, 232, 240);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-logout-btn:hover {
+            background: rgb(248, 250, 252);
+        }
+
+        .header-user-popup {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            width: 280px;
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+        }
+
+        .header-user-info:hover .header-user-popup {
+            display: block;
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .panel-body {
+            padding: 1.25rem;
+        }
+
+        .operator-info {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .operator-avatar-lg {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+        }
+
+        .operator-avatar-lg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .operator-details {
+            flex: 1;
+        }
+
+        .operator-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+
+        .operator-dept,
+        .operator-exp {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.125rem;
+        }
+
+        .status-selector {
+            margin-top: 1rem;
+        }
+
+        .status-selector-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-options {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .status-option {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .status-option.on-call {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .status-option.on-call.active {
+            border-color: #dc2626;
+            background: #fee2e2;
+        }
+
+        .status-option.available {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .status-option.available.active {
+            border-color: #16a34a;
+            background: #dcfce7;
+        }
+
+        .status-option.away {
+            background: #fef9c3;
+            color: #ca8a04;
+        }
+
+        .status-option.away.active {
+            border-color: #ca8a04;
+            background: #fef08a;
+        }
+
         /* Context Bar */
         .context-bar {
             position: sticky;
@@ -204,7 +449,6 @@
             border-radius: 8px;
             border: none;
             background: transparent;
-            color: #1D4ED8;
             cursor: pointer;
             transition: all 0.15s;
         }
@@ -662,6 +906,59 @@
     </style>
 </head>
 <body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+                </div>
+                <h1 class="header-title">Dispatch Console</h1>
+            </div>
+
+            <div class="header-right">
+                <div class="header-user-info">
+                    <span class="header-user-name" id="headerUserName">Loading...</span>
+                    <span class="operator-status-dot available" id="operatorStatusDot"></span>
+                    <div class="header-user-popup">
+                        <div class="panel-header">
+                            <h3 class="panel-title">Operator Information</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="operator-info">
+                                <div class="operator-avatar-lg">
+                                    <img id="headerOperatorAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2364748b'%3E%3F%3C/text%3E%3C/svg%3E" alt="Operator">
+                                </div>
+                                <div class="operator-details">
+                                    <p id="headerOperatorName" class="operator-name">Unknown</p>
+                                    <p id="headerOperatorDept" class="operator-dept">N/A</p>
+                                    <p id="headerOperatorExp" class="operator-exp">N/A</p>
+                                </div>
+                            </div>
+                            <div class="status-selector">
+                                <span class="status-selector-label">Status</span>
+                                <div class="status-options">
+                                    <div class="status-option on-call" onclick="changeOperatorStatus('on-call')">On Call</div>
+                                    <div class="status-option available" onclick="changeOperatorStatus('available')">Available</div>
+                                    <div class="status-option away" onclick="changeOperatorStatus('away')">Away</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-icon" onclick="window.location.href='ecall-intro.html'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </button>
+                <button class="btn btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </button>
+                <button class="header-logout-btn" onclick="logout()">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Context Bar -->
     <div class="context-bar">
         <div class="context-bar-content">
@@ -1379,7 +1676,47 @@
                     footerRight.textContent = 'Last update ' + Math.floor(Math.random() * 5 + 1) + 's ago';
                 }
             }, 2000);
+
+            // Load user info for header
+            loadUserInfo();
         });
+
+        // Header Functions
+        function loadUserInfo() {
+            const user = JSON.parse(sessionStorage.getItem('user'));
+            if (user) {
+                document.getElementById('headerUserName').textContent = user.name || user.username || 'User';
+                document.getElementById('headerOperatorName').textContent = user.name || user.username || 'Unknown';
+                document.getElementById('headerOperatorDept').textContent = user.department || 'N/A';
+                document.getElementById('headerOperatorExp').textContent = user.experience || 'N/A';
+
+                // Set default status
+                changeOperatorStatus('available');
+            }
+        }
+
+        function changeOperatorStatus(status) {
+            const dot = document.getElementById('operatorStatusDot');
+            const options = document.querySelectorAll('.status-option');
+
+            // Remove all status classes from dot
+            dot.classList.remove('on-call', 'available', 'away');
+            // Add new status
+            dot.classList.add(status);
+
+            // Update active option
+            options.forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.textContent.toLowerCase().replace(' ', '-') === status) {
+                    opt.classList.add('active');
+                }
+            });
+        }
+
+        function logout() {
+            sessionStorage.removeItem('user');
+            window.location.href = 'ecall-intro.html';
+        }
     </script>
 </body>
 </html>
