@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Call Assistant</title>
+    <title>e-Call AI.ssistant</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3d8af1dddd94ffe1e0d8465532d945f2&libraries=services,drawing"></script>
     <style>
@@ -455,10 +455,10 @@
         let allIncidents = [];
         
         const incidentData = [
-            { id: 'incident-1', category: 'Medical', urgency: 2, address: '134 Sinchon-dong, Seodaemun-gu, Seoul', lat: 37.5602, lng: 126.9423, time: '14:32 ~ 14:38', agent: { name: 'Operator 1', department: 'Seoul Central', phone: '010-1234-5678', photoUrl: 'https://randomuser.me/api/portraits/men/1.jpg' }, status: 'Dispatch Assigned', statusClass: 'status-assigned', responder: { name: 'Firefighter Kim', unit: 'Engine 12', status: 'En route', eta: '3 min', lat: 37.564923, lng: 126.938441, photoUrl: 'https://randomuser.me/api/portraits/men/5.jpg' }, disabled: false },
-            { id: 'incident-2', category: 'Traffic', urgency: 4, address: '57-1 Nogosan-dong, Mapo-gu, Seoul', lat: 37.5551, lng: 126.9369, time: '14:28 ~ 14:35', agent: { name: 'Operator 2', department: 'Mapo Station', phone: '010-2345-6789', photoUrl: 'https://randomuser.me/api/portraits/women/2.jpg' }, status: 'On Scene', statusClass: 'status-on-scene', responder: { name: 'Officer Park', unit: 'Patrol 34', status: 'On Scene', eta: '0 min', lat: 37.5551, lng: 126.9369, photoUrl: 'https://randomuser.me/api/portraits/men/6.jpg' }, disabled: false },
-            { id: 'incident-3', category: 'Crime', urgency: 1, address: '200-1 Yeonhui-dong, Seodaemun-gu, Seoul', lat: 37.5731, lng: 126.9358, time: '14:25 ~ (Ongoing)', agent: { name: 'Operator 1', department: 'Seoul Central', phone: '010-1234-5678', photoUrl: 'https://randomuser.me/api/portraits/men/1.jpg' }, status: 'Handling Call', statusClass: 'status-handling', responder: { name: 'Detective Lee', unit: 'Unit 1', status: 'Preparing', eta: '10 min', lat: 37.57, lng: 126.93, photoUrl: 'https://randomuser.me/api/portraits/men/7.jpg' }, disabled: false },
-            { id: 'incident-4', category: 'Rescue', urgency: 3, address: 'San 1-1, Bugahyeon-dong, Seodaemun-gu, Seoul', lat: 37.5659, lng: 126.9533, time: '14:10 ~ 14:22', agent: { name: 'Operator 3', department: 'Seodaemun Station', phone: '010-3456-7890', photoUrl: 'https://randomuser.me/api/portraits/men/3.jpg' }, status: 'Closed', statusClass: 'status-closed', responder: { name: 'Rescue Team Choi', unit: 'Rescue 2', status: 'Returned', eta: '-', lat: 37.57, lng: 126.94, photoUrl: 'https://randomuser.me/api/portraits/men/8.jpg' }, disabled: true },
+            { id: 'incident-1', category: 'Medical', urgency: 2, address: '134 Sinchon-dong, Seodaemun-gu, Seoul', lat: 37.5602, lng: 126.9423, time: '14:32 ~ 14:38', agent: { name: 'Operator 1', department: 'Seoul Central', phone: '010-1234-5678', photoUrl: '/assets/images/portraits/operator1.png' }, status: 'Dispatch Assigned', statusClass: 'status-assigned', responder: { name: 'Firefighter Kim', unit: 'Engine 12', status: 'En route', eta: '3 min', lat: 37.564923, lng: 126.938441, photoUrl: '/assets/images/portraits/firefighter1.png' }, disabled: false },
+            { id: 'incident-2', category: 'Traffic', urgency: 4, address: '57-1 Nogosan-dong, Mapo-gu, Seoul', lat: 37.5551, lng: 126.9369, time: '14:28 ~ 14:35', agent: { name: 'Operator 2', department: 'Mapo Station', phone: '010-2345-6789', photoUrl: '/assets/images/portraits/operator2.png' }, status: 'On Scene', statusClass: 'status-on-scene', responder: { name: 'Officer Park', unit: 'Patrol 34', status: 'On Scene', eta: '0 min', lat: 37.5551, lng: 126.9369, photoUrl: '/assets/images/portraits/patrol1.png' }, disabled: false },
+            { id: 'incident-3', category: 'Crime', urgency: 1, address: '200-1 Yeonhui-dong, Seodaemun-gu, Seoul', lat: 37.5731, lng: 126.9358, time: '14:25 ~ (Ongoing)', agent: { name: 'Operator 1', department: 'Seoul Central', phone: '010-1234-5678', photoUrl: '/assets/images/portraits/operator1.png' }, status: 'Handling Call', statusClass: 'status-handling', responder: { name: 'Detective Lee', unit: 'Unit 1', status: 'Preparing', eta: '10 min', lat: 37.57, lng: 126.93, photoUrl: '/assets/images/portraits/patrol1.png' }, disabled: false },
+            { id: 'incident-4', category: 'Rescue', urgency: 3, address: 'San 1-1, Bugahyeon-dong, Seodaemun-gu, Seoul', lat: 37.5659, lng: 126.9533, time: '14:10 ~ 14:22', agent: { name: 'Operator 3', department: 'Seodaemun Station', phone: '010-3456-7890', photoUrl: '/assets/images/portraits/operator3.png' }, status: 'Closed', statusClass: 'status-closed', responder: { name: 'Rescue Team Choi', unit: 'Rescue 2', status: 'Returned', eta: '-', lat: 37.57, lng: 126.94, photoUrl: '/assets/images/portraits/ems1.png' }, disabled: true },
         ];
 
         // =================================================================
@@ -812,9 +812,10 @@
             
             if (user.photoUrl) {
                 headerOperatorAvatar.src = user.photoUrl;
-            } else if (user.name) {
-                const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-                headerOperatorAvatar.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2364748b'%3E${initials}%3C/text%3E%3C/svg%3E`;
+            } else {
+                // Use default operator image based on operatorId or name
+                const operatorNum = user.operatorId ? (parseInt(user.operatorId) % 3) + 1 : 1;
+                headerOperatorAvatar.src = `/assets/images/portraits/operator${operatorNum}.png`;
             }
             
             loadOperatorStatus();

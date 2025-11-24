@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Reception - E-Call Assistant</title>
+    <title>Report Reception - e-Call AI.ssistant</title>
     <style>
         * {
             margin: 0;
@@ -2490,15 +2490,15 @@
                 operatorExpEl.textContent = `${diffYears} year${diffYears !== 1 ? 's' : ''} exp.`;
             }
 
-            // Update avatar - show photo if available, otherwise show initials
+            // Update avatar - show photo if available, otherwise use default operator image
             const operatorAvatarEl = document.getElementById('operatorAvatar');
             if (operatorAvatarEl) {
                 if (user.photoUrl) {
                     operatorAvatarEl.src = user.photoUrl;
-                } else if (user.name) {
-                    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-                    const avatarSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2364748b'%3E${initials}%3C/text%3E%3C/svg%3E`;
-                    operatorAvatarEl.src = avatarSvg;
+                } else {
+                    // Use default operator image based on operatorId or name
+                    const operatorNum = user.operatorId ? (parseInt(user.operatorId) % 3) + 1 : 1;
+                    operatorAvatarEl.src = `/assets/images/portraits/operator${operatorNum}.png`;
                 }
             }
 
@@ -2547,10 +2547,10 @@
             if (headerOperatorAvatarEl) {
                 if (user.photoUrl) {
                     headerOperatorAvatarEl.src = user.photoUrl;
-                } else if (user.name) {
-                    const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-                    const avatarSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect fill='%23e2e8f0' width='48' height='48'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='18' fill='%2364748b'%3E${initials}%3C/text%3E%3C/svg%3E`;
-                    headerOperatorAvatarEl.src = avatarSvg;
+                } else {
+                    // Use default operator image based on operatorId or name
+                    const operatorNum = user.operatorId ? (parseInt(user.operatorId) % 3) + 1 : 1;
+                    headerOperatorAvatarEl.src = `/assets/images/portraits/operator${operatorNum}.png`;
                 }
             }
         }

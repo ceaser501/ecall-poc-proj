@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dispatch Console - E-Call Assistant</title>
+    <title>Dispatch Console - e-Call AI.ssistant</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3d8af1dddd94ffe1e0d8465532d945f2&libraries=services,drawing"></script>
     <style>
@@ -1687,8 +1687,28 @@
             if (user) {
                 document.getElementById('headerUserName').textContent = user.name || user.username || 'User';
                 document.getElementById('headerOperatorName').textContent = user.name || user.username || 'Unknown';
-                document.getElementById('headerOperatorDept').textContent = user.department || 'N/A';
-                document.getElementById('headerOperatorExp').textContent = user.experience || 'N/A';
+                document.getElementById('headerOperatorDept').textContent = user.department || user.organizationName || 'N/A';
+                
+                // Calculate experience from joinDate if available
+                if (user.joinDate) {
+                    const joinDate = new Date(user.joinDate.split('T')[0]);
+                    const yearsDiff = new Date().getFullYear() - joinDate.getFullYear();
+                    document.getElementById('headerOperatorExp').textContent = `${yearsDiff} year${yearsDiff !== 1 ? 's' : ''} exp.`;
+                } else {
+                    document.getElementById('headerOperatorExp').textContent = user.experience || 'N/A';
+                }
+
+                // Set avatar image
+                const headerOperatorAvatar = document.getElementById('headerOperatorAvatar');
+                if (headerOperatorAvatar) {
+                    if (user.photoUrl) {
+                        headerOperatorAvatar.src = user.photoUrl;
+                    } else {
+                        // Use default operator image based on operatorId or name
+                        const operatorNum = user.operatorId ? (parseInt(user.operatorId) % 3) + 1 : 1;
+                        headerOperatorAvatar.src = `/assets/images/portraits/operator${operatorNum}.png`;
+                    }
+                }
 
                 // Set default status
                 changeOperatorStatus('available');
