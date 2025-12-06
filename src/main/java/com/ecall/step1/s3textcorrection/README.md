@@ -27,7 +27,7 @@ git checkout -b feature/seonmin
 #### 3. 테스트 API
 - GET `/api/text/test` - 모듈 상태 확인
 - POST `/api/text/stt` - 음성→텍스트 변환
-- POST `/api/text/summarize` - 텍스트 요약
+- POST `/api/` - 텍스트 요약
 
 #### 4. 커밋 & 푸시
 ```bash

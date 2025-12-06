@@ -10,9 +10,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service
 @RequiredArgsConstructor
@@ -393,6 +392,273 @@ public class EmergencyService {
         } catch (Exception e) {
             log.error("Error inserting emergency call with details: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to insert emergency call: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get all emergencies with caller and operator details
+     */
+    public List<Map<String, Object>> getAllEmergencies() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Get all emergencies
+            String emergencyUrl = supabaseConfig.getApiUrl() + "/emergency?order=call_started_at.desc";
+            ResponseEntity<String> emergencyResponse = restTemplate.exchange(
+                    emergencyUrl,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            if (emergencyResponse.getStatusCode() == HttpStatus.OK && emergencyResponse.getBody() != null) {
+                List<Map<String, Object>> emergencies = objectMapper.readValue(
+                        emergencyResponse.getBody(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+
+                // Get all callers and operators
+                Map<String, Map<String, Object>> callersMap = getAllCallers();
+                Map<String, Map<String, Object>> operatorsMap = getAllOperators();
+
+                // Manually join the data
+                for (Map<String, Object> emergency : emergencies) {
+                    String callerId = (String) emergency.get("caller_id");
+                    String operatorId = (String) emergency.get("operator_id");
+
+                    if (callerId != null && callersMap.containsKey(callerId)) {
+                        emergency.put("caller", callersMap.get(callerId));
+                    }
+
+                    if (operatorId != null && operatorsMap.containsKey(operatorId)) {
+                        emergency.put("operator", operatorsMap.get(operatorId));
+                    }
+                }
+
+                log.info("Retrieved {} emergency records", emergencies.size());
+                return emergencies;
+            }
+
+            return new ArrayList<>();
+
+        } catch (Exception e) {
+            log.error("Error fetching emergencies: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch emergencies: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get all callers as a map (id -> caller data)
+     */
+    private Map<String, Map<String, Object>> getAllCallers() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            String url = supabaseConfig.getApiUrl() + "/caller";
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                List<Map<String, Object>> callers = objectMapper.readValue(
+                        response.getBody(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+
+                Map<String, Map<String, Object>> callersMap = new HashMap<>();
+                for (Map<String, Object> caller : callers) {
+                    callersMap.put((String) caller.get("id"), caller);
+                }
+                return callersMap;
+            }
+
+            return new HashMap<>();
+        } catch (Exception e) {
+            log.error("Error fetching callers: {}", e.getMessage());
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * Get all operators as a map (id -> operator data)
+     */
+    private Map<String, Map<String, Object>> getAllOperators() {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            String url = supabaseConfig.getApiUrl() + "/operator";
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                List<Map<String, Object>> operators = objectMapper.readValue(
+                        response.getBody(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+
+                Map<String, Map<String, Object>> operatorsMap = new HashMap<>();
+                for (Map<String, Object> operator : operators) {
+                    operatorsMap.put((String) operator.get("id"), operator);
+                }
+                return operatorsMap;
+            }
+
+            return new HashMap<>();
+        } catch (Exception e) {
+            log.error("Error fetching operators: {}", e.getMessage());
+            return new HashMap<>();
+        }
+    }
+
+    /**
+     * Get emergency by ID with caller and operator details
+     */
+    public Map<String, Object> getEmergencyById(String emergencyId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Get emergency by ID
+            String url = supabaseConfig.getApiUrl() + "/emergency?id=eq." + emergencyId;
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                List<Map<String, Object>> emergencies = objectMapper.readValue(
+                        response.getBody(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+
+                if (!emergencies.isEmpty()) {
+                    Map<String, Object> emergency = emergencies.get(0);
+
+                    // Get caller and operator details
+                    String callerId = (String) emergency.get("caller_id");
+                    String operatorId = (String) emergency.get("operator_id");
+
+                    if (callerId != null) {
+                        emergency.put("caller", getCallerById(callerId));
+                    }
+
+                    if (operatorId != null) {
+                        emergency.put("operator", getOperatorById(operatorId));
+                    }
+
+                    log.info("Retrieved emergency record: {}", emergencyId);
+                    return emergency;
+                }
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            log.error("Error fetching emergency by ID: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch emergency: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get caller by ID
+     */
+    private Map<String, Object> getCallerById(String callerId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            String url = supabaseConfig.getApiUrl() + "/caller?id=eq." + callerId;
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                List<Map<String, Object>> callers = objectMapper.readValue(
+                        response.getBody(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+                if (!callers.isEmpty()) {
+                    return callers.get(0);
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            log.error("Error fetching caller {}: {}", callerId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get operator by ID
+     */
+    private Map<String, Object> getOperatorById(String operatorId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseConfig.getSupabaseKey());
+            headers.set("Authorization", "Bearer " + supabaseConfig.getSupabaseKey());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            String url = supabaseConfig.getApiUrl() + "/operator?id=eq." + operatorId;
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                List<Map<String, Object>> operators = objectMapper.readValue(
+                        response.getBody(),
+                        new TypeReference<List<Map<String, Object>>>() {}
+                );
+                if (!operators.isEmpty()) {
+                    return operators.get(0);
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            log.error("Error fetching operator {}: {}", operatorId, e.getMessage());
+            return null;
         }
     }
 }

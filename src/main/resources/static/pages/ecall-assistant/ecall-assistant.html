@@ -1386,19 +1386,19 @@
             animation: slideInUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* First incoming call - positioned at bottom */
+        /* First incoming call - disabled */
         #incomingCallNotification {
             bottom: 2rem;
         }
 
-        /* Second incoming call - positioned above first call */
+        /* Second incoming call - positioned at bottom (first active) */
         #incomingCallNotification2 {
-            bottom: calc(2rem + 310px);
+            bottom: 2rem;
         }
 
         /* Third incoming call - positioned above second call */
         #incomingCallNotification3 {
-            bottom: calc(2rem + 620px);
+            bottom: calc(2rem + 310px);
         }
 
         @keyframes slideInUp {
@@ -1937,6 +1937,9 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
                             Speaker
                         </button>
+                        <button class="btn" onclick="showPastRecordsModal()" style="background: #2563eb; color: white;">
+                            Load Past Records
+                        </button>
                         <button class="btn" onclick="showDispatchRequestModal()" style="flex: 1; background: #dc2626; color: white;">
                             <!--<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>-->
                             Request Dispatch
@@ -2146,6 +2149,37 @@
         <div class="modal-footer">
             <button class="btn" onclick="closeUploadModal()">Cancel</button>
             <button class="btn btn-primary" id="uploadBtn" disabled onclick="uploadFile()">Upload</button>
+        </div>
+    </div>
+</div>
+
+<!-- Past Records Modal -->
+<div id="pastRecordsModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh;">
+        <div class="modal-header">
+            <button class="close-btn" onclick="closePastRecordsModal()">&times;</button>
+            <h2 class="modal-title">Past Emergency Records</h2>
+            <p class="modal-desc">Select a past record to load its details</p>
+        </div>
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto; padding: 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                    <tr style="border-bottom: 2px solid rgb(226, 232, 240);">
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: rgb(71, 85, 105);">Date & Time</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: rgb(71, 85, 105);">Caller Number</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: rgb(71, 85, 105);">Operator</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: rgb(71, 85, 105);">Location</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: rgb(71, 85, 105);">Incident Type</th>
+                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: rgb(71, 85, 105);">Severity</th>
+                    </tr>
+                </thead>
+                <tbody id="pastRecordsTableBody">
+                    <!-- Records will be dynamically loaded here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closePastRecordsModal()">Cancel</button>
         </div>
     </div>
 </div>
@@ -4658,6 +4692,8 @@
 
         console.log(`\n=== Scoring ${team.name} ===`);
         console.log(`Member count: ${memberCount}`);
+        console.log(`Incident type: ${incidentType}`);
+        console.log(`Leader1 role: ${team.leader1_role}, Leader2 role: ${team.leader2_role}`);
 
         // Calculate average leader experience
         let totalExperience = 0;
@@ -4687,11 +4723,75 @@
         const hasRescue = (team.leader1_role && team.leader1_role.toLowerCase().includes('rescue')) ||
             (team.leader2_role && team.leader2_role.toLowerCase().includes('rescue'));
 
+        console.log(`hasFirefighter: ${hasFirefighter}, hasRescue: ${hasRescue}, hasMedical: ${hasMedical}, hasPolice: ${hasPolice}`);
+
         // === INCIDENT TYPE MATCHING WITH STRICT TEAM TYPE FILTERING ===
-        // IMPORTANT: Only teams with appropriate specialization should score high
+        // IMPORTANT: incidentType (user-selected) takes priority over transcriptAnalysis
+
+        // Rescue operations - ONLY Fire/Rescue teams (exclude Police teams by name)
+        // NOTE: Check rescue FIRST because rescue situations often trigger fireEmergency in transcript
+        if (incidentType === 'rescue' || transcriptAnalysis.rescueNeeded) {
+            const teamNameLower = team.name ? team.name.toLowerCase() : '';
+            const isPoliceTeam = teamNameLower.includes('police');
+            const isFireTeam = teamNameLower.includes('fire') || teamNameLower.includes('소방');
+            const isRescueTeam = teamNameLower.includes('rescue') || teamNameLower.includes('구조');
+
+            // Exclude Police teams from rescue operations
+            if (isPoliceTeam) {
+                score -= 1000;
+                reasons.push('Police team - Not suitable for rescue operations');
+            }
+            // Fire teams get highest priority for rescue
+            else if (isFireTeam || hasFirefighter) {
+                score += 100;  // Base score for firefighter teams
+                reasons.push('Firefighter team - Primary rescue responders');
+
+                // Bonus for experience
+                if (avgExperience >= 7) {
+                    score += 40;
+                    reasons.push(`${avgExperience.toFixed(1)} years experience (Expert)`);
+                } else if (avgExperience >= 5) {
+                    score += 30;
+                    reasons.push(`${avgExperience.toFixed(1)} years experience (Veteran)`);
+                } else if (avgExperience >= 3) {
+                    score += 20;
+                    reasons.push(`${avgExperience.toFixed(1)} years experience`);
+                }
+
+                // Bonus for team size (larger teams better for rescue)
+                if (memberCount >= 6) {
+                    score += 30;
+                    reasons.push(`${memberCount}-member team - Large scale rescue capable`);
+                } else if (memberCount >= 4) {
+                    score += 20;
+                    reasons.push(`${memberCount}-member team - Standard rescue capable`);
+                }
+
+                // Bonus if also has rescue specialization
+                if (hasRescue || isRescueTeam) {
+                    score += 20;
+                    reasons.push('Additional rescue specialization');
+                }
+            }
+            // Rescue teams as secondary option
+            else if (isRescueTeam || hasRescue) {
+                score += 80;
+                reasons.push('Specialized rescue team');
+                if (avgExperience >= 5) {
+                    score += 25;
+                    reasons.push(`${avgExperience.toFixed(1)} years rescue experience`);
+                }
+                if (memberCount >= 4) {
+                    score += 15;
+                    reasons.push(`${memberCount}-member team`);
+                }
+            } else {
+                score -= 1000; // Eliminate teams without firefighter or rescue capability
+            }
+        }
 
         // Crime situations - ONLY Police teams
-        if (incidentType === 'crime' || transcriptAnalysis.crimeInProgress) {
+        else if (incidentType === 'crime' || transcriptAnalysis.crimeInProgress) {
             if (hasPolice) {
                 score += 100;  // Strong match
                 reasons.push('Specialized crime response team');
@@ -4715,28 +4815,6 @@
                 }
             } else {
                 score -= 1000; // Effectively eliminate non-firefighter teams
-            }
-        }
-
-        // Rescue operations - BOTH Rescue teams AND Firefighter teams
-        else if (incidentType === 'rescue' || transcriptAnalysis.rescueNeeded) {
-            if (hasRescue) {
-                score += 120;  // Strongest preference
-                reasons.push('Specialized rescue operations team');
-                if (avgExperience >= 5) {
-                    score += 30;
-                    reasons.push(`${avgExperience.toFixed(1)} years rescue experience`);
-                }
-            } else if (hasFirefighter) {
-                // Firefighters commonly handle rescue situations in real-world scenarios
-                score += 110;
-                reasons.push('Fire team - Equipped for rescue operations');
-                if (memberCount >= 4) {
-                    score += 20;
-                    reasons.push(`${memberCount}-member team - Suitable for complex rescue`);
-                }
-            } else {
-                score -= 1000; // Eliminate teams without rescue capability
             }
         }
 
@@ -5456,7 +5534,7 @@
     // Start incoming call timers on page load
     window.addEventListener('load', function() {
         console.log('Page loaded, starting incoming call timers...');
-        incomingCallTimer = setTimeout(() => showIncomingCall(1), 1000); // First call at 1 second
+        // incomingCallTimer = setTimeout(() => showIncomingCall(1), 1000); // First call disabled
         incomingCallTimer2 = setTimeout(() => showIncomingCall(2), 2000); // Second call at 2 seconds
         incomingCallTimer3 = setTimeout(() => showIncomingCall(3), 3000); // Third call at 3 seconds
     });
@@ -5677,6 +5755,162 @@
             console.error('Error loading call audio:', error);
             showToast('Failed to load call audio: ' + error.message, 'error');
         }
+    }
+
+    // Past Records Modal Functions
+    async function showPastRecordsModal() {
+        const modal = document.getElementById('pastRecordsModal');
+        const tableBody = document.getElementById('pastRecordsTableBody');
+
+        if (!modal || !tableBody) return;
+
+        // Show loading state
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">Loading past records...</td></tr>';
+        modal.style.display = 'flex';
+
+        try {
+            // Fetch all emergencies from API
+            const response = await fetch('/api/emergencies');
+            const result = await response.json();
+
+            if (!result.success || !result.data || result.data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">No past records found</td></tr>';
+                return;
+            }
+
+            // Sort by call_started_at descending (most recent first)
+            const sortedRecords = result.data.sort((a, b) => {
+                return new Date(b.call_started_at) - new Date(a.call_started_at);
+            });
+
+            // Build table rows
+            let html = '';
+            sortedRecords.forEach(record => {
+                const datetime = record.call_started_at ? new Date(record.call_started_at).toLocaleString('ko-KR') : 'N/A';
+                const incidentType = record.incident_type || 'Unknown';
+                const severityLevel = record.risk_level || 'Unknown';
+                const operatorName = record.operator?.name || 'N/A';
+                const callerNumber = record.caller?.phone_number || 'N/A';
+                const location = record.location || 'N/A';
+
+                html += `
+                    <tr style="border-bottom: 1px solid rgb(226, 232, 240); cursor: pointer; transition: background-color 0.2s;"
+                        onmouseover="this.style.backgroundColor='rgb(248, 250, 252)'"
+                        onmouseout="this.style.backgroundColor='white'"
+                        onclick="loadPastRecord('${record.id}')">
+                        <td style="padding: 0.75rem;">${datetime}</td>
+                        <td style="padding: 0.75rem;">${callerNumber}</td>
+                        <td style="padding: 0.75rem;">${operatorName}</td>
+                        <td style="padding: 0.75rem;">${location}</td>
+                        <td style="padding: 0.75rem;">
+                            <span style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500;
+                                background-color: ${getIncidentTypeColor(incidentType)}20;
+                                color: ${getIncidentTypeColor(incidentType)};">
+                                ${incidentType}
+                            </span>
+                        </td>
+                        <td style="padding: 0.75rem;">
+                            <span style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500;
+                                background-color: ${getSeverityColor(severityLevel)}20;
+                                color: ${getSeverityColor(severityLevel)};">
+                                Level ${severityLevel}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = html;
+
+        } catch (error) {
+            console.error('Error fetching past records:', error);
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #ef4444;">Error loading records</td></tr>';
+        }
+    }
+
+    function closePastRecordsModal() {
+        const modal = document.getElementById('pastRecordsModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    async function loadPastRecord(emergencyId) {
+        try {
+            // Close the modal first
+            closePastRecordsModal();
+
+            // Fetch the full emergency record
+            const response = await fetch(`/api/emergencies/${emergencyId}`);
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                showToast('Failed to load past record', 'error');
+                return;
+            }
+
+            const record = result.data;
+
+            // Populate all form fields as if it's an incoming call
+            document.getElementById('callerNumber').value = record.caller?.phone_number || '';
+            document.getElementById('incidentLocation').value = record.location || '';
+            document.getElementById('incidentType').value = record.incident_type || '';
+            document.getElementById('severityLevel').value = record.risk_level || '1';
+            document.getElementById('transcript').value = record.transcript || '';
+
+            // Update status text
+            document.getElementById('statusText').textContent = 'Past Record Loaded';
+
+            // Hide incoming call notification if visible
+            const incomingCallDiv = document.getElementById('incomingCall');
+            if (incomingCallDiv) {
+                incomingCallDiv.style.display = 'none';
+            }
+
+            // Show the call control buttons
+            const playBtn = document.getElementById('playBtn');
+            const speakerBtn = document.getElementById('speakerBtn');
+            if (playBtn) playBtn.style.display = 'inline-flex';
+            if (speakerBtn) speakerBtn.style.display = 'inline-flex';
+
+            // If there's media available, try to load it
+            if (record.media && record.media.length > 0) {
+                const audioMedia = record.media.find(m => m.type === 'audio');
+                if (audioMedia && audioMedia.url) {
+                    // Load the audio file
+                    await loadCallAudio(audioMedia.url);
+                }
+            }
+
+            showToast('Past record loaded successfully', 'success');
+
+        } catch (error) {
+            console.error('Error loading past record:', error);
+            showToast('Failed to load past record: ' + error.message, 'error');
+        }
+    }
+
+    function getIncidentTypeColor(type) {
+        const colors = {
+            'disaster': '#ef4444',
+            'medical': '#f59e0b',
+            'crime': '#8b5cf6',
+            'traffic': '#3b82f6',
+            'rescue': '#10b981',
+            'other': '#6b7280'
+        };
+        return colors[type?.toLowerCase()] || '#6b7280';
+    }
+
+    function getSeverityColor(level) {
+        const colors = {
+            '1': '#10b981',  // Level 1 - Green
+            '2': '#3b82f6',  // Level 2 - Blue
+            '3': '#f59e0b',  // Level 3 - Yellow
+            '4': '#f97316',  // Level 4 - Orange
+            '5': '#ef4444'   // Level 5 - Red
+        };
+        return colors[String(level)] || '#6b7280';
     }
 
     // Response Manual 팝업 제어 함수 (수정: 데이터 로딩 로직 추가)
